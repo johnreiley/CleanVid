@@ -76,6 +76,8 @@ async function loadVideo(wrapper: ReturnType<typeof mount>) {
 beforeEach(() => {
   let blobCounter = 0;
   lastExportBlob = null;
+  playMock.mockClear();
+  pauseMock.mockClear();
 
   URL.createObjectURL = vi.fn((value: Blob | MediaSource) => {
     blobCounter += 1;
@@ -93,34 +95,71 @@ beforeEach(() => {
 });
 
 describe('annotator app', () => {
-  it('creates, edits, and deletes a segment', async () => {
+  it('renders the streamlined cinematic layout', () => {
     const wrapper = mount(App);
-    expect(wrapper.get('[data-testid="top-bar"]')).toBeTruthy();
-    expect(wrapper.get('[data-testid="workspace"]')).toBeTruthy();
-    expect(wrapper.get('[data-testid="video-stage"]')).toBeTruthy();
-    expect(wrapper.get('[data-testid="control-rail"]')).toBeTruthy();
-    expect(wrapper.get('[data-testid="markers-panel"]')).toBeTruthy();
 
+    expect(wrapper.get('[data-testid="workspace"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="markers-panel"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="stage-shell"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="top-bar"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="video-stage"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="video-dropzone"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="transport-bar"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="timeline-track"]')).toBeTruthy();
+  });
+
+  it('creates, focuses, edits, and deletes a segment using toggle-based marking', async () => {
+    const wrapper = mount(App);
     const video = await loadVideo(wrapper);
 
     video.currentTime = 10;
     video.dispatchEvent(new Event('timeupdate'));
     await nextTick();
-    await wrapper.get('[data-testid="mark-start"]').trigger('click');
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    expect(wrapper.get('[data-testid="marking-indicator"]').text()).toContain('Mute marking live');
 
     video.currentTime = 15;
     video.dispatchEvent(new Event('timeupdate'));
     await nextTick();
-    await wrapper.get('[data-testid="mark-end"]').trigger('click');
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
 
-    expect(wrapper.text()).toContain('00:10.000 - 00:15.000');
+    expect(wrapper.text()).toContain('00:10.000 -> 00:15.000');
+    expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
+
+    const doneButton = wrapper.findAll('.text-button').find((node) => node.text() === 'Done');
+    await doneButton?.trigger('click');
+    expect(wrapper.findAll('input[type="number"]')).toHaveLength(0);
+
+    await wrapper.get('.segment-card-button').trigger('click');
+    expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
 
     const startInput = wrapper.findAll('input[type="number"]')[0];
     await startInput.setValue('12');
-    expect(wrapper.text()).toContain('00:12.000 - 00:15.000');
+    expect(wrapper.text()).toContain('00:12.000 -> 00:15.000');
 
-    await wrapper.get('.danger-button').trigger('click');
-    expect(wrapper.text()).toContain('No segments yet');
+    await wrapper.get('.text-button-danger').trigger('click');
+    expect(wrapper.text()).toContain('Timeline is empty');
+  });
+
+  it('shows validation feedback when a selected segment becomes invalid', async () => {
+    const wrapper = mount(App);
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    const startInput = wrapper.findAll('input[type="number"]')[0];
+    await startInput.setValue('35');
+
+    expect(wrapper.get('[data-testid="validation-summary"]').text()).toContain('issue');
   });
 
   it('imports filters and exports normalized JSON', async () => {
@@ -161,25 +200,49 @@ describe('annotator app', () => {
     await expect(readBlobText(lastExportBlob as Blob)).resolves.toContain('"id": "seg-1"');
   });
 
-  it('supports keyboard shortcuts and seeking to a segment', async () => {
+  it('supports the new keyboard shortcuts, fine seek, custom transport, and timeline seeking', async () => {
     const wrapper = mount(App);
     const video = await loadVideo(wrapper);
 
     video.currentTime = 20;
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
     video.currentTime = 30;
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.text()).toContain('00:20.000 - 00:30.000');
+    expect(wrapper.text()).toContain('00:20.000 -> 00:30.000');
 
     video.currentTime = 40;
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
     await wrapper.vm.$nextTick();
     expect(video.currentTime).toBe(35);
 
-    await wrapper.get('.segment-link').trigger('click');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true }));
+    await wrapper.vm.$nextTick();
+    expect(video.currentTime).toBeCloseTo(35.1, 4);
+
+    await wrapper.get('.segment-card-button').trigger('click');
     expect(video.currentTime).toBe(20);
+
+    const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
+    timeline.getBoundingClientRect = vi.fn(() => ({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 40,
+      width: 200,
+      height: 40,
+      toJSON: () => ({})
+    }));
+
+    timeline.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100 }));
+    await wrapper.vm.$nextTick();
+    expect(video.currentTime).toBe(60);
+
+    await wrapper.get('[aria-label="Play video"]').trigger('click');
+    expect(playMock).toHaveBeenCalled();
   });
 });
 

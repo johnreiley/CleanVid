@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
 import { onBeforeUnmount, onMounted, proxyRefs } from 'vue';
-import AnnotatorControlRail from './components/AnnotatorControlRail.vue';
 import AnnotatorTopBar from './components/AnnotatorTopBar.vue';
 import MarkersPanel from './components/MarkersPanel.vue';
 import VideoStage from './components/VideoStage.vue';
@@ -33,51 +32,57 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="app-shell">
-    <AnnotatorTopBar
-      :marker-count-label="annotator.markerCountLabel"
-      :movie-label="annotator.movieTitle || annotator.videoName || 'No file loaded'"
-      @video-selected="annotator.loadVideoFile"
-      @filters-selected="annotator.loadFilterFile"
-      @export="annotator.exportFilters"
-    />
-
     <main class="workspace" data-testid="workspace">
-      <VideoStage
-        :active-type="annotator.activeType"
-        :active-type-label="annotator.activeTypeLabel"
-        :current-time="annotator.currentTime"
-        :effective-duration="annotator.effectiveDuration"
-        :is-playing="annotator.isPlaying"
-        :pending-start="annotator.pendingStart"
-        :register-video-element="annotator.registerVideoElement"
-        :video-url="annotator.videoUrl"
-        @loaded-metadata="annotator.handleLoadedMetadata"
-        @time-update="annotator.handleTimeUpdate"
-        @play-state-change="annotator.handlePlayStateChange"
-      />
-
-      <AnnotatorControlRail
+      <MarkersPanel
         :active-type="annotator.activeType"
         :error-message="annotator.errorMessage"
-        :is-playing="annotator.isPlaying"
-        :seek-step-seconds="annotator.SEEK_STEP_SECONDS"
-        :segment-issue-count="annotator.segmentIssues.length"
+        :marker-count-label="annotator.markerCountLabel"
+        :movie-label="annotator.movieTitle || annotator.videoName || 'No video loaded'"
+        :pending-start="annotator.pendingStart"
+        :pending-type="annotator.pendingType"
+        :pending-type-label="annotator.pendingTypeLabel"
+        :segment-issues="annotator.segmentIssues"
+        :selected-segment-id="annotator.selectedSegmentId"
+        :sorted-segments="annotator.sortedSegments"
         :status-message="annotator.statusMessage"
         @active-type-change="handleActiveTypeChange"
-        @toggle-playback="annotator.togglePlayback"
-        @seek="annotator.seekBy"
-        @mark-start="annotator.markStart"
-        @mark-end="annotator.markEnd"
-      />
-
-      <MarkersPanel
-        :segment-issues="annotator.segmentIssues"
-        :sorted-segments="annotator.sortedSegments"
+        @filters-selected="annotator.loadFilterFile"
+        @toggle-mark="annotator.toggleMark"
         @seek="annotator.seekTo"
+        @select-segment="annotator.selectSegment"
         @update-segment-type="handleSegmentTypeUpdate"
         @update-segment="handleSegmentUpdate"
         @delete-segment="annotator.deleteSegment"
       />
+
+      <section class="stage-shell" data-testid="stage-shell">
+        <AnnotatorTopBar
+          :marker-count-label="annotator.markerCountLabel"
+          :movie-label="annotator.movieTitle || annotator.videoName || 'No file loaded'"
+          @export="annotator.exportFilters"
+        />
+
+        <VideoStage
+          :active-type="annotator.activeType"
+          :active-type-label="annotator.activeTypeLabel"
+          :current-time="annotator.currentTime"
+          :effective-duration="annotator.effectiveDuration"
+          :is-playing="annotator.isPlaying"
+          :pending-start="annotator.pendingStart"
+          :pending-type="annotator.pendingType"
+          :pending-type-label="annotator.pendingTypeLabel"
+          :register-video-element="annotator.registerVideoElement"
+          :sorted-segments="annotator.sortedSegments"
+          :video-url="annotator.videoUrl"
+          @loaded-metadata="annotator.handleLoadedMetadata"
+          @time-update="annotator.handleTimeUpdate"
+          @play-state-change="annotator.handlePlayStateChange"
+          @toggle-playback="annotator.togglePlayback"
+          @seek="annotator.seekBy"
+          @seek-to="annotator.seekTo"
+          @video-selected="annotator.loadVideoFile"
+        />
+      </section>
     </main>
   </div>
 </template>

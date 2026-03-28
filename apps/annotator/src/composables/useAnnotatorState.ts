@@ -11,6 +11,7 @@ import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp } from '../time';
 
 const SEEK_STEP_SECONDS = 5;
+const FINE_SEEK_STEP_SECONDS = 0.1;
 
 function createSegmentId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -51,7 +52,9 @@ export function useAnnotatorState() {
   const isPlaying = ref(false);
   const activeType = ref<FilterType>('mute');
   const pendingStart = ref<number | null>(null);
+  const pendingType = ref<FilterType | null>(null);
   const segments = ref<EditableSegment[]>([]);
+  const selectedSegmentId = ref<string | null>(null);
   const statusMessage = ref('Load a local video to begin annotating.');
   const errorMessage = ref('');
 
@@ -115,6 +118,9 @@ export function useAnnotatorState() {
   const canExport = computed(() => effectiveDuration.value > 0 && segmentIssues.value.length === 0);
   const sortedSegments = computed(() => sortSegments(segments.value));
   const activeTypeLabel = computed(() => (activeType.value === 'mute' ? 'Mute' : 'Skip'));
+  const pendingTypeLabel = computed(() =>
+    pendingType.value === null ? '' : pendingType.value === 'mute' ? 'Mute' : 'Skip'
+  );
   const markerCountLabel = computed(
     () => `${sortedSegments.value.length} marker${sortedSegments.value.length === 1 ? '' : 's'}`
   );
@@ -169,7 +175,7 @@ export function useAnnotatorState() {
     }
 
     videoDuration.value = Number.isFinite(videoElement.value?.duration) ? videoElement.value?.duration ?? 0 : 0;
-    statusMessage.value = 'Video ready. Mark start and end points to create segments.';
+    statusMessage.value = 'Video ready. Use M or S to mark segments while the video plays.';
     segments.value = segments.value.map((segment) => ({
       ...segment,
       start: clampToDuration(segment.start),
@@ -230,7 +236,7 @@ export function useAnnotatorState() {
     syncVideoState();
   }
 
-  function markStart() {
+  function startMark(type: FilterType) {
     clearFeedback();
 
     if (!canMark.value || !videoElement.value) {
@@ -238,11 +244,13 @@ export function useAnnotatorState() {
       return;
     }
 
+    activeType.value = type;
     pendingStart.value = clampToDuration(videoElement.value.currentTime);
-    statusMessage.value = `Start marked at ${formatTimestamp(pendingStart.value)}.`;
+    pendingType.value = type;
+    statusMessage.value = `${type === 'mute' ? 'Mute' : 'Skip'} marking started at ${formatTimestamp(pendingStart.value)}.`;
   }
 
-  function markEnd() {
+  function completeMark(type: FilterType) {
     clearFeedback();
 
     if (!canMark.value || !videoElement.value) {
@@ -250,8 +258,8 @@ export function useAnnotatorState() {
       return;
     }
 
-    if (pendingStart.value === null) {
-      setError('Mark a start time before marking the end.');
+    if (pendingStart.value === null || pendingType.value !== type) {
+      setError(`Start a ${type} mark before closing it.`);
       return;
     }
 
@@ -271,8 +279,19 @@ export function useAnnotatorState() {
     };
 
     segments.value = sortSegments([...segments.value, nextSegment]);
+    selectedSegmentId.value = nextSegment.id;
     pendingStart.value = null;
+    pendingType.value = null;
     statusMessage.value = `Added ${activeType.value} segment ${formatTimestamp(start)} to ${formatTimestamp(end)}.`;
+  }
+
+  function toggleMark(type: FilterType) {
+    if (pendingStart.value !== null && pendingType.value === type) {
+      completeMark(type);
+      return;
+    }
+
+    startMark(type);
   }
 
   function updateSegment(id: string, field: 'start' | 'end', rawValue: string) {
@@ -305,6 +324,10 @@ export function useAnnotatorState() {
   function deleteSegment(id: string) {
     clearFeedback();
     segments.value = segments.value.filter((segment) => segment.id !== id);
+
+    if (selectedSegmentId.value === id) {
+      selectedSegmentId.value = null;
+    }
   }
 
   async function importFilterFile(file: File) {
@@ -312,9 +335,11 @@ export function useAnnotatorState() {
       clearFeedback();
       const parsed = parseFilterFile(await readTextFile(file));
       segments.value = parsed.filters.map((segment) => ({ ...segment }));
+      selectedSegmentId.value = null;
       movieTitle.value = parsed.movie.title ?? movieTitle.value;
       importedMovieDuration.value = parsed.movie.duration;
       pendingStart.value = null;
+      pendingType.value = null;
       statusMessage.value = `Imported ${parsed.filters.length} segment${parsed.filters.length === 1 ? '' : 's'}.`;
     } catch (error) {
       if (error instanceof FilterValidationError || error instanceof SyntaxError || error instanceof Error) {
@@ -332,6 +357,7 @@ export function useAnnotatorState() {
     videoName.value = file.name;
     movieTitle.value = file.name.replace(/\.[^.]+$/, '');
     pendingStart.value = null;
+    pendingType.value = null;
     currentTime.value = 0;
     videoDuration.value = 0;
     statusMessage.value = `Loaded ${file.name}.`;
@@ -382,6 +408,18 @@ export function useAnnotatorState() {
     }
   }
 
+  function selectSegment(id: string | null) {
+    selectedSegmentId.value = id;
+  }
+
+  function seekToRatio(ratio: number) {
+    if (!Number.isFinite(ratio)) {
+      return;
+    }
+
+    seekTo(clampToDuration(effectiveDuration.value * ratio));
+  }
+
   function isEditableTarget(target: EventTarget | null): boolean {
     if (!(target instanceof HTMLElement)) {
       return false;
@@ -409,21 +447,21 @@ export function useAnnotatorState() {
         break;
       case 'ArrowLeft':
         event.preventDefault();
-        seekBy(-SEEK_STEP_SECONDS);
+        seekBy(event.shiftKey ? -FINE_SEEK_STEP_SECONDS : -SEEK_STEP_SECONDS);
         break;
       case 'ArrowRight':
         event.preventDefault();
-        seekBy(SEEK_STEP_SECONDS);
+        seekBy(event.shiftKey ? FINE_SEEK_STEP_SECONDS : SEEK_STEP_SECONDS);
+        break;
+      case 'm':
+      case 'M':
+        event.preventDefault();
+        toggleMark('mute');
         break;
       case 's':
       case 'S':
         event.preventDefault();
-        markStart();
-        break;
-      case 'e':
-      case 'E':
-        event.preventDefault();
-        markEnd();
+        toggleMark('skip');
         break;
       default:
         break;
@@ -444,11 +482,14 @@ export function useAnnotatorState() {
     isPlaying,
     activeType,
     pendingStart,
+    pendingType,
     statusMessage,
     errorMessage,
     sortedSegments,
     segmentIssues,
+    selectedSegmentId,
     activeTypeLabel,
+    pendingTypeLabel,
     markerCountLabel,
     registerVideoElement,
     handleLoadedMetadata,
@@ -457,11 +498,12 @@ export function useAnnotatorState() {
     togglePlayback,
     seekBy,
     seekTo,
-    markStart,
-    markEnd,
+    seekToRatio,
+    toggleMark,
     updateSegment,
     updateSegmentType,
     deleteSegment,
+    selectSegment,
     loadVideoFile,
     loadFilterFile,
     exportFilters,
