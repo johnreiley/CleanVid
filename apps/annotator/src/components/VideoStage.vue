@@ -88,7 +88,7 @@ function getSegmentStyle(segment: EditableSegment) {
 
   return {
     left: `${left}%`,
-    width: `${width}%`
+    width: `max(${width}%, 1px)`
   };
 }
 
