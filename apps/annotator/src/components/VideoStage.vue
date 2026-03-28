@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, type ComponentPublicInstance } from 'vue';
+import { computed, onBeforeUnmount, ref, type ComponentPublicInstance } from 'vue';
 import PhPause from '@phosphor-icons-vue-icons/PhPause.vue.mjs';
 import PhPlay from '@phosphor-icons-vue-icons/PhPlay.vue.mjs';
 import PhSkipBack from '@phosphor-icons-vue-icons/PhSkipBack.vue.mjs';
@@ -34,6 +34,10 @@ const props = defineProps<{
 }>();
 
 const isDragActive = ref(false);
+const isTimelineDragging = ref(false);
+const timelineTrack = ref<HTMLElement | null>(null);
+const timelinePointerId = ref<number | null>(null);
+const timelineMovedDuringDrag = ref(false);
 
 const progressPercent = computed(() => {
   if (props.effectiveDuration <= 0) {
@@ -87,21 +91,83 @@ function getSegmentStyle(segment: EditableSegment) {
   };
 }
 
-function handleTimelineClick(event: MouseEvent) {
-  const target = event.currentTarget;
-
-  if (!(target instanceof HTMLElement) || props.effectiveDuration <= 0) {
-    return;
+function getTimelineRatio(clientX: number) {
+  if (!timelineTrack.value || props.effectiveDuration <= 0) {
+    return null;
   }
 
-  const rect = target.getBoundingClientRect();
+  const rect = timelineTrack.value.getBoundingClientRect();
 
   if (rect.width <= 0) {
+    return null;
+  }
+
+  return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+}
+
+function seekTimeline(clientX: number) {
+  const ratio = getTimelineRatio(clientX);
+
+  if (ratio === null) {
     return;
   }
 
-  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
   emit('seekTo', props.effectiveDuration * ratio);
+}
+
+function releaseTimelineDrag(pointerId?: number) {
+  if (pointerId !== undefined && timelinePointerId.value !== pointerId) {
+    return;
+  }
+
+  if (timelineTrack.value && timelinePointerId.value !== null && timelineTrack.value.hasPointerCapture?.(timelinePointerId.value)) {
+    timelineTrack.value.releasePointerCapture?.(timelinePointerId.value);
+  }
+
+  isTimelineDragging.value = false;
+  timelinePointerId.value = null;
+}
+
+function handleTimelinePointerDown(event: PointerEvent) {
+  if (props.effectiveDuration <= 0) {
+    return;
+  }
+
+  timelineTrack.value = event.currentTarget instanceof HTMLElement ? event.currentTarget : timelineTrack.value;
+  timelinePointerId.value = event.pointerId;
+  timelineMovedDuringDrag.value = false;
+  isTimelineDragging.value = true;
+  timelineTrack.value?.setPointerCapture?.(event.pointerId);
+  seekTimeline(event.clientX);
+  event.preventDefault();
+}
+
+function handleTimelinePointerMove(event: PointerEvent) {
+  if (!isTimelineDragging.value || timelinePointerId.value !== event.pointerId) {
+    return;
+  }
+
+  timelineMovedDuringDrag.value = true;
+  seekTimeline(event.clientX);
+}
+
+function handleTimelinePointerUp(event: PointerEvent) {
+  if (timelinePointerId.value !== event.pointerId) {
+    return;
+  }
+
+  seekTimeline(event.clientX);
+  releaseTimelineDrag(event.pointerId);
+}
+
+function handleTimelineClick(event: MouseEvent) {
+  if (timelineMovedDuringDrag.value) {
+    timelineMovedDuringDrag.value = false;
+    return;
+  }
+
+  timelineTrack.value = event.currentTarget instanceof HTMLElement ? event.currentTarget : timelineTrack.value;
+  seekTimeline(event.clientX);
 }
 
 function emitSelectedVideo(event: Event) {
@@ -123,6 +189,10 @@ function handleDrop(event: DragEvent) {
     emit('videoSelected', file);
   }
 }
+
+onBeforeUnmount(() => {
+  releaseTimelineDrag();
+});
 </script>
 
 <template>
@@ -170,11 +240,17 @@ function handleDrop(event: DragEvent) {
     <div class="transport-card panel">
       <div class="timeline-shell">
         <button
+          ref="timelineTrack"
           type="button"
-          class="timeline-track"
+          :class="['timeline-track', { 'timeline-track-dragging': isTimelineDragging }]"
           data-testid="timeline-track"
           :disabled="effectiveDuration <= 0"
           @click="handleTimelineClick"
+          @pointerdown="handleTimelinePointerDown"
+          @pointermove="handleTimelinePointerMove"
+          @pointerup="handleTimelinePointerUp"
+          @pointercancel="releaseTimelineDrag($event.pointerId)"
+          @lostpointercapture="releaseTimelineDrag($event.pointerId)"
         >
           <span
             v-for="segment in sortedSegments"
@@ -182,7 +258,9 @@ function handleDrop(event: DragEvent) {
             :class="['timeline-segment', `timeline-segment-${segment.type}`]"
             :style="getSegmentStyle(segment)"
           />
-          <span class="timeline-caret" :style="{ left: `${progressPercent}%` }" />
+          <span class="timeline-caret" data-testid="timeline-caret" :style="{ left: `${progressPercent}%` }">
+            <span class="timeline-caret-line" />
+          </span>
         </button>
 
         <div class="timeline-labels">

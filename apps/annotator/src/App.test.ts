@@ -34,6 +34,17 @@ function flushPromises() {
   });
 }
 
+function createPointerEvent(type: string, clientX: number, pointerId = 1) {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+
+  Object.defineProperties(event, {
+    clientX: { value: clientX },
+    pointerId: { value: pointerId }
+  });
+
+  return event;
+}
+
 async function readBlobText(blob: Blob): Promise<string> {
   if (typeof blob.text === 'function') {
     return blob.text();
@@ -248,6 +259,13 @@ describe('annotator app', () => {
     timeline.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100 }));
     await wrapper.vm.$nextTick();
     expect(video.currentTime).toBe(60);
+
+    const timelineElement = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
+    timelineElement.dispatchEvent(createPointerEvent('pointerdown', 50));
+    timelineElement.dispatchEvent(createPointerEvent('pointermove', 150));
+    timelineElement.dispatchEvent(createPointerEvent('pointerup', 150));
+    await wrapper.vm.$nextTick();
+    expect(video.currentTime).toBe(90);
 
     await wrapper.get('[aria-label="Play video"]').trigger('click');
     expect(playMock).toHaveBeenCalled();

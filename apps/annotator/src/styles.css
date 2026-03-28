@@ -668,10 +668,16 @@ button {
   border-radius: 8px;
   background: linear-gradient(90deg, rgba(30, 41, 59, 0.92), rgba(51, 65, 85, 0.92));
   overflow: visible;
+  user-select: none;
+  cursor: pointer;
 }
 
 .timeline-track:disabled {
   cursor: default;
+}
+
+.timeline-track-dragging {
+  cursor: grabbing;
 }
 
 .timeline-segment,
@@ -683,6 +689,7 @@ button {
   top: -0.08rem;
   bottom: -0.08rem;
   border-radius: 4px;
+  z-index: 1;
 }
 
 .timeline-segment-mute {
@@ -698,10 +705,35 @@ button {
 .timeline-caret {
   top: -0.3rem;
   bottom: -0.3rem;
+  width: 1rem;
+  display: inline-flex;
+  justify-content: center;
+  transform: translateX(-50%);
+  cursor: grab;
+  touch-action: none;
+  z-index: 2;
+}
+
+.timeline-track-dragging .timeline-caret {
+  cursor: grabbing;
+}
+
+.timeline-track-dragging .timeline-caret .timeline-caret-line {
+  width: 6px;
+  cursor: grabbing;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.95);
+}
+
+.timeline-caret-line {
   width: 2px;
+  height: 100%;
+  border-radius: 999px;
   background: #ffffff;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
-  transform: translateX(-1px);
+}
+
+.timeline-caret:hover .timeline-caret-line {
+  width: 4px;
 }
 
 .timeline-labels {
