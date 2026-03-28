@@ -2,6 +2,8 @@
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp } from '../time';
+import PhSkipForward from '@phosphor-icons-vue-icons/PhSkipForward.vue.mjs';
+import PhMute from '@phosphor-icons-vue-icons/PhSpeakerSimpleX.vue.mjs';
 
 const emit = defineEmits<{
   activeTypeChange: [value: FilterType];
@@ -18,7 +20,6 @@ const props = defineProps<{
   activeType: FilterType;
   errorMessage: string;
   markerCountLabel: string;
-  movieLabel: string;
   pendingStart: number | null;
   pendingType: FilterType | null;
   pendingTypeLabel: string;
@@ -92,7 +93,6 @@ function isMarking(type: FilterType): boolean {
   <aside class="sidebar panel" data-testid="markers-panel">
     <div class="sidebar-header">
       <p class="eyebrow">Session</p>
-      <h1>{{ movieLabel }}</h1>
       <div class="sidebar-header-row">
         <span class="meta-chip">{{ markerCountLabel }}</span>
         <label class="subtle-action">
@@ -115,7 +115,9 @@ function isMarking(type: FilterType): boolean {
         data-testid="toggle-mute"
         @click="setActiveType('mute')"
       >
-        <span class="action-glyph">M</span>
+        <span class="action-glyph">
+          <PhMute :size="20" />
+        </span>
         <span class="action-copy">
           <strong>Mute Segment</strong>
           <span>{{ isMarking('mute') ? 'Close active mute range' : 'Hotkey [M]' }}</span>
@@ -129,7 +131,9 @@ function isMarking(type: FilterType): boolean {
         data-testid="toggle-skip"
         @click="setActiveType('skip')"
       >
-        <span class="action-glyph">S</span>
+        <span class="action-glyph">
+          <PhSkipForward :size="20" />
+        </span>
         <span class="action-copy">
           <strong>Skip Segment</strong>
           <span>{{ isMarking('skip') ? 'Close active skip range' : 'Hotkey [S]' }}</span>

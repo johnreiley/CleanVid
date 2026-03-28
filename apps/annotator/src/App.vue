@@ -37,7 +37,6 @@ onBeforeUnmount(() => {
         :active-type="annotator.activeType"
         :error-message="annotator.errorMessage"
         :marker-count-label="annotator.markerCountLabel"
-        :movie-label="annotator.movieTitle || annotator.videoName || 'No video loaded'"
         :pending-start="annotator.pendingStart"
         :pending-type="annotator.pendingType"
         :pending-type-label="annotator.pendingTypeLabel"
