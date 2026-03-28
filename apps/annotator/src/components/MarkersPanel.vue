@@ -229,7 +229,9 @@ onBeforeUnmount(() => {
         </span>
         <span class="action-copy">
           <strong>Mute Segment</strong>
-          <span>{{ isMarking('mute') ? 'Close active mute range' : 'Hotkey [M]' }}</span>
+          <span class="action-subtext">
+            {{ isMarking('mute') ? 'Close active mute range' : 'Hotkey [M]' }}
+          </span>
         </span>
         <span class="action-plus">{{ isMarking('mute') ? '•' : '+' }}</span>
       </button>
@@ -245,7 +247,9 @@ onBeforeUnmount(() => {
         </span>
         <span class="action-copy">
           <strong>Skip Segment</strong>
-          <span>{{ isMarking('skip') ? 'Close active skip range' : 'Hotkey [S]' }}</span>
+          <span class="action-subtext">
+            {{ isMarking('skip') ? 'Close active skip range' : 'Hotkey [S]' }}
+          </span>
         </span>
         <span class="action-plus">{{ isMarking('skip') ? '•' : '+' }}</span>
       </button>
