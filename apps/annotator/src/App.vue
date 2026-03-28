@@ -57,8 +57,7 @@ onBeforeUnmount(() => {
 
       <section class="stage-shell" data-testid="stage-shell">
         <AnnotatorTopBar
-          :marker-count-label="annotator.markerCountLabel"
-          :movie-label="annotator.movieTitle || annotator.videoName || 'No file loaded'"
+          :movie-label="annotator.videoName || 'No file loaded'"
           @export="annotator.exportFilters"
         />
 

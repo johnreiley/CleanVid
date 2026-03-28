@@ -108,6 +108,14 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="timeline-track"]')).toBeTruthy();
   });
 
+  it('shows the loaded filename in the top bar', async () => {
+    const wrapper = mount(App);
+
+    await loadVideo(wrapper);
+
+    expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
+  });
+
   it('creates, focuses, edits, and deletes a segment using toggle-based marking', async () => {
     const wrapper = mount(App);
     const video = await loadVideo(wrapper);

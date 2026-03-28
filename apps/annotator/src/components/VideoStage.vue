@@ -4,6 +4,7 @@ import PhPause from '@phosphor-icons-vue-icons/PhPause.vue.mjs';
 import PhPlay from '@phosphor-icons-vue-icons/PhPlay.vue.mjs';
 import PhSkipBack from '@phosphor-icons-vue-icons/PhSkipBack.vue.mjs';
 import PhSkipForward from '@phosphor-icons-vue-icons/PhSkipForward.vue.mjs';
+import PhFilmSlate from '@phosphor-icons-vue-icons/PhFilmSlate.vue.mjs';
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment } from '../annotator-types';
 import { formatTimestamp } from '../time';
@@ -158,7 +159,9 @@ function handleDrop(event: DragEvent) {
           accept="video/*"
           @change="emitSelectedVideo"
         />
-        <div class="placeholder-mark">+</div>
+        <div class="placeholder-mark">
+          <PhFilmSlate class="placeholder-mark-icon" :size="48" />
+        </div>
         <p class="video-placeholder-title">Drop movie here</p>
         <p class="video-placeholder-copy">or click to browse your library</p>
       </label>

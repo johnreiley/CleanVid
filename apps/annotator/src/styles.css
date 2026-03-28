@@ -95,6 +95,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  overflow: hidden;
 }
 
 .brand-lockup,
@@ -118,6 +119,10 @@ button {
 .sidebar-header-row,
 .transport-cluster {
   gap: 0.75rem;
+}
+
+.brand-lockup {
+  flex: 0 0 auto;
 }
 
 .brand-mark {
@@ -164,6 +169,19 @@ button {
   background: rgba(15, 23, 42, 0.42);
 }
 
+.top-bar-meta {
+  min-width: 0;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.meta-chip-filename {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .export-button,
 .action-tile,
 .segment-card-button,
@@ -178,6 +196,7 @@ button {
   padding: 0.55rem 0.95rem;
   border-radius: 999px;
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 0.55rem;
   color: #f8fafc;
@@ -194,6 +213,7 @@ button {
 
 .sidebar-header h1,
 .video-placeholder-title,
+.video-placeholder-copy,
 .panel-heading h2,
 .section-kicker,
 .eyebrow,
@@ -627,6 +647,7 @@ button {
 .video-placeholder-title {
   font-size: 1.05rem;
   font-weight: 700;
+  margin: 0;
 }
 
 .transport-card {
@@ -661,7 +682,7 @@ button {
 .timeline-segment {
   top: -0.08rem;
   bottom: -0.08rem;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .timeline-segment-mute {
