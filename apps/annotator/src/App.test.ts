@@ -219,7 +219,7 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="validation-summary"]').text()).toContain('issue');
   });
 
-  it('scrolls the segments timeline to the bottom when a new segment is added', async () => {
+  it('scrolls the newly added segment into view', async () => {
     const wrapper = mount(App);
     const video = await loadVideo(wrapper);
 
@@ -234,30 +234,38 @@ describe('annotator app', () => {
     await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
     await nextTick();
 
-    const segmentList = wrapper.get('[data-testid="segment-list"]').element as HTMLUListElement;
-    Object.defineProperty(segmentList, 'scrollHeight', {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
-      value: 480
-    });
-    Object.defineProperty(segmentList, 'scrollTop', {
-      configurable: true,
-      writable: true,
-      value: 0
+      value: scrollIntoView
     });
 
-    video.currentTime = 30;
-    video.dispatchEvent(new Event('timeupdate'));
-    await nextTick();
-    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+    try {
+      video.currentTime = 30;
+      video.dispatchEvent(new Event('timeupdate'));
+      await nextTick();
+      await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
 
-    video.currentTime = 36;
-    video.dispatchEvent(new Event('timeupdate'));
-    await nextTick();
-    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
-    await nextTick();
-    await nextTick();
+      video.currentTime = 36;
+      video.dispatchEvent(new Event('timeupdate'));
+      await nextTick();
+      await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+      await nextTick();
+      await nextTick();
 
-    expect(segmentList.scrollTop).toBe(480);
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+      expect(wrapper.findAll('.segment-card')[1]?.classes()).toContain('segment-card-selected');
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+          configurable: true,
+          value: originalScrollIntoView
+        });
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+      }
+    }
   });
 
   it('imports filters and exports normalized JSON', async () => {

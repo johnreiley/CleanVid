@@ -31,7 +31,6 @@ const props = defineProps<{
   statusMessage: string;
 }>();
 
-const segmentList = ref<HTMLElement | null>(null);
 const segmentCards = new Map<string, HTMLElement>();
 const activeToast = ref<{ kind: 'error' | 'status'; message: string; key: string } | null>(null);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
@@ -161,21 +160,6 @@ function registerSegmentCard(id: string, element: Element | ComponentPublicInsta
 }
 
 watch(
-  () => props.sortedSegments.length,
-  async (nextLength, previousLength) => {
-    if (nextLength === 0 || nextLength <= previousLength) {
-      return;
-    }
-
-    await nextTick();
-
-    if (segmentList.value) {
-      segmentList.value.scrollTop = segmentList.value.scrollHeight;
-    }
-  }
-);
-
-watch(
   [() => props.selectedSegmentId, () => props.selectionScrollKey],
   async ([selectedSegmentId]) => {
     if (!selectedSegmentId) {
@@ -290,7 +274,7 @@ onBeforeUnmount(() => {
         <p>Timeline is empty</p>
       </div>
 
-      <ul v-else ref="segmentList" class="segment-list" data-testid="segment-list">
+      <ul v-else class="segment-list" data-testid="segment-list">
         <li
           v-for="segment in sortedSegments"
           :key="segment.id"
