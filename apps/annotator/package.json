@@ -8,6 +8,7 @@
     "dev": "vite"
   },
   "dependencies": {
+    "@phosphor-icons/vue": "^2.1.1",
     "@cleanvid/shared": "0.1.0",
     "vue": "^3.5.13"
   }

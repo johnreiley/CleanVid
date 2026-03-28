@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import PhPause from '@phosphor-icons-vue-icons/PhPause.vue.mjs';
+import PhPlay from '@phosphor-icons-vue-icons/PhPlay.vue.mjs';
+import PhSkipBack from '@phosphor-icons-vue-icons/PhSkipBack.vue.mjs';
+import PhSkipForward from '@phosphor-icons-vue-icons/PhSkipForward.vue.mjs';
 import {
   FilterValidationError,
   normalizeFilters,
@@ -125,6 +129,10 @@ const segmentIssues = computed<SegmentIssue[]>(() =>
 const canMark = computed(() => videoElement.value !== null && effectiveDuration.value > 0);
 const canExport = computed(() => effectiveDuration.value > 0 && segmentIssues.value.length === 0);
 const sortedSegments = computed(() => sortSegments(segments.value));
+const activeTypeLabel = computed(() => (activeType.value === 'mute' ? 'Mute' : 'Skip'));
+const markerCountLabel = computed(
+  () => `${sortedSegments.value.length} marker${sortedSegments.value.length === 1 ? '' : 's'}`
+);
 
 function clearFeedback() {
   errorMessage.value = '';
@@ -408,6 +416,10 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return target.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select';
 }
 
+function formatSegmentType(type: FilterType): string {
+  return type === 'mute' ? 'Mute' : 'Skip';
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (isEditableTarget(event.target)) {
     return;
@@ -453,39 +465,60 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">CleanVid MVP</p>
-        <h1>Annotate a movie, export a filter file, and send it to the processor.</h1>
+  <div class="app-shell">
+    <header class="top-bar" data-testid="top-bar">
+      <div class="brand-block">
+        <p class="eyebrow">CleanVid Annotator</p>
+        <h1>Local editing workspace for mute and skip markers</h1>
       </div>
-      <p class="hero-copy">
-        This annotator runs entirely in your browser. Load a local video, mark mute or skip
-        segments, and export the shared JSON contract for the CLI.
-      </p>
+
+      <div class="top-meta">
+        <div class="meta-chip">
+          <span class="meta-label">Movie</span>
+          <strong>{{ movieTitle || videoName || 'No file loaded' }}</strong>
+        </div>
+        <div class="meta-chip">
+          <span class="meta-label">Markers</span>
+          <strong>{{ markerCountLabel }}</strong>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <label class="file-action">
+          <span>Load Video</span>
+          <input data-testid="video-input" type="file" accept="video/*" @change="handleVideoSelected" />
+        </label>
+
+        <label class="file-action">
+          <span>Import Filters</span>
+          <input
+            data-testid="filters-input"
+            type="file"
+            accept="application/json,.json"
+            @change="handleFilterSelected"
+          />
+        </label>
+
+        <button type="button" class="primary-button" data-testid="export-button" @click="exportFilters">
+          Export JSON
+        </button>
+      </div>
     </header>
 
-    <main class="layout">
-      <section class="panel">
-        <h2>Media</h2>
-        <div class="field-grid">
-          <label class="field">
-            <span>Video File</span>
-            <input data-testid="video-input" type="file" accept="video/*" @change="handleVideoSelected" />
-          </label>
-
-          <label class="field">
-            <span>Import Filters</span>
-            <input
-              data-testid="filters-input"
-              type="file"
-              accept="application/json,.json"
-              @change="handleFilterSelected"
-            />
-          </label>
+    <main class="workspace" data-testid="workspace">
+      <section class="video-stage panel panel-dark" data-testid="video-stage">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Viewer</p>
+            <h2>Preview and place edit points</h2>
+          </div>
+          <div class="stage-badge">
+            <span class="badge-label">Active Marker</span>
+            <span :class="['type-pill', `type-pill-${activeType}`]">{{ activeTypeLabel }}</span>
+          </div>
         </div>
 
-        <div class="video-frame">
+        <div class="video-stage-body">
           <video
             ref="videoElement"
             data-testid="video-player"
@@ -499,63 +532,138 @@ onBeforeUnmount(() => {
           />
         </div>
 
-        <dl class="stats">
-          <div>
-            <dt>Movie</dt>
-            <dd>{{ movieTitle || 'Not loaded yet' }}</dd>
-          </div>
-          <div>
-            <dt>Current Time</dt>
+        <dl class="info-strip">
+          <div class="info-chip">
+            <dt>Current</dt>
             <dd data-testid="current-time">{{ formatTimestamp(currentTime) }}</dd>
           </div>
-          <div>
+          <div class="info-chip">
             <dt>Duration</dt>
             <dd>{{ formatTimestamp(effectiveDuration) }}</dd>
           </div>
-          <div>
+          <div class="info-chip">
             <dt>Pending Start</dt>
-            <dd>{{ pendingStart === null ? 'None' : formatTimestamp(pendingStart) }}</dd>
+            <dd :class="{ pending: pendingStart !== null }">
+              {{ pendingStart === null ? 'None' : formatTimestamp(pendingStart) }}
+            </dd>
+          </div>
+          <div class="info-chip">
+            <dt>Playback</dt>
+            <dd>{{ isPlaying ? 'Playing' : 'Paused' }}</dd>
           </div>
         </dl>
+      </section>
 
-        <div class="controls">
-          <button type="button" @click="togglePlayback">
-            {{ isPlaying ? 'Pause' : 'Play' }}
-          </button>
-          <button type="button" @click="seekBy(-SEEK_STEP_SECONDS)">-{{ SEEK_STEP_SECONDS }}s</button>
-          <button type="button" @click="seekBy(SEEK_STEP_SECONDS)">+{{ SEEK_STEP_SECONDS }}s</button>
-          <label class="inline-field">
-            <span>Type</span>
+      <section class="control-rail" data-testid="control-rail">
+        <article class="panel control-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="section-kicker">Transport</p>
+              <h2>Playback</h2>
+            </div>
+          </div>
+
+          <div class="transport-cluster">
+            <button
+              type="button"
+              class="icon-button"
+              :aria-label="`Rewind ${SEEK_STEP_SECONDS} seconds`"
+              :title="`Rewind ${SEEK_STEP_SECONDS} seconds`"
+              @click="seekBy(-SEEK_STEP_SECONDS)"
+            >
+              <PhSkipBack :size="18" weight="fill" />
+            </button>
+            <button
+              type="button"
+              class="icon-button icon-button-primary"
+              :aria-label="isPlaying ? 'Pause playback' : 'Play video'"
+              :title="isPlaying ? 'Pause playback' : 'Play video'"
+              @click="togglePlayback"
+            >
+              <PhPause v-if="isPlaying" :size="20" weight="fill" />
+              <PhPlay v-else :size="20" weight="fill" />
+            </button>
+            <button
+              type="button"
+              class="icon-button"
+              :aria-label="`Forward ${SEEK_STEP_SECONDS} seconds`"
+              :title="`Forward ${SEEK_STEP_SECONDS} seconds`"
+              @click="seekBy(SEEK_STEP_SECONDS)"
+            >
+              <PhSkipForward :size="18" weight="fill" />
+            </button>
+          </div>
+        </article>
+
+        <article class="panel control-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="section-kicker">Marker Tools</p>
+              <h2>Create marker</h2>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>Marker Type</span>
             <select v-model="activeType" data-testid="active-type">
               <option value="mute">Mute</option>
               <option value="skip">Skip</option>
             </select>
           </label>
-          <button type="button" data-testid="mark-start" @click="markStart">Mark Start (S)</button>
-          <button type="button" data-testid="mark-end" @click="markEnd">Mark End (E)</button>
-          <button type="button" data-testid="export-button" @click="exportFilters">Export JSON</button>
-        </div>
 
-        <p class="status" data-testid="status-message">{{ statusMessage }}</p>
-        <p v-if="errorMessage" class="error" data-testid="error-message">{{ errorMessage }}</p>
+          <div class="button-stack">
+            <button type="button" class="primary-button" data-testid="mark-start" @click="markStart">
+              Mark Start
+            </button>
+            <button type="button" class="primary-button accent-button" data-testid="mark-end" @click="markEnd">
+              Mark End
+            </button>
+          </div>
+
+          <p class="shortcut-note">Shortcuts: <span>S</span> start, <span>E</span> end, <span>Space</span> play</p>
+        </article>
+
+        <article class="panel control-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="section-kicker">Feedback</p>
+              <h2>Session state</h2>
+            </div>
+          </div>
+
+          <p class="status" data-testid="status-message">{{ statusMessage }}</p>
+          <p v-if="errorMessage" class="error" data-testid="error-message">{{ errorMessage }}</p>
+          <p v-else-if="segmentIssues.length > 0" class="warning-text">
+            {{ segmentIssues.length }} validation issue{{ segmentIssues.length === 1 ? '' : 's' }} need attention.
+          </p>
+          <p v-else class="hint-text">
+            Marker edits are live. Export when the list is valid and ready for the CLI.
+          </p>
+        </article>
       </section>
 
-      <section class="panel">
+      <section class="markers-panel panel" data-testid="markers-panel">
         <div class="panel-heading">
-          <h2>Segments</h2>
-          <span>{{ sortedSegments.length }} total</span>
+          <div>
+            <p class="section-kicker">Markers</p>
+            <h2>Existing segments</h2>
+          </div>
+          <span class="panel-count">{{ sortedSegments.length }} total</span>
         </div>
 
         <p v-if="sortedSegments.length === 0" class="empty-state">
           No segments yet. Load a video, choose a type, then mark start and end points.
         </p>
 
-        <ul v-else class="segment-list">
+        <ul v-else class="segment-list" data-testid="segment-list">
           <li v-for="segment in sortedSegments" :key="segment.id" class="segment-card">
             <div class="segment-summary">
-              <button type="button" class="segment-link" @click="seekTo(segment.start)">
-                {{ formatTimestamp(segment.start) }} - {{ formatTimestamp(segment.end) }}
-              </button>
+              <div class="segment-summary-main">
+                <span :class="['type-pill', `type-pill-${segment.type}`]">{{ formatSegmentType(segment.type) }}</span>
+                <button type="button" class="segment-link" @click="seekTo(segment.start)">
+                  {{ formatTimestamp(segment.start) }} - {{ formatTimestamp(segment.end) }}
+                </button>
+              </div>
               <span class="segment-id">{{ segment.id }}</span>
             </div>
 

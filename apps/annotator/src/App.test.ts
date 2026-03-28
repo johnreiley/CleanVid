@@ -95,6 +95,12 @@ beforeEach(() => {
 describe('annotator app', () => {
   it('creates, edits, and deletes a segment', async () => {
     const wrapper = mount(App);
+    expect(wrapper.get('[data-testid="top-bar"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="workspace"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="video-stage"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="control-rail"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="markers-panel"]')).toBeTruthy();
+
     const video = await loadVideo(wrapper);
 
     video.currentTime = 10;

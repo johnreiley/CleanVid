@@ -9,7 +9,11 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@cleanvid/shared': path.resolve(rootDir, 'packages/shared/src/index.ts')
+      '@cleanvid/shared': path.resolve(rootDir, 'packages/shared/src/index.ts'),
+      '@phosphor-icons-vue-icons': path.resolve(
+        rootDir,
+        'node_modules/@phosphor-icons/vue/dist/icons'
+      )
     }
   },
   test: {
