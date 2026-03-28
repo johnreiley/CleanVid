@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { nextTick, ref, watch, type ComponentPublicInstance } from 'vue';
+import { nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from 'vue';
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp, parseTimestamp } from '../time';
 import PhSkipForward from '@phosphor-icons-vue-icons/PhSkipForward.vue.mjs';
 import PhMute from '@phosphor-icons-vue-icons/PhSpeakerSimpleX.vue.mjs';
 import PhTrash from '@phosphor-icons-vue-icons/PhTrash.vue.mjs';
+import PhX from '@phosphor-icons-vue-icons/PhX.vue.mjs';
 
 const emit = defineEmits<{
   activeTypeChange: [value: FilterType];
@@ -33,6 +34,8 @@ const props = defineProps<{
 
 const segmentList = ref<HTMLElement | null>(null);
 const segmentCards = new Map<string, HTMLElement>();
+const activeToast = ref<{ kind: 'error' | 'status'; message: string; key: string } | null>(null);
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 function emitSelectedFile(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -65,6 +68,31 @@ function resetEditableText(target: EventTarget | null, value: string) {
   if (target instanceof HTMLElement) {
     target.textContent = value;
   }
+}
+
+function clearToastTimer() {
+  if (toastTimer !== null) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+}
+
+function dismissToast() {
+  clearToastTimer();
+  activeToast.value = null;
+}
+
+function showToast(kind: 'error' | 'status', message: string) {
+  const key = `${kind}:${message}`;
+
+  activeToast.value = { kind, message, key };
+  clearToastTimer();
+  toastTimer = setTimeout(() => {
+    if (activeToast.value?.key === key) {
+      activeToast.value = null;
+    }
+    clearToastTimer();
+  }, 5000);
 }
 
 function commitSegmentTime(segment: EditableSegment, field: 'start' | 'end', event: FocusEvent) {
@@ -163,6 +191,28 @@ watch(
     }
   }
 );
+
+watch(
+  () => [props.errorMessage, props.statusMessage] as const,
+  ([errorMessage, statusMessage]) => {
+    if (errorMessage) {
+      showToast('error', errorMessage);
+      return;
+    }
+
+    if (statusMessage) {
+      showToast('status', statusMessage);
+      return;
+    }
+
+    dismissToast();
+  },
+  { immediate: true }
+);
+
+onBeforeUnmount(() => {
+  clearToastTimer();
+});
 </script>
 
 <template>
@@ -229,13 +279,6 @@ watch(
         <p>{{ formatTimestamp(pendingStart) }} captured. Press {{ pendingType === 'mute' ? 'M' : 'S' }} again to commit.</p>
       </div>
     </div>
-
-    <p v-if="errorMessage" class="feedback-card feedback-card-error" data-testid="error-message">
-      {{ errorMessage }}
-    </p>
-    <p v-else class="feedback-card feedback-card-quiet" data-testid="status-message">
-      {{ statusMessage }}
-    </p>
 
     <section class="segments-shell">
       <div class="panel-heading">
@@ -330,4 +373,31 @@ watch(
       </ul>
     </section>
   </aside>
+
+  <div class="toast-stack" aria-live="polite" aria-atomic="true">
+    <Transition name="toast" appear>
+      <div
+        v-if="activeToast"
+        :key="activeToast.key"
+        :class="[
+          'feedback-card',
+          'feedback-toast',
+          activeToast.kind === 'error' ? 'feedback-card-error' : 'feedback-card-quiet'
+        ]"
+        :data-testid="activeToast.kind === 'error' ? 'error-message' : 'status-message'"
+      >
+        <span class="feedback-toast-copy">{{ activeToast.message }}</span>
+        <button
+          type="button"
+          class="toast-dismiss-button"
+          data-testid="toast-dismiss"
+          aria-label="Dismiss notification"
+          title="Dismiss notification"
+          @click="dismissToast"
+        >
+          <PhX :size="14" />
+        </button>
+      </div>
+    </Transition>
+  </div>
 </template>

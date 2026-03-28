@@ -146,6 +146,30 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
   });
 
+  it('animates toast visibility, supports manual dismissal, and auto-dismisses after 5 seconds', async () => {
+    vi.useFakeTimers();
+
+    try {
+      const wrapper = mount(App);
+
+      expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Load a local video to begin annotating.');
+
+      await wrapper.get('[data-testid="toast-dismiss"]').trigger('click');
+      await nextTick();
+      expect(wrapper.find('[data-testid="status-message"]').exists()).toBe(false);
+
+      await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+      await nextTick();
+      expect(wrapper.get('[data-testid="error-message"]').text()).toContain('Load a video before marking a segment.');
+
+      await vi.advanceTimersByTimeAsync(5000);
+      await nextTick();
+      expect(wrapper.find('[data-testid="error-message"]').exists()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('creates, focuses, edits, and deletes a segment using toggle-based marking', async () => {
     const wrapper = mount(App);
     const video = await loadVideo(wrapper);

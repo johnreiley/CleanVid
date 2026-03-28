@@ -380,6 +380,59 @@ button {
   margin: 0;
 }
 
+.toast-stack {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 40;
+  width: min(24rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.feedback-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  box-shadow: 0 20px 45px -20px rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.feedback-toast-copy {
+  flex: 1 1 auto;
+}
+
+.toast-dismiss-button {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.toast-dismiss-button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-0.5rem) scale(0.97);
+}
+
 .feedback-card-error {
   color: #ffe0ec;
   background: rgba(76, 19, 49, 0.74);
