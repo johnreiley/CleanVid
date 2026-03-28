@@ -314,7 +314,8 @@ onBeforeUnmount(() => {
           <span class="transport-state">{{ isPlaying ? 'Playing' : 'Paused' }}</span>
           <span class="shortcut-pill">SPACE</span>
           <span class="shortcut-copy">Toggle</span>
-          <span class="shortcut-copy">Shift + Arrows fine seek</span>
+          <span class="shortcut-pill">Shift + Arrows</span>
+          <span class="shortcut-copy">Fine seek</span>
         </div>
       </div>
     </div>
