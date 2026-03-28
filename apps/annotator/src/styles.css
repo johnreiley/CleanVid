@@ -462,6 +462,26 @@ button {
   padding: 0;
   display: grid;
   gap: 0.8rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) rgba(15, 23, 42, 0.18);
+}
+
+.segment-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.segment-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.18);
+  border-radius: 999px;
+}
+
+.segment-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+}
+
+.segment-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.34);
 }
 
 .segment-card {
