@@ -2,8 +2,14 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { buildFilterGraph, processMedia } from './processor.js';
-import { probeMedia, runCommand } from './ffmpeg.js';
+import { createFfmpegProgressParser, probeMedia, runCommand } from './ffmpeg.js';
+import {
+  buildFilterGraph,
+  calculateProgressPercent,
+  getExpectedDurationSeconds,
+  processMedia,
+  type ProcessMediaProgressEvent
+} from './processor.js';
 
 const tempDirs: string[] = [];
 
@@ -97,6 +103,68 @@ describe('filter graph generation', () => {
   });
 });
 
+describe('ffmpeg progress parsing', () => {
+  it('parses chunked progress output across partial lines', () => {
+    const events: Array<ReturnType<typeof captureProgressEvent>> = [];
+    const parser = createFfmpegProgressParser((event) => {
+      events.push(captureProgressEvent(event));
+    });
+
+    parser.push('frame=10\nfps=24.0\nout_time=00:00:01.500000\nprogress=cont');
+    parser.push('inue\nframe=20\nout_time_us=2500000\nspeed=1.8x\nprogress=end\n');
+    parser.flush();
+
+    expect(events).toEqual([
+      {
+        progress: 'continue',
+        frame: 10,
+        fps: 24,
+        outTimeSeconds: 1.5,
+        speed: undefined
+      },
+      {
+        progress: 'end',
+        frame: 20,
+        fps: undefined,
+        outTimeSeconds: 2.5,
+        speed: '1.8x'
+      }
+    ]);
+  });
+
+  it('handles progress updates with missing optional fields', () => {
+    const events: Array<ReturnType<typeof captureProgressEvent>> = [];
+    const parser = createFfmpegProgressParser((event) => {
+      events.push(captureProgressEvent(event));
+    });
+
+    parser.push('out_time_ms=3000000\nprogress=end\n');
+
+    expect(events).toEqual([
+      {
+        progress: 'end',
+        frame: undefined,
+        fps: undefined,
+        outTimeSeconds: 3,
+        speed: undefined
+      }
+    ]);
+  });
+});
+
+describe('progress helpers', () => {
+  it('sums kept span duration and clamps progress percent', () => {
+    const totalDuration = getExpectedDurationSeconds([
+      { start: 0, end: 1, muteRanges: [] },
+      { start: 2, end: 4, muteRanges: [] }
+    ]);
+
+    expect(totalDuration).toBe(3);
+    expect(calculateProgressPercent(1.5, totalDuration)).toBe(0.5);
+    expect(calculateProgressPercent(10, totalDuration)).toBe(1);
+  });
+});
+
 describe('processor integration', () => {
   it('returns a clear error for invalid JSON', async () => {
     const directory = await createTempDir();
@@ -181,4 +249,60 @@ describe('processor integration', () => {
     expect(mediaInfo.duration).toBeLessThan(3.3);
     expect(silenceLog).toContain('silence_start: 0');
   });
+
+  it('emits stage and encode progress events while processing', async () => {
+    const directory = await createTempDir();
+    const inputPath = path.join(directory, 'input.mp4');
+    const filtersPath = path.join(directory, 'filters.json');
+    const outputPath = path.join(directory, 'output.mp4');
+    const events: ProcessMediaProgressEvent[] = [];
+
+    await createFixtureVideo(inputPath);
+    await writeFile(
+      filtersPath,
+      createFilterFile(4, [
+        { id: 'skip-1', type: 'skip', start: 1, end: 2 },
+        { id: 'mute-1', type: 'mute', start: 2, end: 3 }
+      ]),
+      'utf8'
+    );
+
+    await processMedia({
+      inputPath,
+      filtersPath,
+      outputPath,
+      onProgress: (event) => {
+        events.push(event);
+      }
+    });
+
+    const phases = events.map((event) => event.phase);
+    const encodeEvents = events.filter((event) => event.phase === 'encode' && event.percent !== undefined);
+
+    expect(phases).toContain('read-filters');
+    expect(phases).toContain('probe-media');
+    expect(phases).toContain('plan-timeline');
+    expect(phases).toContain('build-graph');
+    expect(phases).toContain('encode');
+    expect(phases.at(-1)).toBe('done');
+    expect(encodeEvents.length).toBeGreaterThan(0);
+    expect(encodeEvents.at(-1)?.percent).toBe(1);
+    expect(encodeEvents.every((event) => event.totalDurationSeconds === 3)).toBe(true);
+  });
 });
+
+function captureProgressEvent(event: {
+  progress: 'continue' | 'end';
+  frame?: number;
+  fps?: number;
+  outTimeSeconds?: number;
+  speed?: string;
+}) {
+  return {
+    progress: event.progress,
+    frame: event.frame,
+    fps: event.fps,
+    outTimeSeconds: event.outTimeSeconds,
+    speed: event.speed
+  };
+}

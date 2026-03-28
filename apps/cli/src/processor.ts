@@ -7,7 +7,26 @@ import {
   parseFilterFile,
   type KeptSpan
 } from '@cleanvid/shared';
-import { probeMedia, runCommand } from './ffmpeg.js';
+import { probeMedia, runFfmpegWithProgress } from './ffmpeg.js';
+
+export type ProcessMediaPhase =
+  | 'read-filters'
+  | 'probe-media'
+  | 'plan-timeline'
+  | 'build-graph'
+  | 'encode'
+  | 'done';
+
+export interface ProcessMediaProgressEvent {
+  phase: ProcessMediaPhase;
+  message: string;
+  percent?: number;
+  outTimeSeconds?: number;
+  totalDurationSeconds?: number;
+  speed?: string;
+  frame?: number;
+  fps?: number;
+}
 
 function formatSeconds(value: number): string {
   return value.toFixed(6).replace(/\.?0+$/, '');
@@ -78,14 +97,52 @@ export interface ProcessMediaOptions {
   inputPath: string;
   filtersPath: string;
   outputPath: string;
+  onProgress?: (event: ProcessMediaProgressEvent) => void;
+}
+
+function emitProgress(
+  onProgress: ProcessMediaOptions['onProgress'],
+  event: ProcessMediaProgressEvent
+) {
+  if (!onProgress) {
+    return;
+  }
+
+  try {
+    onProgress(event);
+  } catch {
+    // Progress reporting is best-effort and should not fail the processing pipeline.
+  }
+}
+
+export function getExpectedDurationSeconds(spans: KeptSpan[]): number {
+  return spans.reduce((total, span) => total + (span.end - span.start), 0);
+}
+
+export function calculateProgressPercent(outTimeSeconds: number, totalDurationSeconds: number): number {
+  if (!Number.isFinite(outTimeSeconds) || outTimeSeconds < 0 || totalDurationSeconds <= 0) {
+    return 0;
+  }
+
+  return Math.min(outTimeSeconds / totalDurationSeconds, 1);
 }
 
 export async function processMedia(options: ProcessMediaOptions): Promise<void> {
   const inputPath = path.resolve(options.inputPath);
   const filtersPath = path.resolve(options.filtersPath);
   const outputPath = path.resolve(options.outputPath);
+  const { onProgress } = options;
 
+  emitProgress(onProgress, {
+    phase: 'read-filters',
+    message: 'Reading filters...'
+  });
   const filterFile = await readFilterFile(filtersPath);
+
+  emitProgress(onProgress, {
+    phase: 'probe-media',
+    message: 'Probing media...'
+  });
   const mediaInfo = await probeMedia(inputPath);
 
   if (!mediaInfo.hasVideo) {
@@ -96,6 +153,10 @@ export async function processMedia(options: ProcessMediaOptions): Promise<void> 
     throw new Error('Input media must contain an audio stream.');
   }
 
+  emitProgress(onProgress, {
+    phase: 'plan-timeline',
+    message: 'Planning timeline...'
+  });
   const timeline = buildTimeline(filterFile.filters, mediaInfo.duration);
   const spans = buildKeptSpans(timeline);
 
@@ -103,6 +164,18 @@ export async function processMedia(options: ProcessMediaOptions): Promise<void> 
     throw new Error('Filters remove the entire movie. No output can be produced.');
   }
 
+  const skipCount = filterFile.filters.filter((segment) => segment.type === 'skip').length;
+  const muteCount = filterFile.filters.filter((segment) => segment.type === 'mute').length;
+  const expectedDurationSeconds = getExpectedDurationSeconds(spans);
+
+  emitProgress(onProgress, {
+    phase: 'plan-timeline',
+    message: `Timeline ready: ${skipCount} skip region${skipCount === 1 ? '' : 's'} removed, ${muteCount} mute region${muteCount === 1 ? '' : 's'} retained across ${spans.length} kept span${spans.length === 1 ? '' : 's'}.`
+  });
+  emitProgress(onProgress, {
+    phase: 'build-graph',
+    message: 'Building FFmpeg filter graph...'
+  });
   const filterComplex = buildFilterGraph(spans);
   const args = [
     '-y',
@@ -132,7 +205,31 @@ export async function processMedia(options: ProcessMediaOptions): Promise<void> 
   ];
 
   try {
-    await runCommand('ffmpeg', args);
+    emitProgress(onProgress, {
+      phase: 'encode',
+      message: 'Encoding output...'
+    });
+    await runFfmpegWithProgress(args, (event) => {
+      const outTimeSeconds = event.outTimeSeconds ?? 0;
+
+      emitProgress(onProgress, {
+        phase: 'encode',
+        message: 'Encoding output...',
+        percent:
+          event.progress === 'end'
+            ? 1
+            : calculateProgressPercent(outTimeSeconds, expectedDurationSeconds),
+        outTimeSeconds,
+        totalDurationSeconds: expectedDurationSeconds,
+        speed: event.speed,
+        frame: event.frame,
+        fps: event.fps
+      });
+    });
+    emitProgress(onProgress, {
+      phase: 'done',
+      message: 'Processing complete.'
+    });
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`FFmpeg processing failed: ${error.message}`);
