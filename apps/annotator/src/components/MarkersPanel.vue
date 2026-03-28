@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
-import { formatTimestamp } from '../time';
+import { formatTimestamp, parseTimestamp } from '../time';
 import PhSkipForward from '@phosphor-icons-vue-icons/PhSkipForward.vue.mjs';
 import PhMute from '@phosphor-icons-vue-icons/PhSpeakerSimpleX.vue.mjs';
+import PhTrash from '@phosphor-icons-vue-icons/PhTrash.vue.mjs';
 
 const emit = defineEmits<{
   activeTypeChange: [value: FilterType];
@@ -13,7 +14,6 @@ const emit = defineEmits<{
   selectSegment: [id: string | null];
   toggleMark: [value: FilterType];
   updateSegment: [payload: { id: string; field: 'start' | 'end'; value: string }];
-  updateSegmentType: [payload: { id: string; value: FilterType }];
 }>();
 
 const props = defineProps<{
@@ -41,38 +41,46 @@ function emitSelectedFile(event: Event) {
 }
 
 function formatSegmentType(type: FilterType): string {
-  return type === 'mute' ? 'Mute' : 'Skip';
+  return type === 'mute' ? 'MUTE' : 'SKIP';
 }
 
 function formatDuration(segment: EditableSegment): string {
   return `${Math.max(0, segment.end - segment.start).toFixed(1)}s`;
 }
 
-function emitSegmentType(id: string, event: Event) {
-  const value = (event.target as HTMLSelectElement).value;
+function readEditableText(target: EventTarget | null): string {
+  if (!(target instanceof HTMLElement)) {
+    return '';
+  }
 
-  if (value !== 'mute' && value !== 'skip') {
+  return (target.textContent ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function resetEditableText(target: EventTarget | null, value: string) {
+  if (target instanceof HTMLElement) {
+    target.textContent = value;
+  }
+}
+
+function commitSegmentTime(segment: EditableSegment, field: 'start' | 'end', event: FocusEvent) {
+  const parsed = parseTimestamp(readEditableText(event.target));
+
+  if (parsed === null) {
+    resetEditableText(event.target, formatTimestamp(segment[field]));
     return;
   }
 
-  emit('updateSegmentType', { id, value });
-}
-
-function emitSegmentNumber(id: string, field: 'start' | 'end', event: Event) {
   emit('updateSegment', {
-    id,
+    id: segment.id,
     field,
-    value: (event.target as HTMLInputElement).value
+    value: parsed.toString()
   });
+  resetEditableText(event.target, formatTimestamp(parsed));
 }
 
 function handleSegmentCard(segment: EditableSegment) {
   emit('selectSegment', segment.id);
   emit('seek', segment.start);
-}
-
-function closeSelectedSegment() {
-  emit('selectSegment', null);
 }
 
 function setActiveType(type: FilterType) {
@@ -86,6 +94,24 @@ function hasSelectedSegment(id: string): boolean {
 
 function isMarking(type: FilterType): boolean {
   return props.pendingType === type && props.pendingStart !== null;
+}
+
+function handleEditableKeydown(event: KeyboardEvent, fallbackValue: string) {
+  if (!(event.target instanceof HTMLElement)) {
+    return;
+  }
+
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    event.target.blur();
+    return;
+  }
+
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    resetEditableText(event.target, fallbackValue);
+    event.target.blur();
+  }
 }
 </script>
 
@@ -190,67 +216,64 @@ function isMarking(type: FilterType): boolean {
           :key="segment.id"
           :class="['segment-card', { 'segment-card-selected': hasSelectedSegment(segment.id) }]"
         >
-          <button type="button" class="segment-card-button" @click="handleSegmentCard(segment)">
-            <div class="segment-card-main">
-              <span :class="['type-pill', `type-pill-${segment.type}`]">{{ formatSegmentType(segment.type) }}</span>
+          <div class="segment-card-surface" @click="handleSegmentCard(segment)">
+            <div class="segment-card-top">
+              <div :class="['segment-card-type', `segment-card-type-${segment.type}`]">
+                <span class="segment-type-glyph">
+                  <PhMute v-if="segment.type === 'mute'" :size="14" weight="bold" />
+                  <PhSkipForward v-else :size="14" weight="bold" />
+                </span>
+                <span :class="['segment-type-label', `segment-type-label-${segment.type}`]">
+                  {{ formatSegmentType(segment.type) }}
+                </span>
+              </div>
+              <button
+                type="button"
+                class="segment-delete-button"
+                data-testid="segment-delete"
+                aria-label="Delete segment"
+                title="Delete segment"
+                @click.stop="emit('deleteSegment', segment.id)"
+              >
+                <PhTrash :size="16" />
+              </button>
+            </div>
+
+            <div class="segment-time-row">
+              <span
+                class="segment-editable-time"
+                data-testid="segment-start-edit"
+                contenteditable="true"
+                spellcheck="false"
+                role="textbox"
+                tabindex="0"
+                @click.stop
+                @focus="emit('selectSegment', segment.id)"
+                @blur="commitSegmentTime(segment, 'start', $event)"
+                @keydown="handleEditableKeydown($event, formatTimestamp(segment.start))"
+              >
+                {{ formatTimestamp(segment.start) }}
+              </span>
+              <span class="segment-range-separator">-&gt;</span>
+              <span
+                class="segment-editable-time"
+                data-testid="segment-end-edit"
+                contenteditable="true"
+                spellcheck="false"
+                role="textbox"
+                tabindex="0"
+                @click.stop
+                @focus="emit('selectSegment', segment.id)"
+                @blur="commitSegmentTime(segment, 'end', $event)"
+                @keydown="handleEditableKeydown($event, formatTimestamp(segment.end))"
+              >
+                {{ formatTimestamp(segment.end) }}
+              </span>
+            </div>
+
+            <div class="segment-card-meta">
               <span class="segment-duration">{{ formatDuration(segment) }}</span>
             </div>
-            <strong class="segment-time">{{ formatTimestamp(segment.start) }} -> {{ formatTimestamp(segment.end) }}</strong>
-          </button>
-
-          <div class="segment-card-footer">
-            <span class="segment-id">{{ segment.id }}</span>
-            <div class="segment-actions">
-              <button
-                v-if="hasSelectedSegment(segment.id)"
-                type="button"
-                class="text-button"
-                @click="closeSelectedSegment"
-              >
-                Done
-              </button>
-              <button
-                v-else
-                type="button"
-                class="text-button"
-                @click="emit('selectSegment', segment.id)"
-              >
-                Edit
-              </button>
-              <button type="button" class="text-button text-button-danger" @click="emit('deleteSegment', segment.id)">
-                Remove
-              </button>
-            </div>
-          </div>
-
-          <div v-if="hasSelectedSegment(segment.id)" class="detail-grid">
-            <label class="field">
-              <span>Type</span>
-              <select :value="segment.type" @change="emitSegmentType(segment.id, $event)">
-                <option value="mute">Mute</option>
-                <option value="skip">Skip</option>
-              </select>
-            </label>
-
-            <label class="field">
-              <span>Start</span>
-              <input
-                :value="Number.isFinite(segment.start) ? segment.start : ''"
-                type="number"
-                step="0.1"
-                @input="emitSegmentNumber(segment.id, 'start', $event)"
-              />
-            </label>
-
-            <label class="field">
-              <span>End</span>
-              <input
-                :value="Number.isFinite(segment.end) ? segment.end : ''"
-                type="number"
-                step="0.1"
-                @input="emitSegmentNumber(segment.id, 'end', $event)"
-              />
-            </label>
           </div>
         </li>
       </ul>

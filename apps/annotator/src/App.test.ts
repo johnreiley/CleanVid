@@ -45,6 +45,25 @@ function createPointerEvent(type: string, clientX: number, pointerId = 1) {
   return event;
 }
 
+async function editContentEditable(
+  wrapper: ReturnType<typeof mount>,
+  selector: string,
+  value: string,
+  index = 0
+) {
+  const editable = wrapper.findAll(selector)[index];
+  const element = editable.element as HTMLElement;
+
+  element.textContent = value;
+  element.dispatchEvent(new Event('focus'));
+  element.dispatchEvent(new Event('blur'));
+  await nextTick();
+}
+
+function getEditableText(wrapper: ReturnType<typeof mount>, selector: string, index = 0) {
+  return (wrapper.findAll(selector)[index]?.element as HTMLElement | undefined)?.textContent ?? '';
+}
+
 async function readBlobText(blob: Blob): Promise<string> {
   if (typeof blob.text === 'function') {
     return blob.text();
@@ -143,21 +162,17 @@ describe('annotator app', () => {
     await nextTick();
     await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
 
-    expect(wrapper.text()).toContain('00:10.000 -> 00:15.000');
-    expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]')).toBe('00:10.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-end-edit"]')).toBe('00:15.000');
+    await wrapper.get('.segment-card-surface').trigger('click');
+    expect(video.currentTime).toBe(10);
 
-    const doneButton = wrapper.findAll('.text-button').find((node) => node.text() === 'Done');
-    await doneButton?.trigger('click');
-    expect(wrapper.findAll('input[type="number"]')).toHaveLength(0);
+    await editContentEditable(wrapper, '[data-testid="segment-start-edit"]', '00:12.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]')).toBe('00:12.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-end-edit"]')).toBe('00:15.000');
+    expect(wrapper.text()).toContain('MUTE');
 
-    await wrapper.get('.segment-card-button').trigger('click');
-    expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
-
-    const startInput = wrapper.findAll('input[type="number"]')[0];
-    await startInput.setValue('12');
-    expect(wrapper.text()).toContain('00:12.000 -> 00:15.000');
-
-    await wrapper.get('.text-button-danger').trigger('click');
+    await wrapper.get('[data-testid="segment-delete"]').trigger('click');
     expect(wrapper.text()).toContain('Timeline is empty');
   });
 
@@ -175,8 +190,7 @@ describe('annotator app', () => {
     await nextTick();
     await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
 
-    const startInput = wrapper.findAll('input[type="number"]')[0];
-    await startInput.setValue('35');
+    await editContentEditable(wrapper, '[data-testid="segment-start-edit"]', '00:35.000');
 
     expect(wrapper.get('[data-testid="validation-summary"]').text()).toContain('issue');
   });
@@ -229,7 +243,8 @@ describe('annotator app', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.text()).toContain('00:20.000 -> 00:30.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]')).toBe('00:20.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-end-edit"]')).toBe('00:30.000');
 
     video.currentTime = 40;
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
@@ -240,7 +255,7 @@ describe('annotator app', () => {
     await wrapper.vm.$nextTick();
     expect(video.currentTime).toBeCloseTo(35.1, 4);
 
-    await wrapper.get('.segment-card-button').trigger('click');
+    await wrapper.get('.segment-card-surface').trigger('click');
     expect(video.currentTime).toBe(20);
 
     const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;

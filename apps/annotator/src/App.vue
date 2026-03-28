@@ -12,10 +12,6 @@ function handleActiveTypeChange(value: FilterType) {
   annotator.activeType = value;
 }
 
-function handleSegmentTypeUpdate(payload: { id: string; value: FilterType }) {
-  annotator.updateSegmentType(payload.id, payload.value);
-}
-
 function handleSegmentUpdate(payload: { id: string; field: 'start' | 'end'; value: string }) {
   annotator.updateSegment(payload.id, payload.field, payload.value);
 }
@@ -49,7 +45,6 @@ onBeforeUnmount(() => {
         @toggle-mark="annotator.toggleMark"
         @seek="annotator.seekTo"
         @select-segment="annotator.selectSegment"
-        @update-segment-type="handleSegmentTypeUpdate"
         @update-segment="handleSegmentUpdate"
         @delete-segment="annotator.deleteSegment"
       />
