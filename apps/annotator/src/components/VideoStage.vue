@@ -14,6 +14,7 @@ const emit = defineEmits<{
   playStateChange: [video: HTMLVideoElement];
   seek: [deltaSeconds: number];
   seekTo: [seconds: number];
+  selectSegment: [id: string];
   timeUpdate: [video: HTMLVideoElement];
   togglePlayback: [];
   videoSelected: [file: File];
@@ -170,6 +171,11 @@ function handleTimelineClick(event: MouseEvent) {
   seekTimeline(event.clientX);
 }
 
+function handleTimelineSegmentClick(segment: EditableSegment) {
+  emit('selectSegment', segment.id);
+  emit('seekTo', segment.start);
+}
+
 function emitSelectedVideo(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -256,7 +262,10 @@ onBeforeUnmount(() => {
             v-for="segment in sortedSegments"
             :key="segment.id"
             :class="['timeline-segment', `timeline-segment-${segment.type}`]"
+            data-testid="timeline-segment"
             :style="getSegmentStyle(segment)"
+            @pointerdown.stop
+            @click.stop="handleTimelineSegmentClick(segment)"
           />
           <span class="timeline-caret" data-testid="timeline-caret" :style="{ left: `${progressPercent}%` }">
             <span class="timeline-caret-line" />

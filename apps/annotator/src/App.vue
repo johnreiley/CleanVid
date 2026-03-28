@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
-import { onBeforeUnmount, onMounted, proxyRefs } from 'vue';
+import { onBeforeUnmount, onMounted, proxyRefs, ref } from 'vue';
 import AnnotatorTopBar from './components/AnnotatorTopBar.vue';
 import MarkersPanel from './components/MarkersPanel.vue';
 import VideoStage from './components/VideoStage.vue';
 import { useAnnotatorState } from './composables/useAnnotatorState';
 
 const annotator = proxyRefs(useAnnotatorState());
+const segmentScrollKey = ref(0);
 
 function handleActiveTypeChange(value: FilterType) {
   annotator.activeType = value;
@@ -14,6 +15,11 @@ function handleActiveTypeChange(value: FilterType) {
 
 function handleSegmentUpdate(payload: { id: string; field: 'start' | 'end'; value: string }) {
   annotator.updateSegment(payload.id, payload.field, payload.value);
+}
+
+function handleTimelineSegmentSelect(id: string) {
+  annotator.selectSegment(id);
+  segmentScrollKey.value += 1;
 }
 
 onMounted(() => {
@@ -36,6 +42,7 @@ onBeforeUnmount(() => {
         :pending-start="annotator.pendingStart"
         :pending-type="annotator.pendingType"
         :pending-type-label="annotator.pendingTypeLabel"
+        :selection-scroll-key="segmentScrollKey"
         :segment-issues="annotator.segmentIssues"
         :selected-segment-id="annotator.selectedSegmentId"
         :sorted-segments="annotator.sortedSegments"
@@ -73,6 +80,7 @@ onBeforeUnmount(() => {
           @toggle-playback="annotator.togglePlayback"
           @seek="annotator.seekBy"
           @seek-to="annotator.seekTo"
+          @select-segment="handleTimelineSegmentSelect"
           @video-selected="annotator.loadVideoFile"
         />
       </section>

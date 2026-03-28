@@ -326,6 +326,44 @@ describe('annotator app', () => {
     await wrapper.get('[aria-label="Play video"]').trigger('click');
     expect(playMock).toHaveBeenCalled();
   });
+
+  it('scrolls to and highlights the matching segment when a timeline segment is clicked', async () => {
+    const wrapper = mount(App);
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 10;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 15;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 36;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+    await nextTick();
+
+    const segmentCards = wrapper.findAll('.segment-card');
+    const scrollIntoView = vi.fn();
+    (segmentCards[1]?.element as HTMLElement).scrollIntoView = scrollIntoView;
+
+    await wrapper.findAll('[data-testid="timeline-segment"]')[1]?.trigger('click');
+    await nextTick();
+    await nextTick();
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+    expect(segmentCards[1]?.classes()).toContain('segment-card-selected');
+    expect(video.currentTime).toBe(30);
+  });
 });
 
 afterEach(() => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, ref, watch, type ComponentPublicInstance } from 'vue';
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp, parseTimestamp } from '../time';
@@ -24,6 +24,7 @@ const props = defineProps<{
   pendingStart: number | null;
   pendingType: FilterType | null;
   pendingTypeLabel: string;
+  selectionScrollKey: number;
   segmentIssues: SegmentIssue[];
   selectedSegmentId: string | null;
   sortedSegments: EditableSegment[];
@@ -31,6 +32,7 @@ const props = defineProps<{
 }>();
 
 const segmentList = ref<HTMLElement | null>(null);
+const segmentCards = new Map<string, HTMLElement>();
 
 function emitSelectedFile(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -117,6 +119,20 @@ function handleEditableKeydown(event: KeyboardEvent, fallbackValue: string) {
   }
 }
 
+function registerSegmentCard(id: string, element: Element | ComponentPublicInstance | null) {
+  if (element instanceof HTMLElement) {
+    segmentCards.set(id, element);
+    return;
+  }
+
+  if (element && '$el' in element && element.$el instanceof HTMLElement) {
+    segmentCards.set(id, element.$el);
+    return;
+  }
+
+  segmentCards.delete(id);
+}
+
 watch(
   () => props.sortedSegments.length,
   async (nextLength, previousLength) => {
@@ -128,6 +144,22 @@ watch(
 
     if (segmentList.value) {
       segmentList.value.scrollTop = segmentList.value.scrollHeight;
+    }
+  }
+);
+
+watch(
+  [() => props.selectedSegmentId, () => props.selectionScrollKey],
+  async ([selectedSegmentId]) => {
+    if (!selectedSegmentId) {
+      return;
+    }
+
+    await nextTick();
+    const segmentCard = segmentCards.get(selectedSegmentId);
+
+    if (segmentCard && typeof segmentCard.scrollIntoView === 'function') {
+      segmentCard.scrollIntoView({ block: 'nearest' });
     }
   }
 );
@@ -232,6 +264,7 @@ watch(
         <li
           v-for="segment in sortedSegments"
           :key="segment.id"
+          :ref="(element) => registerSegmentCard(segment.id, element)"
           :class="['segment-card', { 'segment-card-selected': hasSelectedSegment(segment.id) }]"
         >
           <div class="segment-card-surface" @click="handleSegmentCard(segment)">
