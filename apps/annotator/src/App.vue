@@ -41,7 +41,6 @@ onBeforeUnmount(() => {
         :marker-count-label="annotator.markerCountLabel"
         :pending-start="annotator.pendingStart"
         :pending-type="annotator.pendingType"
-        :pending-type-label="annotator.pendingTypeLabel"
         :selection-scroll-key="segmentScrollKey"
         :segment-issues="annotator.segmentIssues"
         :selected-segment-id="annotator.selectedSegmentId"

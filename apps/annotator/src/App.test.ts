@@ -179,7 +179,7 @@ describe('annotator app', () => {
     await nextTick();
     await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
 
-    expect(wrapper.get('[data-testid="marking-indicator"]').text()).toContain('Mute marking live');
+    expect(wrapper.get('[data-testid="toggle-mute"]').text()).toContain('Close active mute range');
 
     video.currentTime = 15;
     video.dispatchEvent(new Event('timeupdate'));

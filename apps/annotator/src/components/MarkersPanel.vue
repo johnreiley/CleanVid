@@ -24,7 +24,6 @@ const props = defineProps<{
   markerCountLabel: string;
   pendingStart: number | null;
   pendingType: FilterType | null;
-  pendingTypeLabel: string;
   selectionScrollKey: number;
   segmentIssues: SegmentIssue[];
   selectedSegmentId: string | null;
@@ -237,7 +236,7 @@ onBeforeUnmount(() => {
     <section class="quick-actions">
       <button
         type="button"
-        :class="['action-tile', 'action-tile-mute', { 'action-tile-active': isMarking('mute') || activeType === 'mute' }]"
+        :class="['action-tile', 'action-tile-mute', { 'action-tile-active': isMarking('mute') }]"
         data-testid="toggle-mute"
         @click="setActiveType('mute')"
       >
@@ -253,7 +252,7 @@ onBeforeUnmount(() => {
 
       <button
         type="button"
-        :class="['action-tile', 'action-tile-skip', { 'action-tile-active': isMarking('skip') || activeType === 'skip' }]"
+        :class="['action-tile', 'action-tile-skip', { 'action-tile-active': isMarking('skip') }]"
         data-testid="toggle-skip"
         @click="setActiveType('skip')"
       >
@@ -267,18 +266,6 @@ onBeforeUnmount(() => {
         <span class="action-plus">{{ isMarking('skip') ? '•' : '+' }}</span>
       </button>
     </section>
-
-    <div
-      v-if="pendingStart !== null && pendingType !== null"
-      class="marking-indicator"
-      data-testid="marking-indicator"
-    >
-      <span :class="['marking-pulse', `marking-pulse-${pendingType}`]" />
-      <div>
-        <strong>{{ pendingTypeLabel }} marking live</strong>
-        <p>{{ formatTimestamp(pendingStart) }} captured. Press {{ pendingType === 'mute' ? 'M' : 'S' }} again to commit.</p>
-      </div>
-    </div>
 
     <section class="segments-shell">
       <div class="panel-heading">
