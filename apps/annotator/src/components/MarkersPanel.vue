@@ -116,7 +116,7 @@ function isMarking(type: FilterType): boolean {
         @click="setActiveType('mute')"
       >
         <span class="action-glyph">
-          <PhMute :size="20" />
+          <PhMute :size="20" weight="bold" />
         </span>
         <span class="action-copy">
           <strong>Mute Segment</strong>
@@ -132,7 +132,7 @@ function isMarking(type: FilterType): boolean {
         @click="setActiveType('skip')"
       >
         <span class="action-glyph">
-          <PhSkipForward :size="20" />
+          <PhSkipForward :size="20" weight="bold" />
         </span>
         <span class="action-copy">
           <strong>Skip Segment</strong>
