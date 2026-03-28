@@ -1,0 +1,31 @@
+{
+  "name": "cleanvid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@9.5.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build:shared && npm run build:cli && npm run build:annotator",
+    "build:shared": "npm --workspace @cleanvid/shared run build",
+    "build:cli": "npm --workspace @cleanvid/cli run build",
+    "build:annotator": "npm --workspace @cleanvid/annotator run build",
+    "dev:annotator": "npm --workspace @cleanvid/annotator run dev",
+    "dev:cli": "npm --workspace @cleanvid/cli run dev",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/compiler-sfc": "^3.5.13",
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.3.1",
+    "vitest": "^3.1.1",
+    "vue-tsc": "^2.2.8"
+  }
+}
