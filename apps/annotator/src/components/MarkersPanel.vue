@@ -225,15 +225,12 @@ onBeforeUnmount(() => {
         @click="setActiveType('mute')"
       >
         <span class="action-glyph">
-          <PhMute :size="20" weight="bold" />
+          <PhMute :size="28" weight="bold" />
         </span>
         <span class="action-copy">
-          <strong>Mute Segment</strong>
-          <span class="action-subtext">
-            {{ isMarking('mute') ? 'Close active mute range' : 'Hotkey [M]' }}
-          </span>
+          <strong>Mute Range</strong>
+          <span class="action-subtext">Hotkey [M]</span>
         </span>
-        <span class="action-plus">{{ isMarking('mute') ? '•' : '+' }}</span>
       </button>
 
       <button
@@ -243,15 +240,12 @@ onBeforeUnmount(() => {
         @click="setActiveType('skip')"
       >
         <span class="action-glyph">
-          <PhSkipForward :size="20" weight="bold" />
+          <PhSkipForward :size="28" weight="bold" />
         </span>
         <span class="action-copy">
-          <strong>Skip Segment</strong>
-          <span class="action-subtext">
-            {{ isMarking('skip') ? 'Close active skip range' : 'Hotkey [S]' }}
-          </span>
+          <strong>Skip Range</strong>
+          <span class="action-subtext">Hotkey [S]</span>
         </span>
-        <span class="action-plus">{{ isMarking('skip') ? '•' : '+' }}</span>
       </button>
     </section>
 
