@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue';
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp, parseTimestamp } from '../time';
@@ -28,6 +29,8 @@ const props = defineProps<{
   sortedSegments: EditableSegment[];
   statusMessage: string;
 }>();
+
+const segmentList = ref<HTMLElement | null>(null);
 
 function emitSelectedFile(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -113,6 +116,21 @@ function handleEditableKeydown(event: KeyboardEvent, fallbackValue: string) {
     event.target.blur();
   }
 }
+
+watch(
+  () => props.sortedSegments.length,
+  async (nextLength, previousLength) => {
+    if (nextLength === 0 || nextLength <= previousLength) {
+      return;
+    }
+
+    await nextTick();
+
+    if (segmentList.value) {
+      segmentList.value.scrollTop = segmentList.value.scrollHeight;
+    }
+  }
+);
 </script>
 
 <template>
@@ -210,7 +228,7 @@ function handleEditableKeydown(event: KeyboardEvent, fallbackValue: string) {
         <p>Timeline is empty</p>
       </div>
 
-      <ul v-else class="segment-list" data-testid="segment-list">
+      <ul v-else ref="segmentList" class="segment-list" data-testid="segment-list">
         <li
           v-for="segment in sortedSegments"
           :key="segment.id"
