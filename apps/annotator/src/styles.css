@@ -661,7 +661,7 @@ button {
 }
 
 .segment-delete-button:hover {
-  color: #f8fafc;
+  color: #da4545;
   background: rgba(148, 163, 184, 0.08);
 }
 
