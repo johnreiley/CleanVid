@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import PhExport from '@phosphor-icons-vue-icons/PhUploadSimple.vue.mjs';
-// import PhLightning from '@phosphor-icons-vue-icons/PhLightning.vue.mjs';
 import PhSprayBottle from '@phosphor-icons-vue-icons/PhSprayBottle.vue.mjs';
 
 defineEmits<{

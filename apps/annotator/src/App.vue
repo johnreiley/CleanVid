@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
 import { onBeforeUnmount, onMounted, proxyRefs, ref } from 'vue';
-import AnnotatorTopBar from './components/AnnotatorTopBar.vue';
-import MarkersPanel from './components/MarkersPanel.vue';
-import VideoStage from './components/VideoStage.vue';
+import AnnotatorTopBar from './components/annotator/top-bar/AnnotatorTopBar.vue';
+import MarkersPanel from './components/annotator/markers-panel/MarkersPanel.vue';
+import VideoStage from './components/annotator/video-stage/VideoStage.vue';
 import { useAnnotatorState } from './composables/useAnnotatorState';
 
 const annotator = proxyRefs(useAnnotatorState());
