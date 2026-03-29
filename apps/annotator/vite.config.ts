@@ -46,6 +46,7 @@ export interface ProcessRequestBody {
 
 export interface ProcessResult {
   outputPath: string;
+  filtersPath: string;
   message: string;
 }
 
@@ -58,6 +59,7 @@ interface ProcessRequestDependencies {
   ensureInputExists: (inputPath: string) => Promise<void>;
   createTempFilterFile: (content: string) => Promise<TempFilterFile>;
   processMediaImpl: (options: ProcessMediaOptions) => Promise<void>;
+  writeExportedFilterFile: (outputPath: string, content: string) => Promise<string>;
 }
 
 interface OpenVideoDependencies {
@@ -92,6 +94,15 @@ export function deriveDefaultOutputPath(inputPath: string): string {
   return path.join(parsed.dir, suffix);
 }
 
+export function deriveExportedFiltersPath(outputPath: string): string {
+  const parsed = path.parse(path.resolve(outputPath));
+  const outputBaseName = EXPORTABLE_MEDIA_EXTENSIONS.has(parsed.ext.toLowerCase())
+    ? parsed.name
+    : parsed.base;
+  const suffix = `${outputBaseName}.filters.json`;
+  return path.join(parsed.dir, suffix);
+}
+
 async function ensureInputExists(inputPath: string) {
   try {
     await access(path.resolve(inputPath));
@@ -113,11 +124,18 @@ async function createTempFilterFile(content: string): Promise<TempFilterFile> {
   };
 }
 
+async function writeExportedFilterFile(outputPath: string, content: string): Promise<string> {
+  const filtersPath = deriveExportedFiltersPath(outputPath);
+  await writeFile(filtersPath, content, 'utf8');
+  return filtersPath;
+}
+
 function getDefaultProcessRequestDependencies(): ProcessRequestDependencies {
   return {
     ensureInputExists,
     createTempFilterFile,
-    processMediaImpl: processMedia
+    processMediaImpl: processMedia,
+    writeExportedFilterFile
   };
 }
 
@@ -135,6 +153,17 @@ const MEDIA_CONTENT_TYPES: Record<string, string> = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm'
 };
+const EXPORTABLE_MEDIA_EXTENSIONS = new Set([
+  '.avi',
+  '.m4v',
+  '.mkv',
+  '.mov',
+  '.mp4',
+  '.mpeg',
+  '.mpg',
+  '.webm',
+  '.wmv'
+]);
 
 const defaultPlaybackRegistry = createPlaybackRegistry();
 
@@ -394,6 +423,7 @@ export async function handleProcessRequest(
     filters: request.filters
   });
   const tempFilterFile = await dependencies.createTempFilterFile(filterFileContent);
+  let exportedFiltersPath = '';
 
   try {
     await dependencies.processMediaImpl({
@@ -401,12 +431,17 @@ export async function handleProcessRequest(
       filtersPath: tempFilterFile.filtersPath,
       outputPath: resolvedOutputPath
     });
+    exportedFiltersPath = await dependencies.writeExportedFilterFile(
+      resolvedOutputPath,
+      filterFileContent
+    );
   } finally {
     await tempFilterFile.cleanup();
   }
 
   return {
     outputPath: resolvedOutputPath,
+    filtersPath: exportedFiltersPath,
     message: `Processed video to ${resolvedOutputPath}.`
   };
 }

@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createPlaybackRegistry,
   deriveDefaultOutputPath,
+  deriveExportedFiltersPath,
   handleMediaRequest,
   handleOpenVideoRequest,
   handleProcessRequest
@@ -140,7 +141,8 @@ describe('annotator vite api helpers', () => {
             filtersPath: 'filters.json',
             cleanup: async () => undefined
           }),
-          processMediaImpl: async () => undefined
+          processMediaImpl: async () => undefined,
+          writeExportedFilterFile: async () => 'filters-output.json'
         }
       )
     ).rejects.toThrow('inputPath is required.');
@@ -157,13 +159,14 @@ describe('annotator vite api helpers', () => {
             filtersPath: 'filters.json',
             cleanup: async () => undefined
           }),
-          processMediaImpl: async () => undefined
+          processMediaImpl: async () => undefined,
+          writeExportedFilterFile: async () => 'filters-output.json'
         }
       )
     ).rejects.toThrow('filters[0].id must be a non-empty string.');
   });
 
-  it('creates a temp filter file, derives output paths, and always cleans up', async () => {
+  it('creates a temp filter file, derives output paths, exports sibling filter json, and always cleans up', async () => {
     const cleanup = vi.fn(async () => undefined);
     const ensureInputExists = vi.fn(async () => undefined);
     const createTempFilterFile = vi.fn(async (content: string) => {
@@ -174,6 +177,7 @@ describe('annotator vite api helpers', () => {
       };
     });
     const processMediaImpl = vi.fn(async () => undefined);
+    const writeExportedFilterFile = vi.fn(async () => 'C:\\Movies\\movie.cleaned.filters.json');
 
     await expect(
       handleProcessRequest(
@@ -184,11 +188,13 @@ describe('annotator vite api helpers', () => {
         {
           ensureInputExists,
           createTempFilterFile,
-          processMediaImpl
+          processMediaImpl,
+          writeExportedFilterFile
         }
       )
     ).resolves.toEqual({
       outputPath: 'C:\\Movies\\movie.cleaned.mkv',
+      filtersPath: 'C:\\Movies\\movie.cleaned.filters.json',
       message: 'Processed video to C:\\Movies\\movie.cleaned.mkv.'
     });
 
@@ -198,9 +204,14 @@ describe('annotator vite api helpers', () => {
       filtersPath: 'C:\\Temp\\filters.json',
       outputPath: 'C:\\Movies\\movie.cleaned.mkv'
     });
+    expect(writeExportedFilterFile).toHaveBeenCalledWith(
+      'C:\\Movies\\movie.cleaned.mkv',
+      expect.stringContaining('"type": "skip"')
+    );
     expect(cleanup).toHaveBeenCalledTimes(1);
 
     cleanup.mockClear();
+    writeExportedFilterFile.mockClear();
 
     await expect(
       handleProcessRequest(
@@ -211,6 +222,7 @@ describe('annotator vite api helpers', () => {
         {
           ensureInputExists,
           createTempFilterFile,
+          writeExportedFilterFile,
           processMediaImpl: async () => {
             throw new Error('boom');
           }
@@ -218,7 +230,17 @@ describe('annotator vite api helpers', () => {
       )
     ).rejects.toThrow('boom');
 
+    expect(writeExportedFilterFile).not.toHaveBeenCalled();
     expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it('derives the exported filters path beside the processed video', () => {
+    expect(deriveExportedFiltersPath('C:\\Movies\\movie.cleaned.mp4')).toBe(
+      'C:\\Movies\\movie.cleaned.filters.json'
+    );
+    expect(deriveExportedFiltersPath('C:\\Exports\\movie.cleaned')).toBe(
+      'C:\\Exports\\movie.cleaned.filters.json'
+    );
   });
 
   it('serves byte ranges through the media endpoint', async () => {
