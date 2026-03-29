@@ -279,8 +279,20 @@ button {
 
 .subtle-action {
   position: relative;
+  min-height: 2.2rem;
+  padding: 0.38rem 0.65rem;
   font-size: 0.82rem;
   color: var(--text-primary);
+}
+
+.subtle-action-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.subtle-action-disabled .visually-hidden-input {
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
 .visually-hidden-input {

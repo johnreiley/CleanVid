@@ -5,6 +5,7 @@ const emit = defineEmits<{
 }>();
 
 defineProps<{
+  canImportFilters: boolean;
   isOpeningVideo: boolean;
 }>();
 
@@ -37,13 +38,14 @@ function emitSelectedFile(event: Event) {
         {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
       </button>
 
-      <label class="subtle-action">
+      <label :class="['subtle-action', { 'subtle-action-disabled': !canImportFilters }]">
         <span>Import Filters</span>
         <input
           data-testid="filters-input"
           class="visually-hidden-input"
           type="file"
           accept="application/json,.json"
+          :disabled="!canImportFilters"
           @change="emitSelectedFile"
         />
       </label>

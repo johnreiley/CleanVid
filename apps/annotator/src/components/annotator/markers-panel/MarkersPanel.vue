@@ -146,6 +146,7 @@ onBeforeUnmount(() => {
 
     <div v-if="currentMode === 'media'" class="sidebar-mode-panel" data-testid="mode-panel-media">
       <SessionActions
+        :can-import-filters="hasLoadedVideo"
         :is-opening-video="isOpeningVideo"
         @filters-selected="emit('filtersSelected', $event)"
         @open-video="emit('openVideo')"

@@ -284,11 +284,13 @@ describe('annotator app', () => {
     const wrapper = mount(App);
 
     expect(wrapper.find('[data-testid="loaded-video-name"]').exists()).toBe(false);
+    expect((wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement).disabled).toBe(true);
 
     await openVideo(wrapper);
     await switchMode(wrapper, 'media');
 
     expect(wrapper.get('[data-testid="loaded-video-name"]').text()).toContain('movie.mp4');
+    expect((wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement).disabled).toBe(false);
 
     await switchMode(wrapper, 'annotate');
     expect(wrapper.get('[data-testid="mode-panel-annotate"]').text()).toContain('Actions');
