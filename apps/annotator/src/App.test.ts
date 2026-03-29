@@ -5,9 +5,11 @@ import { nextTick } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App.vue';
 
+const originalFetch = globalThis.fetch;
 const originalCreateObjectURL = URL.createObjectURL;
 const originalRevokeObjectURL = URL.revokeObjectURL;
 let lastExportBlob: Blob | null = null;
+let fetchMock: ReturnType<typeof vi.fn>;
 const playMock = vi.fn(async function play(this: HTMLVideoElement) {
   Object.defineProperty(this, 'paused', {
     configurable: true,
@@ -32,6 +34,27 @@ function flushPromises() {
   return new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
+}
+
+function mockJsonResponse(body: unknown, init: ResponseInit = {}) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    ...init
+  });
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
 }
 
 function createPointerEvent(type: string, clientX: number, pointerId = 1) {
@@ -118,6 +141,7 @@ beforeEach(() => {
   lastExportBlob = null;
   playMock.mockClear();
   pauseMock.mockClear();
+  fetchMock = vi.fn(() => Promise.reject(new Error('Unexpected fetch request.')));
 
   URL.createObjectURL = vi.fn((value: Blob | MediaSource) => {
     blobCounter += 1;
@@ -129,6 +153,7 @@ beforeEach(() => {
       : `blob:video-${blobCounter}`;
   });
   URL.revokeObjectURL = vi.fn();
+  globalThis.fetch = fetchMock as typeof fetch;
   HTMLMediaElement.prototype.play = playMock;
   HTMLMediaElement.prototype.pause = pauseMock;
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
@@ -155,6 +180,49 @@ describe('annotator app', () => {
 
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
     expect(wrapper.get('[data-testid="preview-toggle"]').text()).toContain('Preview On');
+  });
+
+  it('links a file for processing and keeps it when the picker is cancelled', async () => {
+    const wrapper = mount(App);
+
+    fetchMock
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          cancelled: false,
+          path: 'C:\\Movies\\movie.mp4',
+          name: 'movie.mp4'
+        })
+      )
+      .mockResolvedValueOnce(mockJsonResponse({ cancelled: true }));
+
+    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
+      true
+    );
+
+    await wrapper.get('[data-testid="link-file-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="linked-file-summary"]').text()).toContain('movie.mp4');
+    expect(wrapper.get('[data-testid="linked-file-summary"]').attributes('title')).toBe(
+      'C:\\Movies\\movie.mp4'
+    );
+    expect((wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement).value).toBe(
+      'C:\\Movies\\movie.cleaned.mp4'
+    );
+    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
+      false
+    );
+
+    await wrapper.get('[data-testid="link-file-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="linked-file-summary"]').attributes('title')).toBe(
+      'C:\\Movies\\movie.mp4'
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/select-file', undefined);
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/select-file', undefined);
   });
 
   it('animates toast visibility, supports manual dismissal, and auto-dismisses after 5 seconds', async () => {
@@ -209,6 +277,119 @@ describe('annotator app', () => {
 
     await wrapper.get('[data-testid="segment-delete"]').trigger('click');
     expect(wrapper.text()).toContain('Timeline is empty');
+  });
+
+  it('processes the linked video, disables processing while busy or invalid, and sends the expected payload', async () => {
+    const wrapper = mount(App);
+
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: false,
+        path: 'C:\\Movies\\movie.mp4',
+        name: 'movie.mp4'
+      })
+    );
+
+    await wrapper.get('[data-testid="link-file-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    const outputInput = wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement;
+    outputInput.value = 'C:\\Exports\\custom-output.mp4';
+    outputInput.dispatchEvent(new Event('input'));
+    await nextTick();
+
+    const processRequest = createDeferred<Response>();
+    fetchMock.mockReturnValueOnce(processRequest.promise);
+
+    await wrapper.get('[data-testid="process-video-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="process-video-button"]').text()).toContain('Processing...');
+    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
+      true
+    );
+
+    processRequest.resolve(
+      mockJsonResponse({
+        outputPath: 'C:\\Exports\\custom-output.mp4',
+        message: 'Processed video to C:\\Exports\\custom-output.mp4.'
+      })
+    );
+    await flushPromises();
+    await nextTick();
+
+    const [, processInit] = fetchMock.mock.calls[1] as [string, RequestInit];
+    const processBody = JSON.parse(String(processInit.body)) as {
+      inputPath: string;
+      outputPath: string;
+      filters: Array<{ id: string; type: string; start: number; end: number }>;
+    };
+
+    expect(processInit.method).toBe('POST');
+    expect(processBody.inputPath).toBe('C:\\Movies\\movie.mp4');
+    expect(processBody.outputPath).toBe('C:\\Exports\\custom-output.mp4');
+    expect(processBody.filters).toEqual([]);
+    expect(wrapper.get('[data-testid="status-message"]').text()).toContain(
+      'Processed video to C:\\Exports\\custom-output.mp4.'
+    );
+    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
+      false
+    );
+
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    await editContentEditable(wrapper, '[data-testid="segment-start-edit"]', '00:35.000');
+
+    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
+      true
+    );
+  });
+
+  it('shows processing failures and resets the processing state', async () => {
+    const wrapper = mount(App);
+
+    fetchMock
+      .mockResolvedValueOnce(
+        mockJsonResponse({
+          cancelled: false,
+          path: 'C:\\Movies\\movie.mp4',
+          name: 'movie.mp4'
+        })
+      )
+      .mockResolvedValueOnce(
+        mockJsonResponse(
+          {
+            message: 'FFmpeg processing failed: boom'
+          },
+          { status: 500 }
+        )
+      );
+
+    await wrapper.get('[data-testid="link-file-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    await wrapper.get('[data-testid="process-video-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="error-message"]').text()).toContain(
+      'FFmpeg processing failed: boom'
+    );
+    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
+      false
+    );
   });
 
   it('shows validation feedback when a selected segment becomes invalid', async () => {
@@ -567,6 +748,7 @@ describe('annotator app', () => {
 });
 
 afterEach(() => {
+  globalThis.fetch = originalFetch;
   URL.createObjectURL = originalCreateObjectURL;
   URL.revokeObjectURL = originalRevokeObjectURL;
   vi.restoreAllMocks();

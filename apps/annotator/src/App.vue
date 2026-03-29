@@ -17,6 +17,10 @@ function handleSegmentUpdate(payload: { id: string; field: 'start' | 'end'; valu
   annotator.updateSegment(payload.id, payload.field, payload.value);
 }
 
+function handleOutputPathUpdate(value: string) {
+  annotator.updateOutputPath(value);
+}
+
 function handleTimelineSegmentSelect(id: string) {
   annotator.selectSegment(id);
   segmentScrollKey.value += 1;
@@ -37,8 +41,13 @@ onBeforeUnmount(() => {
     <main class="workspace" data-testid="workspace">
       <MarkersPanel
         :active-type="annotator.activeType"
+        :can-process-video="annotator.canProcessVideo"
         :error-message="annotator.errorMessage"
+        :is-processing="annotator.isProcessing"
+        :linked-input-name="annotator.linkedInputName"
+        :linked-input-path="annotator.linkedInputPath"
         :marker-count-label="annotator.markerCountLabel"
+        :output-path="annotator.outputPath"
         :pending-start="annotator.pendingStart"
         :pending-type="annotator.pendingType"
         :selection-scroll-key="segmentScrollKey"
@@ -48,9 +57,12 @@ onBeforeUnmount(() => {
         :status-message="annotator.statusMessage"
         @active-type-change="handleActiveTypeChange"
         @filters-selected="annotator.loadFilterFile"
+        @link-input-file="annotator.linkInputFile"
+        @process-linked-video="annotator.processLinkedVideo"
         @toggle-mark="annotator.toggleMark"
         @seek="annotator.seekTo"
         @select-segment="annotator.selectSegment"
+        @update-output-path="handleOutputPathUpdate"
         @update-segment="handleSegmentUpdate"
         @delete-segment="annotator.deleteSegment"
       />

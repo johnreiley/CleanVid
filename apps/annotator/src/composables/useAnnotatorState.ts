@@ -15,6 +15,17 @@ import { formatTimestamp } from '../time';
 const SEEK_STEP_SECONDS = 5;
 const FINE_SEEK_STEP_SECONDS = 0.1;
 
+interface SelectFileResponse {
+  cancelled: boolean;
+  path?: string;
+  name?: string;
+}
+
+interface ProcessResponse {
+  outputPath: string;
+  message: string;
+}
+
 function createSegmentId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -43,15 +54,43 @@ async function readTextFile(file: File): Promise<string> {
   });
 }
 
+function deriveDefaultOutputPath(inputPath: string): string {
+  const separatorIndex = Math.max(inputPath.lastIndexOf('/'), inputPath.lastIndexOf('\\'));
+  const directory = separatorIndex >= 0 ? inputPath.slice(0, separatorIndex + 1) : '';
+  const fileName = separatorIndex >= 0 ? inputPath.slice(separatorIndex + 1) : inputPath;
+  const extensionIndex = fileName.lastIndexOf('.');
+
+  if (extensionIndex <= 0) {
+    return `${directory}${fileName}.cleaned`;
+  }
+
+  return `${directory}${fileName.slice(0, extensionIndex)}.cleaned${fileName.slice(extensionIndex)}`;
+}
+
+async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  const response = await fetch(input, init);
+  const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.message || 'The request failed.');
+  }
+
+  return payload as T;
+}
+
 export function useAnnotatorState() {
   const videoElement = ref<HTMLVideoElement | null>(null);
   const videoUrl = ref<string | null>(null);
   const videoName = ref('');
+  const linkedInputPath = ref('');
+  const linkedInputName = ref('');
+  const outputPath = ref('');
   const movieTitle = ref('');
   const importedMovieDuration = ref(0);
   const currentTime = ref(0);
   const videoDuration = ref(0);
   const isPlaying = ref(false);
+  const isProcessing = ref(false);
   const previewPlaybackEnabled = ref(true);
   const previewActiveType = ref<FilterType | null>(null);
   const activeType = ref<FilterType>('mute');
@@ -146,6 +185,9 @@ export function useAnnotatorState() {
 
   const canMark = computed(() => videoElement.value !== null && effectiveDuration.value > 0);
   const canExport = computed(() => effectiveDuration.value > 0 && segmentIssues.value.length === 0);
+  const canProcessVideo = computed(
+    () => linkedInputPath.value !== '' && segmentIssues.value.length === 0 && !isProcessing.value
+  );
   const sortedSegments = computed(() => sortSegments(segments.value));
   const activeTypeLabel = computed(() => (activeType.value === 'mute' ? 'Mute' : 'Skip'));
   const pendingTypeLabel = computed(() =>
@@ -451,6 +493,78 @@ export function useAnnotatorState() {
     clearPreviewEffects();
   }
 
+  function updateOutputPath(value: string) {
+    outputPath.value = value;
+  }
+
+  async function linkInputFile() {
+    clearFeedback();
+
+    try {
+      const response = await requestJson<SelectFileResponse>('/api/select-file');
+
+      if (response.cancelled) {
+        return;
+      }
+
+      linkedInputPath.value = response.path ?? '';
+      linkedInputName.value = response.name ?? '';
+      outputPath.value = response.path ? deriveDefaultOutputPath(response.path) : '';
+      statusMessage.value = linkedInputName.value
+        ? `Linked ${linkedInputName.value} for processing.`
+        : 'Linked input file for processing.';
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to link the selected file.');
+    }
+  }
+
+  async function processLinkedVideo() {
+    clearFeedback();
+
+    if (!canProcessVideo.value) {
+      if (linkedInputPath.value === '') {
+        setError('Link a local source file before processing.');
+        return;
+      }
+
+      if (segmentIssues.value.length > 0) {
+        setError('Resolve validation issues before processing.');
+      }
+
+      return;
+    }
+
+    isProcessing.value = true;
+    statusMessage.value = `Processing ${linkedInputName.value || 'linked video'}...`;
+
+    try {
+      const response = await requestJson<ProcessResponse>('/api/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          inputPath: linkedInputPath.value,
+          outputPath: outputPath.value.trim(),
+          movieTitle: movieTitle.value,
+          filters: segments.value.map((segment) => ({
+            id: segment.id,
+            type: segment.type,
+            start: segment.start,
+            end: segment.end
+          }))
+        })
+      });
+
+      outputPath.value = response.outputPath;
+      statusMessage.value = response.message;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to process the linked video.');
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
   async function loadFilterFile(file: File) {
     await importFilterFile(file);
   }
@@ -579,10 +693,14 @@ export function useAnnotatorState() {
     SEEK_STEP_SECONDS,
     videoUrl,
     videoName,
+    linkedInputPath,
+    linkedInputName,
+    outputPath,
     movieTitle,
     currentTime,
     effectiveDuration,
     isPlaying,
+    isProcessing,
     previewPlaybackEnabled,
     previewActiveType,
     activeType,
@@ -592,6 +710,7 @@ export function useAnnotatorState() {
     errorMessage,
     sortedSegments,
     segmentIssues,
+    canProcessVideo,
     selectedSegmentId,
     activeTypeLabel,
     pendingTypeLabel,
@@ -612,6 +731,9 @@ export function useAnnotatorState() {
     togglePreviewPlayback,
     loadVideoFile,
     loadFilterFile,
+    updateOutputPath,
+    linkInputFile,
+    processLinkedVideo,
     exportFilters,
     handleKeydown,
     cleanup

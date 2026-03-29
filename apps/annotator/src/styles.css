@@ -104,6 +104,7 @@ button {
 .brand-copy,
 .top-bar-meta,
 .sidebar-header-row,
+.file-actions-row,
 .timeline-labels,
 .transport-bar,
 .transport-meta,
@@ -119,6 +120,7 @@ button {
 .brand-lockup,
 .top-bar-meta,
 .sidebar-header-row,
+.file-actions-row,
 .transport-cluster {
   gap: 0.75rem;
 }
@@ -256,9 +258,123 @@ button {
   gap: 0.75rem;
 }
 
+.file-actions,
 .segments-shell {
   display: grid;
   gap: 1rem;
+}
+
+.file-actions {
+  padding: 1rem;
+  border-radius: 1.5rem;
+  border: 1px solid var(--border);
+  background: rgba(17, 24, 39, 0.55);
+}
+
+.file-actions-heading {
+  align-items: flex-start;
+}
+
+.file-actions-row {
+  justify-content: space-between;
+}
+
+.file-link-button,
+.process-button {
+  min-height: 2.4rem;
+}
+
+.file-link-button {
+  flex: 0 0 auto;
+}
+
+.process-button {
+  flex: 1 1 auto;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.95rem;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(52, 64, 123, 0.52);
+  color: #f8fafc;
+  transition: transform 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.process-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-color: var(--border);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.process-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.file-link-summary,
+.file-link-empty,
+.file-path-field {
+  margin: 0;
+}
+
+.file-link-summary {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.file-link-summary strong,
+.file-path-field span {
+  font-size: 0.84rem;
+}
+
+.file-link-summary strong {
+  color: #f8fafc;
+}
+
+.file-link-summary span,
+.file-link-empty {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.file-link-summary span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+
+.file-path-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.file-path-field span {
+  color: var(--text-soft);
+}
+
+.file-path-input {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.38);
+  color: #f8fafc;
+  font-family: var(--mono);
+}
+
+.file-path-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.file-path-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.34);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.16);
 }
 
 .action-tile,
@@ -959,6 +1075,7 @@ button {
 
   .top-bar,
   .sidebar,
+  .file-actions,
   .transport-card,
   .viewport-card,
   .segments-shell,
@@ -968,6 +1085,7 @@ button {
 
   .top-bar,
   .transport-bar,
+  .file-actions-row,
   .segment-card-footer {
     flex-direction: column;
     align-items: stretch;

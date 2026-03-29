@@ -13,16 +13,24 @@ const emit = defineEmits<{
   activeTypeChange: [value: FilterType];
   deleteSegment: [id: string];
   filtersSelected: [file: File];
+  linkInputFile: [];
+  processLinkedVideo: [];
   seek: [start: number];
   selectSegment: [id: string | null];
   toggleMark: [value: FilterType];
+  updateOutputPath: [value: string];
   updateSegment: [payload: { id: string; field: 'start' | 'end'; value: string }];
 }>();
 
 const props = defineProps<{
   activeType: FilterType;
+  canProcessVideo: boolean;
   errorMessage: string;
+  isProcessing: boolean;
+  linkedInputName: string;
+  linkedInputPath: string;
   markerCountLabel: string;
+  outputPath: string;
   pendingStart: number | null;
   pendingType: FilterType | null;
   selectionScrollKey: number;
@@ -217,6 +225,59 @@ onBeforeUnmount(() => {
         </label>
       </div>
     </div>
+
+    <section class="file-actions">
+      <div class="panel-heading file-actions-heading">
+        <div>
+          <p class="section-kicker">Processing</p>
+          <h2>Linked Video</h2>
+        </div>
+      </div>
+
+      <div class="file-actions-row">
+        <button
+          type="button"
+          class="subtle-action file-link-button"
+          data-testid="link-file-button"
+          @click="emit('linkInputFile')"
+        >
+          Link File
+        </button>
+
+        <button
+          type="button"
+          class="process-button"
+          data-testid="process-video-button"
+          :disabled="!canProcessVideo"
+          @click="emit('processLinkedVideo')"
+        >
+          {{ isProcessing ? 'Processing...' : 'Process Video' }}
+        </button>
+      </div>
+
+      <div
+        v-if="linkedInputPath"
+        class="file-link-summary"
+        data-testid="linked-file-summary"
+        :title="linkedInputPath"
+      >
+        <strong>{{ linkedInputName }}</strong>
+        <span>{{ linkedInputPath }}</span>
+      </div>
+      <p v-else class="file-link-empty">Link the real local movie file used for processing.</p>
+
+      <label class="file-path-field">
+        <span>Output path</span>
+        <input
+          data-testid="output-path-input"
+          class="file-path-input"
+          type="text"
+          :value="outputPath"
+          placeholder="Auto-generated beside the linked video"
+          @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
+        />
+      </label>
+    </section>
 
     <section class="quick-actions">
       <button
