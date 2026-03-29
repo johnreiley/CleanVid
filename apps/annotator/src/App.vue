@@ -73,6 +73,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="app-shell">
+    <AnnotatorTopBar
+      :movie-label="annotator.inputName || 'No file loaded'"
+      @export="annotator.exportFilters"
+    />
+
     <main class="workspace" data-testid="workspace">
       <MarkersPanel
         :active-type="annotator.activeType"
@@ -106,11 +111,6 @@ onBeforeUnmount(() => {
       />
 
       <section class="stage-shell" data-testid="stage-shell">
-        <AnnotatorTopBar
-          :movie-label="annotator.inputName || 'No file loaded'"
-          @export="annotator.exportFilters"
-        />
-
         <VideoStage
           :active-type="annotator.activeType"
           :active-type-label="annotator.activeTypeLabel"
