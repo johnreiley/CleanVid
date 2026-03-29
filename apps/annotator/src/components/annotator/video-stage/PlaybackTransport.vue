@@ -59,12 +59,14 @@ defineProps<{
         <span class="preview-toggle-indicator" />
         <span>{{ previewPlaybackEnabled ? 'Preview On' : 'Preview Off' }}</span>
       </button>
-      <span class="shortcut-pill">SPACE</span>
-      <span class="shortcut-copy">Toggle Play/Pause</span>
-      <span class="shortcut-pill">&larr;/&rarr; Arrows</span>
-      <span class="shortcut-copy">Seek</span>
-      <span class="shortcut-pill">Shift + &larr;/&rarr; Arrows</span>
-      <span class="shortcut-copy">Fine seek</span>
+      <div class="shortcut-cluster">
+        <span class="shortcut-pill">SPACE</span>
+        <span class="shortcut-copy">Play</span>
+      </div>
+      <div class="shortcut-cluster">
+        <span class="shortcut-pill">&larr;/&rarr;</span>
+        <span class="shortcut-copy">Seek</span>
+      </div>
     </div>
   </div>
 </template>

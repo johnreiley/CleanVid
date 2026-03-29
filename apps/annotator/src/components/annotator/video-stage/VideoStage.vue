@@ -8,6 +8,7 @@ import VideoViewport from './VideoViewport.vue';
 
 const emit = defineEmits<{
   loadedMetadata: [video: HTMLVideoElement];
+  markTypeRequest: [value: FilterType];
   openVideo: [];
   playStateChange: [video: HTMLVideoElement];
   seek: [deltaSeconds: number];
@@ -187,6 +188,7 @@ onBeforeUnmount(() => {
 <template>
   <section class="video-stage" data-testid="video-stage">
     <VideoViewport
+      :active-type="activeType"
       :pending-start="pendingStart"
       :pending-type="pendingType"
       :pending-type-label="pendingTypeLabel"
@@ -194,12 +196,13 @@ onBeforeUnmount(() => {
       :register-video-element="registerVideoElement"
       :video-url="videoUrl"
       @loaded-metadata="emit('loadedMetadata', $event)"
+      @mark-type-request="emit('markTypeRequest', $event)"
       @open-video="emit('openVideo')"
       @play-state-change="emit('playStateChange', $event)"
       @time-update="emit('timeUpdate', $event)"
     />
 
-    <div class="transport-card panel">
+    <div class="timeline-rail panel">
       <TimelineTrack
         :current-time="currentTime"
         :effective-duration="effectiveDuration"

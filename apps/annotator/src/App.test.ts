@@ -159,13 +159,21 @@ async function openVideo(
     playbackSource: 'original'
   }
 ) {
-  fetchMock.mockResolvedValueOnce(mockJsonResponse(responseBody));
-
   const sidebarOpenButton = wrapper.find('[data-testid="open-video-button"]');
+  const mediaModeButton = wrapper.find('[data-testid="mode-media-button"]');
   const videoDropzone = wrapper.find('[data-testid="video-dropzone"]');
 
-  if (sidebarOpenButton.exists()) {
-    await sidebarOpenButton.trigger('click');
+  fetchMock.mockResolvedValueOnce(mockJsonResponse(responseBody));
+
+  if (!sidebarOpenButton.exists() && mediaModeButton.exists()) {
+    await mediaModeButton.trigger('click');
+    await nextTick();
+  }
+
+  const activeSidebarOpenButton = wrapper.find('[data-testid="open-video-button"]');
+
+  if (activeSidebarOpenButton.exists()) {
+    await activeSidebarOpenButton.trigger('click');
   } else if (videoDropzone.exists()) {
     await videoDropzone.trigger('click');
   }
@@ -179,6 +187,14 @@ async function openVideo(
   await nextTick();
 
   return video;
+}
+
+async function switchMode(
+  wrapper: ReturnType<typeof mount>,
+  mode: 'media' | 'annotate' | 'export'
+) {
+  await wrapper.get(`[data-testid="mode-${mode}-button"]`).trigger('click');
+  await nextTick();
 }
 
 beforeEach(() => {
@@ -205,7 +221,7 @@ beforeEach(() => {
 });
 
 describe('annotator app', () => {
-  it('renders the streamlined cinematic layout', () => {
+  it('renders the compact editor shell', () => {
     const wrapper = mount(App);
 
     expect(wrapper.get('[data-testid="workspace"]')).toBeTruthy();
@@ -214,8 +230,9 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="top-bar"]')).toBeTruthy();
     expect(wrapper.get('[data-testid="video-stage"]')).toBeTruthy();
     expect(wrapper.get('[data-testid="video-dropzone"]')).toBeTruthy();
-    expect(wrapper.get('[data-testid="transport-bar"]')).toBeTruthy();
     expect(wrapper.get('[data-testid="timeline-track"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="mode-switch"]')).toBeTruthy();
+    expect(wrapper.get('[data-testid="mode-panel-media"]')).toBeTruthy();
   });
 
   it('opens the picker when clicking the empty video stage and removes the redundant stage button', async () => {
@@ -241,19 +258,25 @@ describe('annotator app', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/open-video', undefined);
   });
 
-  it('defaults Processing and Segments expanded, and lets both sections toggle', async () => {
+  it('defaults to Media mode, auto-switches to Annotate after open, and allows manual mode changes', async () => {
     const wrapper = mount(App);
 
-    expect(wrapper.find('[data-testid="processing-section-content"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="segments-section-content"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="mode-panel-media"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="mode-panel-annotate"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="mode-panel-export"]').exists()).toBe(false);
 
-    await wrapper.get('[data-testid="toggle-processing-section"]').trigger('click');
-    await nextTick();
-    expect(wrapper.find('[data-testid="processing-section-content"]').exists()).toBe(false);
+    await openVideo(wrapper);
 
-    await wrapper.get('[data-testid="toggle-segments-section"]').trigger('click');
+    expect(wrapper.find('[data-testid="mode-panel-media"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="mode-panel-annotate"]').exists()).toBe(true);
+
+    await switchMode(wrapper, 'export');
     await nextTick();
-    expect(wrapper.find('[data-testid="segments-section-content"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="mode-panel-export"]').exists()).toBe(true);
+
+    await switchMode(wrapper, 'media');
+    await nextTick();
+    expect(wrapper.find('[data-testid="mode-panel-media"]').exists()).toBe(true);
   });
 
   it('shows the loaded filename in the top bar', async () => {
@@ -262,6 +285,7 @@ describe('annotator app', () => {
     await openVideo(wrapper);
 
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
+    expect(wrapper.find('[data-testid="mode-panel-annotate"]').exists()).toBe(true);
     expect(wrapper.get('[data-testid="preview-toggle"]').text()).toContain('Preview On');
   });
 
@@ -303,6 +327,7 @@ describe('annotator app', () => {
     video.dispatchEvent(new Event('loadedmetadata'));
     await nextTick();
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
+    await switchMode(wrapper, 'export');
     expect((wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement).value).toBe(
       'C:\\Movies\\movie.cleaned.mp4'
     );
@@ -310,6 +335,7 @@ describe('annotator app', () => {
       false
     );
 
+    await switchMode(wrapper, 'media');
     await wrapper.get('[data-testid="open-video-button"]').trigger('click');
     await flushPromises();
     await nextTick();
@@ -341,10 +367,9 @@ describe('annotator app', () => {
 
     await flushPromises();
     await nextTick();
+    expect(wrapper.find('[data-testid="mode-panel-annotate"]').exists()).toBe(true);
+    await switchMode(wrapper, 'media');
     expect(wrapper.get('[data-testid="open-video-button"]').text()).toContain('Open Video');
-    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
-      false
-    );
   });
 
   it('shows backend validation errors for unsupported formats and keeps processing disabled', async () => {
@@ -364,6 +389,7 @@ describe('annotator app', () => {
     await nextTick();
 
     expect(wrapper.get('[data-testid="error-message"]').text()).toContain('Unsupported video format.');
+    await switchMode(wrapper, 'export');
     expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
       true
     );
@@ -381,6 +407,7 @@ describe('annotator app', () => {
       await nextTick();
       expect(wrapper.find('[data-testid="status-message"]').exists()).toBe(false);
 
+      await switchMode(wrapper, 'annotate');
       await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
       await nextTick();
       expect(wrapper.get('[data-testid="error-message"]').text()).toContain('Open a video before marking a segment.');
@@ -459,6 +486,7 @@ describe('annotator app', () => {
 
     expect(wrapper.find('[data-testid="timeline-pending-start"]').exists()).toBe(true);
 
+    await switchMode(wrapper, 'media');
     fetchMock.mockResolvedValueOnce(
       mockJsonResponse({
         cancelled: false,
@@ -489,8 +517,9 @@ describe('annotator app', () => {
       playbackSource: 'preview'
     });
 
+    await switchMode(wrapper, 'export');
     expect(wrapper.get('[data-testid="processing-section-content"]').text()).toContain(
-      'Processing always uses the original source file, not the preview.'
+      'Processing uses the original source file, not the preview.'
     );
 
     const outputInput = wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement;
@@ -503,6 +532,8 @@ describe('annotator app', () => {
 
     await wrapper.get('[data-testid="process-video-button"]').trigger('click');
     await nextTick();
+
+    expect(wrapper.find('[data-testid="mode-panel-export"]').exists()).toBe(true);
 
     expect(wrapper.get('[data-testid="process-video-button"]').text()).toContain('Exporting 0%');
     expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
@@ -578,6 +609,7 @@ describe('annotator app', () => {
     );
 
     const video = await openVideo(wrapper);
+    await switchMode(wrapper, 'annotate');
 
     video.currentTime = 20;
     video.dispatchEvent(new Event('timeupdate'));
@@ -591,6 +623,7 @@ describe('annotator app', () => {
 
     await editContentEditable(wrapper, '[data-testid="segment-start-edit"]', '00:35.000');
 
+    await switchMode(wrapper, 'export');
     expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
       true
     );
@@ -600,6 +633,7 @@ describe('annotator app', () => {
     const wrapper = mount(App);
 
     await openVideo(wrapper)
+    await switchMode(wrapper, 'export');
 
     fetchMock
       .mockResolvedValueOnce(
@@ -851,6 +885,7 @@ describe('annotator app', () => {
   it('imports filters and exports normalized JSON', async () => {
     const wrapper = mount(App);
     await openVideo(wrapper);
+    await switchMode(wrapper, 'media');
 
     const importInput = wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement;
     const filterFile = new File(
