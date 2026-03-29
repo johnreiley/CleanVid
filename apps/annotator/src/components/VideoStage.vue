@@ -11,6 +11,7 @@ import { formatTimestamp } from '../time';
 
 const emit = defineEmits<{
   loadedMetadata: [video: HTMLVideoElement];
+  openVideo: [];
   playStateChange: [video: HTMLVideoElement];
   seek: [deltaSeconds: number];
   seekTo: [seconds: number];
@@ -18,7 +19,6 @@ const emit = defineEmits<{
   timeUpdate: [video: HTMLVideoElement];
   togglePreviewPlayback: [];
   togglePlayback: [];
-  videoSelected: [file: File];
 }>();
 
 const props = defineProps<{
@@ -37,7 +37,6 @@ const props = defineProps<{
   videoUrl: string | null;
 }>();
 
-const isDragActive = ref(false);
 const isTimelineDragging = ref(false);
 const timelineTrack = ref<HTMLElement | null>(null);
 const timelinePointerId = ref<number | null>(null);
@@ -179,26 +178,6 @@ function handleTimelineSegmentClick(segment: EditableSegment) {
   emit('seekTo', segment.start);
 }
 
-function emitSelectedVideo(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-
-  if (file) {
-    emit('videoSelected', file);
-  }
-}
-
-function handleDrop(event: DragEvent) {
-  event.preventDefault();
-  isDragActive.value = false;
-
-  const file = event.dataTransfer?.files?.[0];
-
-  if (file) {
-    emit('videoSelected', file);
-  }
-}
-
 onBeforeUnmount(() => {
   releaseTimelineDrag();
 });
@@ -206,14 +185,7 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="video-stage" data-testid="video-stage">
-    <div
-      :class="['viewport-card panel panel-dark', { 'viewport-card-drag': isDragActive }]"
-      data-testid="video-dropzone"
-      @dragenter.prevent="isDragActive = true"
-      @dragover.prevent="isDragActive = true"
-      @dragleave.prevent="isDragActive = false"
-      @drop="handleDrop"
-    >
+    <div class="viewport-card panel panel-dark" data-testid="video-dropzone">
       <video
         :ref="registerVideoElement"
         data-testid="video-player"
@@ -244,20 +216,21 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <label v-if="!videoUrl" class="video-placeholder">
-        <input
-          data-testid="video-input"
-          class="visually-hidden-input"
-          type="file"
-          accept="video/*"
-          @change="emitSelectedVideo"
-        />
+      <div v-if="!videoUrl" class="video-placeholder">
         <div class="placeholder-mark">
           <PhFilmSlate class="placeholder-mark-icon" :size="48" />
         </div>
-        <p class="video-placeholder-title">Drop movie here</p>
-        <p class="video-placeholder-copy">or click to browse your library</p>
-      </label>
+        <p class="video-placeholder-title">Open a local movie</p>
+        <p class="video-placeholder-copy">Choose the source file to annotate and process</p>
+        <button
+          type="button"
+          class="export-button"
+          data-testid="stage-open-video-button"
+          @click="emit('openVideo')"
+        >
+          Open Video
+        </button>
+      </div>
     </div>
 
     <div class="transport-card panel">

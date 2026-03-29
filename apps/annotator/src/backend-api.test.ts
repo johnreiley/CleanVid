@@ -1,27 +1,125 @@
-import { describe, expect, it, vi } from 'vitest';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { once } from 'node:events';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  createPlaybackRegistry,
   deriveDefaultOutputPath,
-  handleProcessRequest,
-  handleSelectFileRequest
+  handleMediaRequest,
+  handleOpenVideoRequest,
+  handleProcessRequest
 } from '../vite.config';
 
+const tempDirectories: string[] = [];
+
+async function createTempDir(): Promise<string> {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'cleanvid-annotator-api-'));
+  tempDirectories.push(directory);
+  return directory;
+}
+
+async function withMediaServer(
+  handler: (request: IncomingMessage, response: ServerResponse) => void,
+  run: (baseUrl: string) => Promise<void>
+) {
+  const server = createServer(handler);
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+
+  const address = server.address();
+
+  if (!address || typeof address === 'string') {
+    server.close();
+    throw new Error('Unable to determine test server address.');
+  }
+
+  try {
+    await run(`http://127.0.0.1:${address.port}`);
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      server.closeAllConnections?.();
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve();
+      });
+    });
+  }
+}
+
+afterEach(async () => {
+  await Promise.all(
+    tempDirectories.splice(0).map((directory) =>
+      rm(directory, {
+        recursive: true,
+        force: true
+      })
+    )
+  );
+});
+
 describe('annotator vite api helpers', () => {
-  it('returns the expected select-file shapes', async () => {
+  it('returns the expected open-video shapes for original playback and cancellation', async () => {
+    const registerPlaybackPath = vi.fn(() => '/api/media/token-1');
+
     await expect(
-      handleSelectFileRequest({
-        selectFilePath: async () => 'C:\\Movies\\movie.mp4'
+      handleOpenVideoRequest({
+        selectFilePath: async () => 'C:\\Movies\\movie.mp4',
+        preparePlaybackFile: async () => ({
+          inputPath: 'C:\\Movies\\movie.mp4',
+          playbackPath: 'C:\\Movies\\movie.mp4',
+          playbackSource: 'original',
+          name: 'movie.mp4'
+        }),
+        registerPlaybackPath
       })
     ).resolves.toEqual({
       cancelled: false,
-      path: 'C:\\Movies\\movie.mp4',
-      name: 'movie.mp4'
+      inputPath: 'C:\\Movies\\movie.mp4',
+      name: 'movie.mp4',
+      outputPath: 'C:\\Movies\\movie.cleaned.mp4',
+      playbackUrl: '/api/media/token-1',
+      playbackSource: 'original'
     });
 
+    expect(registerPlaybackPath).toHaveBeenCalledWith('C:\\Movies\\movie.mp4');
+
     await expect(
-      handleSelectFileRequest({
-        selectFilePath: async () => null
+      handleOpenVideoRequest({
+        selectFilePath: async () => null,
+        preparePlaybackFile: async () => {
+          throw new Error('should not run');
+        },
+        registerPlaybackPath: () => '/api/media/token-2'
       })
     ).resolves.toEqual({ cancelled: true });
+  });
+
+  it('returns preview playback metadata when preprocessing is needed', async () => {
+    await expect(
+      handleOpenVideoRequest({
+        selectFilePath: async () => 'C:\\Movies\\movie.mkv',
+        preparePlaybackFile: async () => ({
+          inputPath: 'C:\\Movies\\movie.mkv',
+          playbackPath: 'C:\\Temp\\preview.mp4',
+          playbackSource: 'preview',
+          name: 'movie.mkv'
+        }),
+        registerPlaybackPath: () => '/api/media/token-preview'
+      })
+    ).resolves.toEqual({
+      cancelled: false,
+      inputPath: 'C:\\Movies\\movie.mkv',
+      name: 'movie.mkv',
+      outputPath: 'C:\\Movies\\movie.cleaned.mkv',
+      playbackUrl: '/api/media/token-preview',
+      playbackSource: 'preview'
+    });
   });
 
   it('derives the default cleaned output path beside the input file', () => {
@@ -80,7 +178,7 @@ describe('annotator vite api helpers', () => {
     await expect(
       handleProcessRequest(
         {
-          inputPath: 'C:\\Movies\\movie.mp4',
+          inputPath: 'C:\\Movies\\movie.mkv',
           filters: [{ id: 'seg-1', type: 'skip', start: 10, end: 20 }]
         },
         {
@@ -90,15 +188,15 @@ describe('annotator vite api helpers', () => {
         }
       )
     ).resolves.toEqual({
-      outputPath: 'C:\\Movies\\movie.cleaned.mp4',
-      message: 'Processed video to C:\\Movies\\movie.cleaned.mp4.'
+      outputPath: 'C:\\Movies\\movie.cleaned.mkv',
+      message: 'Processed video to C:\\Movies\\movie.cleaned.mkv.'
     });
 
-    expect(ensureInputExists).toHaveBeenCalledWith('C:\\Movies\\movie.mp4');
+    expect(ensureInputExists).toHaveBeenCalledWith('C:\\Movies\\movie.mkv');
     expect(processMediaImpl).toHaveBeenCalledWith({
-      inputPath: 'C:\\Movies\\movie.mp4',
+      inputPath: 'C:\\Movies\\movie.mkv',
       filtersPath: 'C:\\Temp\\filters.json',
-      outputPath: 'C:\\Movies\\movie.cleaned.mp4'
+      outputPath: 'C:\\Movies\\movie.cleaned.mkv'
     });
     expect(cleanup).toHaveBeenCalledTimes(1);
 
@@ -107,7 +205,7 @@ describe('annotator vite api helpers', () => {
     await expect(
       handleProcessRequest(
         {
-          inputPath: 'C:\\Movies\\movie.mp4',
+          inputPath: 'C:\\Movies\\movie.mkv',
           filters: [{ id: 'seg-1', type: 'skip', start: 10, end: 20 }]
         },
         {
@@ -121,5 +219,37 @@ describe('annotator vite api helpers', () => {
     ).rejects.toThrow('boom');
 
     expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it('serves byte ranges through the media endpoint', async () => {
+    const directory = await createTempDir();
+    const playbackFile = path.join(directory, 'movie.mp4');
+    await writeFile(playbackFile, '0123456789', 'utf8');
+
+    const playbackRegistry = createPlaybackRegistry();
+    const playbackUrl = playbackRegistry.registerPlaybackPath(playbackFile);
+
+    await withMediaServer(
+      (request, response) => {
+        void handleMediaRequest(request, response, playbackRegistry).then((handled) => {
+          if (!handled) {
+            response.statusCode = 404;
+            response.end();
+          }
+        });
+      },
+      async (baseUrl) => {
+        const response = await fetch(`${baseUrl}${playbackUrl}`, {
+          headers: {
+            Connection: 'close',
+            Range: 'bytes=2-5'
+          }
+        });
+
+        expect(response.status).toBe(206);
+        expect(response.headers.get('content-range')).toBe('bytes 2-5/10');
+        await expect(response.text()).resolves.toBe('2345');
+      }
+    );
   });
 });

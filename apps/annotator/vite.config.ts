@@ -1,5 +1,7 @@
 import { promisify } from 'node:util';
-import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { createReadStream } from 'node:fs';
+import { access, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import { execFile as execFileCallback } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -15,16 +17,24 @@ import {
   type FilterSegment
 } from '../../packages/shared/src/index';
 import { processMedia, type ProcessMediaOptions } from '../cli/src/processor';
+import {
+  preparePreviewPlayback,
+  type PlaybackSource,
+  type PreviewPreparationResult
+} from '../cli/src/preview';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const execFile = promisify(execFileCallback);
 const VIDEO_DIALOG_FILTER =
   'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
 
-export interface SelectFileResult {
+export interface OpenVideoResult {
   cancelled: boolean;
-  path?: string;
+  inputPath?: string;
   name?: string;
+  outputPath?: string;
+  playbackUrl?: string;
+  playbackSource?: PlaybackSource;
 }
 
 export interface ProcessRequestBody {
@@ -50,8 +60,15 @@ interface ProcessRequestDependencies {
   processMediaImpl: (options: ProcessMediaOptions) => Promise<void>;
 }
 
-interface SelectFileDependencies {
+interface OpenVideoDependencies {
   selectFilePath: () => Promise<string | null>;
+  preparePlaybackFile: (inputPath: string) => Promise<PreviewPreparationResult>;
+  registerPlaybackPath: (filePath: string) => string;
+}
+
+interface PlaybackRegistry {
+  getPlaybackPath: (token: string) => string | undefined;
+  registerPlaybackPath: (filePath: string) => string;
 }
 
 class HttpError extends Error {
@@ -79,7 +96,7 @@ async function ensureInputExists(inputPath: string) {
   try {
     await access(path.resolve(inputPath));
   } catch {
-    throw new HttpError(400, 'Linked input file could not be found.');
+    throw new HttpError(400, 'Opened input file could not be found.');
   }
 }
 
@@ -104,11 +121,22 @@ function getDefaultProcessRequestDependencies(): ProcessRequestDependencies {
   };
 }
 
-function getDefaultSelectFileDependencies(): SelectFileDependencies {
+function getDefaultOpenVideoDependencies(): OpenVideoDependencies {
   return {
-    selectFilePath: openNativeVideoFileDialog
+    selectFilePath: openNativeVideoFileDialog,
+    preparePlaybackFile: preparePreviewPlayback,
+    registerPlaybackPath: defaultPlaybackRegistry.registerPlaybackPath
   };
 }
+
+const MEDIA_CONTENT_TYPES: Record<string, string> = {
+  '.m4v': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm'
+};
+
+const defaultPlaybackRegistry = createPlaybackRegistry();
 
 export async function openNativeVideoFileDialog(): Promise<string | null> {
   if (process.platform !== 'win32') {
@@ -141,20 +169,171 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
   return selectedPath === '' ? null : selectedPath;
 }
 
-export async function handleSelectFileRequest(
-  dependencies: SelectFileDependencies = getDefaultSelectFileDependencies()
-): Promise<SelectFileResult> {
+export async function handleOpenVideoRequest(
+  dependencies: OpenVideoDependencies = getDefaultOpenVideoDependencies()
+): Promise<OpenVideoResult> {
   const selectedPath = await dependencies.selectFilePath();
 
   if (!selectedPath) {
     return { cancelled: true };
   }
 
+  const preparedPlayback = await dependencies.preparePlaybackFile(selectedPath);
+
   return {
     cancelled: false,
-    path: path.resolve(selectedPath),
-    name: path.basename(selectedPath)
+    inputPath: preparedPlayback.inputPath,
+    name: preparedPlayback.name,
+    outputPath: deriveDefaultOutputPath(preparedPlayback.inputPath),
+    playbackUrl: dependencies.registerPlaybackPath(preparedPlayback.playbackPath),
+    playbackSource: preparedPlayback.playbackSource
   };
+}
+
+export function createPlaybackRegistry(): PlaybackRegistry {
+  const registry = new Map<string, string>();
+
+  return {
+    getPlaybackPath(token: string) {
+      return registry.get(token);
+    },
+    registerPlaybackPath(filePath: string) {
+      const token = randomUUID();
+      registry.set(token, path.resolve(filePath));
+      return `/api/media/${token}`;
+    }
+  };
+}
+
+function getMediaContentType(filePath: string): string {
+  return MEDIA_CONTENT_TYPES[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream';
+}
+
+interface ByteRange {
+  start: number;
+  end: number;
+}
+
+export function resolveByteRange(rangeHeader: string, fileSize: number): ByteRange | null {
+  const matches = /^bytes=(\d*)-(\d*)$/i.exec(rangeHeader.trim());
+
+  if (!matches) {
+    return null;
+  }
+
+  const [, startText, endText] = matches;
+
+  if (startText === '' && endText === '') {
+    return null;
+  }
+
+  if (startText === '') {
+    const suffixLength = Number(endText);
+
+    if (!Number.isFinite(suffixLength) || suffixLength <= 0) {
+      return null;
+    }
+
+    return {
+      start: Math.max(fileSize - suffixLength, 0),
+      end: fileSize - 1
+    };
+  }
+
+  const start = Number(startText);
+  const parsedEnd = endText === '' ? fileSize - 1 : Number(endText);
+
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(parsedEnd) ||
+    start < 0 ||
+    parsedEnd < start ||
+    start >= fileSize
+  ) {
+    return null;
+  }
+
+  return {
+    start,
+    end: Math.min(parsedEnd, fileSize - 1)
+  };
+}
+
+export async function handleMediaRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  playbackRegistry: PlaybackRegistry = defaultPlaybackRegistry
+): Promise<boolean> {
+  const url = new URL(request.url ?? '/', 'http://localhost');
+  const mediaPrefix = '/api/media/';
+
+  if (!url.pathname.startsWith(mediaPrefix)) {
+    return false;
+  }
+
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    sendJson(response, 405, { message: 'Method not allowed.' });
+    return true;
+  }
+
+  const token = decodeURIComponent(url.pathname.slice(mediaPrefix.length));
+  const playbackPath = playbackRegistry.getPlaybackPath(token);
+
+  if (!playbackPath) {
+    throw new HttpError(404, 'Playback file not found.');
+  }
+
+  let fileStats;
+
+  try {
+    fileStats = await stat(playbackPath);
+  } catch {
+    throw new HttpError(404, 'Playback file not found.');
+  }
+
+  const fileSize = fileStats.size;
+  const rangeHeader = request.headers.range;
+  const resolvedRange =
+    typeof rangeHeader === 'string' ? resolveByteRange(rangeHeader, fileSize) : null;
+
+  response.setHeader('Accept-Ranges', 'bytes');
+  response.setHeader('Cache-Control', 'no-store');
+  response.setHeader('Content-Type', getMediaContentType(playbackPath));
+
+  if (typeof rangeHeader === 'string' && !resolvedRange) {
+    response.statusCode = 416;
+    response.setHeader('Content-Range', `bytes */${fileSize}`);
+    response.end();
+    return true;
+  }
+
+  if (!resolvedRange) {
+    response.statusCode = 200;
+    response.setHeader('Content-Length', fileSize);
+
+    if (request.method === 'HEAD') {
+      response.end();
+      return true;
+    }
+
+    await pipeFileToResponse(response, playbackPath);
+    return true;
+  }
+
+  response.statusCode = 206;
+  response.setHeader('Content-Length', resolvedRange.end - resolvedRange.start + 1);
+  response.setHeader(
+    'Content-Range',
+    `bytes ${resolvedRange.start}-${resolvedRange.end}/${fileSize}`
+  );
+
+  if (request.method === 'HEAD') {
+    response.end();
+    return true;
+  }
+
+  await pipeFileToResponse(response, playbackPath, resolvedRange);
+  return true;
 }
 
 function parseProcessRequestBody(body: unknown): Required<ProcessRequestBody> {
@@ -260,16 +439,58 @@ function sendJson(response: ServerResponse, statusCode: number, body: unknown) {
   response.end(JSON.stringify(body));
 }
 
+async function pipeFileToResponse(
+  response: ServerResponse,
+  filePath: string,
+  options?: { start?: number; end?: number }
+): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const stream = createReadStream(filePath, options);
+    let settled = false;
+
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      response.off('close', finish);
+      response.off('finish', finish);
+      resolve();
+    };
+
+    const fail = (error: unknown) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      response.off('close', finish);
+      response.off('finish', finish);
+      reject(error);
+    };
+
+    stream.on('error', fail);
+    response.on('close', finish);
+    response.on('finish', finish);
+    stream.pipe(response);
+  });
+}
+
 async function handleApiRequest(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
   const url = new URL(request.url ?? '/', 'http://localhost');
 
-  if (url.pathname === '/api/select-file') {
+  if (await handleMediaRequest(request, response)) {
+    return true;
+  }
+
+  if (url.pathname === '/api/open-video') {
     if (request.method !== 'GET') {
       sendJson(response, 405, { message: 'Method not allowed.' });
       return true;
     }
 
-    const result = await handleSelectFileRequest();
+    const result = await handleOpenVideoRequest();
     sendJson(response, 200, result);
     return true;
   }

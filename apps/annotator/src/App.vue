@@ -43,13 +43,16 @@ onBeforeUnmount(() => {
         :active-type="annotator.activeType"
         :can-process-video="annotator.canProcessVideo"
         :error-message="annotator.errorMessage"
+        :is-opening-video="annotator.isOpeningVideo"
         :is-processing="annotator.isProcessing"
-        :linked-input-name="annotator.linkedInputName"
-        :linked-input-path="annotator.linkedInputPath"
+        :input-name="annotator.inputName"
+        :input-path="annotator.inputPath"
         :marker-count-label="annotator.markerCountLabel"
         :output-path="annotator.outputPath"
         :pending-start="annotator.pendingStart"
         :pending-type="annotator.pendingType"
+        :playback-source="annotator.playbackSource"
+        :playback-source-label="annotator.playbackSourceLabel"
         :selection-scroll-key="segmentScrollKey"
         :segment-issues="annotator.segmentIssues"
         :selected-segment-id="annotator.selectedSegmentId"
@@ -57,7 +60,7 @@ onBeforeUnmount(() => {
         :status-message="annotator.statusMessage"
         @active-type-change="handleActiveTypeChange"
         @filters-selected="annotator.loadFilterFile"
-        @link-input-file="annotator.linkInputFile"
+        @open-video="annotator.openVideo"
         @process-linked-video="annotator.processLinkedVideo"
         @toggle-mark="annotator.toggleMark"
         @seek="annotator.seekTo"
@@ -69,7 +72,7 @@ onBeforeUnmount(() => {
 
       <section class="stage-shell" data-testid="stage-shell">
         <AnnotatorTopBar
-          :movie-label="annotator.videoName || 'No file loaded'"
+          :movie-label="annotator.inputName || 'No file loaded'"
           @export="annotator.exportFilters"
         />
 
@@ -87,6 +90,7 @@ onBeforeUnmount(() => {
           :register-video-element="annotator.registerVideoElement"
           :sorted-segments="annotator.sortedSegments"
           :video-url="annotator.videoUrl"
+          @open-video="annotator.openVideo"
           @loaded-metadata="annotator.handleLoadedMetadata"
           @time-update="annotator.handleTimeUpdate"
           @play-state-change="annotator.handlePlayStateChange"
@@ -95,7 +99,6 @@ onBeforeUnmount(() => {
           @seek="annotator.seekBy"
           @seek-to="annotator.seekTo"
           @select-segment="handleTimelineSegmentSelect"
-          @video-selected="annotator.loadVideoFile"
         />
       </section>
     </main>

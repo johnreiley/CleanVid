@@ -13,7 +13,7 @@ const emit = defineEmits<{
   activeTypeChange: [value: FilterType];
   deleteSegment: [id: string];
   filtersSelected: [file: File];
-  linkInputFile: [];
+  openVideo: [];
   processLinkedVideo: [];
   seek: [start: number];
   selectSegment: [id: string | null];
@@ -26,13 +26,16 @@ const props = defineProps<{
   activeType: FilterType;
   canProcessVideo: boolean;
   errorMessage: string;
+  inputName: string;
+  inputPath: string;
+  isOpeningVideo: boolean;
   isProcessing: boolean;
-  linkedInputName: string;
-  linkedInputPath: string;
   markerCountLabel: string;
   outputPath: string;
   pendingStart: number | null;
   pendingType: FilterType | null;
+  playbackSource: 'original' | 'preview' | null;
+  playbackSourceLabel: string;
   selectionScrollKey: number;
   segmentIssues: SegmentIssue[];
   selectedSegmentId: string | null;
@@ -229,8 +232,8 @@ onBeforeUnmount(() => {
     <section class="file-actions">
       <div class="panel-heading file-actions-heading">
         <div>
-          <p class="section-kicker">Processing</p>
-          <h2>Linked Video</h2>
+          <p class="section-kicker">Source</p>
+          <h2>Opened Video</h2>
         </div>
       </div>
 
@@ -238,17 +241,18 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="subtle-action file-link-button"
-          data-testid="link-file-button"
-          @click="emit('linkInputFile')"
+          data-testid="open-video-button"
+          :disabled="isOpeningVideo"
+          @click="emit('openVideo')"
         >
-          Link File
+          {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
         </button>
 
         <button
           type="button"
           class="process-button"
           data-testid="process-video-button"
-          :disabled="!canProcessVideo"
+          :disabled="!canProcessVideo || isOpeningVideo"
           @click="emit('processLinkedVideo')"
         >
           {{ isProcessing ? 'Processing...' : 'Process Video' }}
@@ -256,15 +260,18 @@ onBeforeUnmount(() => {
       </div>
 
       <div
-        v-if="linkedInputPath"
+        v-if="inputPath"
         class="file-link-summary"
-        data-testid="linked-file-summary"
-        :title="linkedInputPath"
+        data-testid="opened-video-summary"
+        :title="inputPath"
       >
-        <strong>{{ linkedInputName }}</strong>
-        <span>{{ linkedInputPath }}</span>
+        <strong>{{ inputName }}</strong>
+        <span>{{ inputPath }}</span>
+        <span class="file-link-mode">
+          Playback: {{ playbackSourceLabel }}. Processing always uses the original file.
+        </span>
       </div>
-      <p v-else class="file-link-empty">Link the real local movie file used for processing.</p>
+      <p v-else class="file-link-empty">Open the real local movie file you want to annotate and process.</p>
 
       <label class="file-path-field">
         <span>Output path</span>
@@ -273,7 +280,7 @@ onBeforeUnmount(() => {
           class="file-path-input"
           type="text"
           :value="outputPath"
-          placeholder="Auto-generated beside the linked video"
+          placeholder="Auto-generated beside the opened video"
           @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
         />
       </label>

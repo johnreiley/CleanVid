@@ -15,10 +15,13 @@ import { formatTimestamp } from '../time';
 const SEEK_STEP_SECONDS = 5;
 const FINE_SEEK_STEP_SECONDS = 0.1;
 
-interface SelectFileResponse {
+interface OpenVideoResponse {
   cancelled: boolean;
-  path?: string;
+  inputPath?: string;
   name?: string;
+  outputPath?: string;
+  playbackUrl?: string;
+  playbackSource?: 'original' | 'preview';
 }
 
 interface ProcessResponse {
@@ -54,19 +57,6 @@ async function readTextFile(file: File): Promise<string> {
   });
 }
 
-function deriveDefaultOutputPath(inputPath: string): string {
-  const separatorIndex = Math.max(inputPath.lastIndexOf('/'), inputPath.lastIndexOf('\\'));
-  const directory = separatorIndex >= 0 ? inputPath.slice(0, separatorIndex + 1) : '';
-  const fileName = separatorIndex >= 0 ? inputPath.slice(separatorIndex + 1) : inputPath;
-  const extensionIndex = fileName.lastIndexOf('.');
-
-  if (extensionIndex <= 0) {
-    return `${directory}${fileName}.cleaned`;
-  }
-
-  return `${directory}${fileName.slice(0, extensionIndex)}.cleaned${fileName.slice(extensionIndex)}`;
-}
-
 async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, init);
   const payload = (await response.json().catch(() => null)) as { message?: string } | null;
@@ -81,15 +71,16 @@ async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Pro
 export function useAnnotatorState() {
   const videoElement = ref<HTMLVideoElement | null>(null);
   const videoUrl = ref<string | null>(null);
-  const videoName = ref('');
-  const linkedInputPath = ref('');
-  const linkedInputName = ref('');
+  const inputPath = ref('');
+  const inputName = ref('');
   const outputPath = ref('');
+  const playbackSource = ref<'original' | 'preview' | null>(null);
   const movieTitle = ref('');
   const importedMovieDuration = ref(0);
   const currentTime = ref(0);
   const videoDuration = ref(0);
   const isPlaying = ref(false);
+  const isOpeningVideo = ref(false);
   const isProcessing = ref(false);
   const previewPlaybackEnabled = ref(true);
   const previewActiveType = ref<FilterType | null>(null);
@@ -98,7 +89,7 @@ export function useAnnotatorState() {
   const pendingType = ref<FilterType | null>(null);
   const segments = ref<EditableSegment[]>([]);
   const selectedSegmentId = ref<string | null>(null);
-  const statusMessage = ref('Load a local video to begin annotating.');
+  const statusMessage = ref('Open a local video to begin annotating.');
   const errorMessage = ref('');
   let previewMutedApplied = false;
   let previewMutedOriginal = false;
@@ -186,12 +177,23 @@ export function useAnnotatorState() {
   const canMark = computed(() => videoElement.value !== null && effectiveDuration.value > 0);
   const canExport = computed(() => effectiveDuration.value > 0 && segmentIssues.value.length === 0);
   const canProcessVideo = computed(
-    () => linkedInputPath.value !== '' && segmentIssues.value.length === 0 && !isProcessing.value
+    () =>
+      inputPath.value !== '' &&
+      segmentIssues.value.length === 0 &&
+      !isProcessing.value &&
+      !isOpeningVideo.value
   );
   const sortedSegments = computed(() => sortSegments(segments.value));
   const activeTypeLabel = computed(() => (activeType.value === 'mute' ? 'Mute' : 'Skip'));
   const pendingTypeLabel = computed(() =>
     pendingType.value === null ? '' : pendingType.value === 'mute' ? 'Mute' : 'Skip'
+  );
+  const playbackSourceLabel = computed(() =>
+    playbackSource.value === 'preview'
+      ? 'Generated MP4 preview'
+      : playbackSource.value === 'original'
+        ? 'Original file'
+        : ''
   );
   const markerCountLabel = computed(
     () => `${sortedSegments.value.length} marker${sortedSegments.value.length === 1 ? '' : 's'}`
@@ -280,10 +282,11 @@ export function useAnnotatorState() {
   }
 
   function revokeVideoUrl() {
-    if (videoUrl.value) {
+    if (videoUrl.value?.startsWith('blob:')) {
       URL.revokeObjectURL(videoUrl.value);
-      videoUrl.value = null;
     }
+
+    videoUrl.value = null;
   }
 
   function registerVideoElement(element: Element | ComponentPublicInstance | null) {
@@ -296,7 +299,10 @@ export function useAnnotatorState() {
     }
 
     videoDuration.value = Number.isFinite(videoElement.value?.duration) ? videoElement.value?.duration ?? 0 : 0;
-    statusMessage.value = 'Video ready. Use [M] or [S] to mark segments while the video plays.';
+    statusMessage.value =
+      playbackSource.value === 'preview'
+        ? 'Preview ready. Playback uses a generated MP4 preview; processing still uses the original file.'
+        : 'Video ready. Playback and processing both use the original file.';
     segments.value = segments.value.map((segment) => ({
       ...segment,
       start: clampToDuration(segment.start),
@@ -367,7 +373,7 @@ export function useAnnotatorState() {
     clearFeedback();
 
     if (!canMark.value || !videoElement.value) {
-      setError('Load a video before marking a segment.');
+      setError('Open a video before marking a segment.');
       return;
     }
 
@@ -381,7 +387,7 @@ export function useAnnotatorState() {
     clearFeedback();
 
     if (!canMark.value || !videoElement.value) {
-      setError('Load a video before marking a segment.');
+      setError('Open a video before marking a segment.');
       return;
     }
 
@@ -478,64 +484,73 @@ export function useAnnotatorState() {
     }
   }
 
-  async function loadVideoFile(file: File) {
-    revokeVideoUrl();
-    videoUrl.value = URL.createObjectURL(file);
-    videoName.value = file.name;
-    movieTitle.value = file.name.replace(/\.[^.]+$/, '');
-    pendingStart.value = null;
-    pendingType.value = null;
-    currentTime.value = 0;
-    videoDuration.value = 0;
-    statusMessage.value = `Loaded ${file.name}.`;
+  async function openVideo() {
     clearFeedback();
-    previewPlaybackEnabled.value = true;
-    clearPreviewEffects();
+    isOpeningVideo.value = true;
+    statusMessage.value = 'Preparing video...';
+
+    try {
+      const response = await requestJson<OpenVideoResponse>('/api/open-video');
+
+      if (response.cancelled) {
+        statusMessage.value =
+          inputPath.value === ''
+            ? 'Open a local video to begin annotating.'
+            : `${inputName.value || 'Current video'} is still ready.`;
+        return;
+      }
+
+      revokeVideoUrl();
+      videoUrl.value = response.playbackUrl ?? null;
+      inputPath.value = response.inputPath ?? '';
+      inputName.value = response.name ?? '';
+      outputPath.value = response.outputPath ?? '';
+      playbackSource.value = response.playbackSource ?? 'original';
+      movieTitle.value = (response.name ?? '').replace(/\.[^.]+$/, '');
+      pendingStart.value = null;
+      pendingType.value = null;
+      currentTime.value = 0;
+      videoDuration.value = 0;
+      clearPreviewEffects();
+      previewPlaybackEnabled.value = true;
+      statusMessage.value =
+        playbackSource.value === 'preview'
+          ? `Opened ${inputName.value}. Preparing generated preview playback...`
+          : `Opened ${inputName.value}.`;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to open the selected video.');
+    } finally {
+      isOpeningVideo.value = false;
+    }
   }
 
   function updateOutputPath(value: string) {
     outputPath.value = value;
   }
 
-  async function linkInputFile() {
-    clearFeedback();
-
-    try {
-      const response = await requestJson<SelectFileResponse>('/api/select-file');
-
-      if (response.cancelled) {
-        return;
-      }
-
-      linkedInputPath.value = response.path ?? '';
-      linkedInputName.value = response.name ?? '';
-      outputPath.value = response.path ? deriveDefaultOutputPath(response.path) : '';
-      statusMessage.value = linkedInputName.value
-        ? `Linked ${linkedInputName.value} for processing.`
-        : 'Linked input file for processing.';
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unable to link the selected file.');
-    }
-  }
-
   async function processLinkedVideo() {
     clearFeedback();
 
     if (!canProcessVideo.value) {
-      if (linkedInputPath.value === '') {
-        setError('Link a local source file before processing.');
+      if (inputPath.value === '') {
+        setError('Open a local source file before processing.');
         return;
       }
 
       if (segmentIssues.value.length > 0) {
         setError('Resolve validation issues before processing.');
+        return;
+      }
+
+      if (isOpeningVideo.value) {
+        setError('Wait for the video to finish preparing before processing.');
       }
 
       return;
     }
 
     isProcessing.value = true;
-    statusMessage.value = `Processing ${linkedInputName.value || 'linked video'}...`;
+    statusMessage.value = `Processing ${inputName.value || 'opened video'}...`;
 
     try {
       const response = await requestJson<ProcessResponse>('/api/process', {
@@ -544,7 +559,7 @@ export function useAnnotatorState() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          inputPath: linkedInputPath.value,
+          inputPath: inputPath.value,
           outputPath: outputPath.value.trim(),
           movieTitle: movieTitle.value,
           filters: segments.value.map((segment) => ({
@@ -559,7 +574,7 @@ export function useAnnotatorState() {
       outputPath.value = response.outputPath;
       statusMessage.value = response.message;
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unable to process the linked video.');
+      setError(error instanceof Error ? error.message : 'Unable to process the opened video.');
     } finally {
       isProcessing.value = false;
     }
@@ -692,14 +707,16 @@ export function useAnnotatorState() {
   return {
     SEEK_STEP_SECONDS,
     videoUrl,
-    videoName,
-    linkedInputPath,
-    linkedInputName,
+    inputPath,
+    inputName,
     outputPath,
+    playbackSource,
+    playbackSourceLabel,
     movieTitle,
     currentTime,
     effectiveDuration,
     isPlaying,
+    isOpeningVideo,
     isProcessing,
     previewPlaybackEnabled,
     previewActiveType,
@@ -729,10 +746,9 @@ export function useAnnotatorState() {
     deleteSegment,
     selectSegment,
     togglePreviewPlayback,
-    loadVideoFile,
+    openVideo,
     loadFilterFile,
     updateOutputPath,
-    linkInputFile,
     processLinkedVideo,
     exportFilters,
     handleKeydown,
