@@ -45,6 +45,8 @@ const props = defineProps<{
 
 const segmentCards = new Map<string, HTMLElement>();
 const activeToast = ref<{ kind: 'error' | 'status'; message: string; key: string } | null>(null);
+const isSourceExpanded = ref(false);
+const isSegmentsExpanded = ref(true);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 function emitSelectedFile(event: Event) {
@@ -90,6 +92,14 @@ function clearToastTimer() {
 function dismissToast() {
   clearToastTimer();
   activeToast.value = null;
+}
+
+function toggleSourceSection() {
+  isSourceExpanded.value = !isSourceExpanded.value;
+}
+
+function toggleSegmentsSection() {
+  isSegmentsExpanded.value = !isSegmentsExpanded.value;
 }
 
 function showToast(kind: 'error' | 'status', message: string) {
@@ -233,57 +243,68 @@ onBeforeUnmount(() => {
       <div class="panel-heading file-actions-heading">
         <div>
           <p class="section-kicker">Source</p>
-          <h2>Opened Video</h2>
+          <h2>Options</h2>
         </div>
-      </div>
-
-      <div class="file-actions-row">
         <button
           type="button"
-          class="subtle-action file-link-button"
-          data-testid="open-video-button"
-          :disabled="isOpeningVideo"
-          @click="emit('openVideo')"
+          class="section-toggle-button"
+          data-testid="toggle-source-section"
+          :aria-expanded="isSourceExpanded"
+          @click="toggleSourceSection"
         >
-          {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
-        </button>
-
-        <button
-          type="button"
-          class="process-button"
-          data-testid="process-video-button"
-          :disabled="!canProcessVideo || isOpeningVideo"
-          @click="emit('processLinkedVideo')"
-        >
-          {{ isProcessing ? 'Processing...' : 'Process Video' }}
+          {{ isSourceExpanded ? 'Hide' : 'Show' }}
         </button>
       </div>
 
-      <div
-        v-if="inputPath"
-        class="file-link-summary"
-        data-testid="opened-video-summary"
-        :title="inputPath"
-      >
-        <strong>{{ inputName }}</strong>
-        <span>{{ inputPath }}</span>
-        <span class="file-link-mode">
-          Playback: {{ playbackSourceLabel }}. Processing always uses the original file.
-        </span>
-      </div>
-      <p v-else class="file-link-empty">Open the real local movie file you want to annotate and process.</p>
+      <div v-if="isSourceExpanded" class="collapsible-section-content" data-testid="source-section-content">
+        <div class="file-actions-row">
+          <button
+            type="button"
+            class="subtle-action file-link-button"
+            data-testid="open-video-button"
+            :disabled="isOpeningVideo"
+            @click="emit('openVideo')"
+          >
+            {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
+          </button>
 
-      <label class="file-path-field">
-        <span>Output path</span>
-        <input
-          data-testid="output-path-input"
-          class="file-path-input"
-          type="text"
-          :value="outputPath"
-          placeholder="Auto-generated beside the opened video"
-          @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
-        />
-      </label>
+          <button
+            type="button"
+            class="process-button"
+            data-testid="process-video-button"
+            :disabled="!canProcessVideo || isOpeningVideo"
+            @click="emit('processLinkedVideo')"
+          >
+            {{ isProcessing ? 'Processing...' : 'Process Video' }}
+          </button>
+        </div>
+
+        <div
+          v-if="inputPath"
+          class="file-link-summary"
+          data-testid="opened-video-summary"
+          :title="inputPath"
+        >
+          <strong>{{ inputName }}</strong>
+          <span>{{ inputPath }}</span>
+          <span class="file-link-mode">
+            Playback: {{ playbackSourceLabel }}. Processing always uses the original file.
+          </span>
+        </div>
+        <p v-else class="file-link-empty">Open the real local movie file you want to annotate and process.</p>
+
+        <label class="file-path-field">
+          <span>Output path</span>
+          <input
+            data-testid="output-path-input"
+            class="file-path-input"
+            type="text"
+            :value="outputPath"
+            placeholder="Auto-generated beside the opened video"
+            @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+      </div>
     </section>
 
     <section class="quick-actions">
@@ -324,91 +345,108 @@ onBeforeUnmount(() => {
           <p class="section-kicker">Segments</p>
           <h2>Timeline</h2>
         </div>
-        <span class="panel-count">{{ sortedSegments.length.toString().padStart(2, '0') }}</span>
+        <div class="section-heading-actions">
+          <span class="panel-count">{{ sortedSegments.length.toString().padStart(2, '0') }}</span>
+          <button
+            type="button"
+            class="section-toggle-button"
+            data-testid="toggle-segments-section"
+            :aria-expanded="isSegmentsExpanded"
+            @click="toggleSegmentsSection"
+          >
+            {{ isSegmentsExpanded ? 'Hide' : 'Show' }}
+          </button>
+        </div>
       </div>
 
-      <div v-if="segmentIssues.length > 0" class="validation-summary" data-testid="validation-summary">
-        <strong>{{ segmentIssues.length }} issue{{ segmentIssues.length === 1 ? '' : 's' }}</strong>
-        <ul>
-          <li v-for="issue in segmentIssues" :key="issue.id">
-            {{ issue.id }}: {{ issue.messages.join(' ') }}
+      <div
+        v-if="isSegmentsExpanded"
+        class="collapsible-section-content collapsible-section-content-grow"
+        data-testid="segments-section-content"
+      >
+        <div v-if="segmentIssues.length > 0" class="validation-summary" data-testid="validation-summary">
+          <strong>{{ segmentIssues.length }} issue{{ segmentIssues.length === 1 ? '' : 's' }}</strong>
+          <ul>
+            <li v-for="issue in segmentIssues" :key="issue.id">
+              {{ issue.id }}: {{ issue.messages.join(' ') }}
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="sortedSegments.length === 0" class="segments-empty">
+          <PhWind :size="32" />
+          <p>Timeline is empty</p>
+        </div>
+
+        <ul v-else class="segment-list" data-testid="segment-list">
+          <li
+            v-for="segment in sortedSegments"
+            :key="segment.id"
+            :ref="(element) => registerSegmentCard(segment.id, element)"
+            :class="['segment-card', { 'segment-card-selected': hasSelectedSegment(segment.id) }]"
+          >
+            <div class="segment-card-surface" @click="handleSegmentCard(segment)">
+              <div class="segment-card-top">
+                <div :class="['segment-card-type', `segment-card-type-${segment.type}`]">
+                  <span class="segment-type-glyph">
+                    <PhMute v-if="segment.type === 'mute'" :size="14" weight="bold" />
+                    <PhSkipForward v-else :size="14" weight="bold" />
+                  </span>
+                  <span :class="['segment-type-label', `segment-type-label-${segment.type}`]">
+                    {{ formatSegmentType(segment.type) }}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  class="segment-delete-button"
+                  data-testid="segment-delete"
+                  aria-label="Delete segment"
+                  title="Delete segment"
+                  @click.stop="emit('deleteSegment', segment.id)"
+                >
+                  <PhTrash :size="16" />
+                </button>
+              </div>
+
+              <div class="segment-time-row">
+                <span
+                  class="segment-editable-time"
+                  data-testid="segment-start-edit"
+                  contenteditable="true"
+                  spellcheck="false"
+                  role="textbox"
+                  tabindex="0"
+                  @click.stop
+                  @focus="emit('selectSegment', segment.id)"
+                  @blur="commitSegmentTime(segment, 'start', $event)"
+                  @keydown="handleEditableKeydown($event, formatTimestamp(segment.start))"
+                >
+                  {{ formatTimestamp(segment.start) }}
+                </span>
+                <span class="segment-range-separator">-&gt;</span>
+                <span
+                  class="segment-editable-time"
+                  data-testid="segment-end-edit"
+                  contenteditable="true"
+                  spellcheck="false"
+                  role="textbox"
+                  tabindex="0"
+                  @click.stop
+                  @focus="emit('selectSegment', segment.id)"
+                  @blur="commitSegmentTime(segment, 'end', $event)"
+                  @keydown="handleEditableKeydown($event, formatTimestamp(segment.end))"
+                >
+                  {{ formatTimestamp(segment.end) }}
+                </span>
+              </div>
+
+              <div class="segment-card-meta">
+                <span class="segment-duration">{{ formatDuration(segment) }}</span>
+              </div>
+            </div>
           </li>
         </ul>
       </div>
-
-      <div v-if="sortedSegments.length === 0" class="segments-empty">
-        <PhWind :size="32" />
-        <p>Timeline is empty</p>
-      </div>
-
-      <ul v-else class="segment-list" data-testid="segment-list">
-        <li
-          v-for="segment in sortedSegments"
-          :key="segment.id"
-          :ref="(element) => registerSegmentCard(segment.id, element)"
-          :class="['segment-card', { 'segment-card-selected': hasSelectedSegment(segment.id) }]"
-        >
-          <div class="segment-card-surface" @click="handleSegmentCard(segment)">
-            <div class="segment-card-top">
-              <div :class="['segment-card-type', `segment-card-type-${segment.type}`]">
-                <span class="segment-type-glyph">
-                  <PhMute v-if="segment.type === 'mute'" :size="14" weight="bold" />
-                  <PhSkipForward v-else :size="14" weight="bold" />
-                </span>
-                <span :class="['segment-type-label', `segment-type-label-${segment.type}`]">
-                  {{ formatSegmentType(segment.type) }}
-                </span>
-              </div>
-              <button
-                type="button"
-                class="segment-delete-button"
-                data-testid="segment-delete"
-                aria-label="Delete segment"
-                title="Delete segment"
-                @click.stop="emit('deleteSegment', segment.id)"
-              >
-                <PhTrash :size="16" />
-              </button>
-            </div>
-
-            <div class="segment-time-row">
-              <span
-                class="segment-editable-time"
-                data-testid="segment-start-edit"
-                contenteditable="true"
-                spellcheck="false"
-                role="textbox"
-                tabindex="0"
-                @click.stop
-                @focus="emit('selectSegment', segment.id)"
-                @blur="commitSegmentTime(segment, 'start', $event)"
-                @keydown="handleEditableKeydown($event, formatTimestamp(segment.start))"
-              >
-                {{ formatTimestamp(segment.start) }}
-              </span>
-              <span class="segment-range-separator">-&gt;</span>
-              <span
-                class="segment-editable-time"
-                data-testid="segment-end-edit"
-                contenteditable="true"
-                spellcheck="false"
-                role="textbox"
-                tabindex="0"
-                @click.stop
-                @focus="emit('selectSegment', segment.id)"
-                @blur="commitSegmentTime(segment, 'end', $event)"
-                @keydown="handleEditableKeydown($event, formatTimestamp(segment.end))"
-              >
-                {{ formatTimestamp(segment.end) }}
-              </span>
-            </div>
-
-            <div class="segment-card-meta">
-              <span class="segment-duration">{{ formatDuration(segment) }}</span>
-            </div>
-          </div>
-        </li>
-      </ul>
     </section>
   </aside>
 

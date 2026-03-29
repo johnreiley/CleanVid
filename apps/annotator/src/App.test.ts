@@ -136,7 +136,18 @@ async function openVideo(
 ) {
   fetchMock.mockResolvedValueOnce(mockJsonResponse(responseBody));
 
-  await wrapper.get('[data-testid="open-video-button"]').trigger('click');
+  const sidebarOpenButton = wrapper.find('[data-testid="open-video-button"]');
+  const stageOpenButton = wrapper.find('[data-testid="stage-open-video-button"]');
+
+  if (sidebarOpenButton.exists()) {
+    await sidebarOpenButton.trigger('click');
+  } else if (stageOpenButton.exists()) {
+    await stageOpenButton.trigger('click');
+  } else {
+    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
+    await wrapper.get('[data-testid="open-video-button"]').trigger('click');
+  }
+
   await flushPromises();
   await nextTick();
 
@@ -144,6 +155,12 @@ async function openVideo(
   setVideoMetrics(video, 120, 0);
   video.dispatchEvent(new Event('loadedmetadata'));
   await nextTick();
+
+  if (!wrapper.find('[data-testid="source-section-content"]').exists()) {
+    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
+    await nextTick();
+  }
+
   return video;
 }
 
@@ -184,6 +201,21 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="timeline-track"]')).toBeTruthy();
   });
 
+  it('defaults Source collapsed and Segments expanded, and lets both sections toggle', async () => {
+    const wrapper = mount(App);
+
+    expect(wrapper.find('[data-testid="source-section-content"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="segments-section-content"]').exists()).toBe(true);
+
+    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
+    await nextTick();
+    expect(wrapper.find('[data-testid="source-section-content"]').exists()).toBe(true);
+
+    await wrapper.get('[data-testid="toggle-segments-section"]').trigger('click');
+    await nextTick();
+    expect(wrapper.find('[data-testid="segments-section-content"]').exists()).toBe(false);
+  });
+
   it('shows the loaded filename in the top bar', async () => {
     const wrapper = mount(App);
 
@@ -209,17 +241,18 @@ describe('annotator app', () => {
       )
       .mockResolvedValueOnce(mockJsonResponse({ cancelled: true }));
 
-    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
-      true
-    );
+    expect(wrapper.find('[data-testid="source-section-content"]').exists()).toBe(false);
 
-    await wrapper.get('[data-testid="open-video-button"]').trigger('click');
+    await wrapper.get('[data-testid="stage-open-video-button"]').trigger('click');
     await flushPromises();
     await nextTick();
 
     const video = wrapper.get('[data-testid="video-player"]').element as HTMLVideoElement;
     setVideoMetrics(video, 120, 0);
     video.dispatchEvent(new Event('loadedmetadata'));
+    await nextTick();
+
+    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
     await nextTick();
 
     expect(wrapper.get('[data-testid="opened-video-summary"]').text()).toContain('movie.mp4');
@@ -249,13 +282,8 @@ describe('annotator app', () => {
     const openRequest = createDeferred<Response>();
     fetchMock.mockReturnValueOnce(openRequest.promise);
 
-    await wrapper.get('[data-testid="open-video-button"]').trigger('click');
+    await wrapper.get('[data-testid="stage-open-video-button"]').trigger('click');
     await nextTick();
-
-    expect(wrapper.get('[data-testid="open-video-button"]').text()).toContain('Preparing...');
-    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
-      true
-    );
     expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Preparing video...');
 
     openRequest.resolve(
@@ -271,6 +299,13 @@ describe('annotator app', () => {
 
     await flushPromises();
     await nextTick();
+
+    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
+    await nextTick();
+    expect(wrapper.get('[data-testid="open-video-button"]').text()).toContain('Open Video');
+    expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
+      false
+    );
   });
 
   it('shows backend validation errors for unsupported formats and keeps processing disabled', async () => {
@@ -290,6 +325,8 @@ describe('annotator app', () => {
     await nextTick();
 
     expect(wrapper.get('[data-testid="error-message"]').text()).toContain('Unsupported video format.');
+    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
+    await nextTick();
     expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
       true
     );

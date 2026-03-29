@@ -264,6 +264,16 @@ button {
   gap: 1rem;
 }
 
+.collapsible-section-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.collapsible-section-content-grow {
+  min-height: 0;
+  align-content: start;
+}
+
 .file-actions {
   padding: 1rem;
   border-radius: 1.5rem;
@@ -575,8 +585,6 @@ button {
 
 .segments-shell {
   min-height: 0;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  flex-grow: 1;
 }
 
 .panel-heading {
@@ -586,8 +594,27 @@ button {
   align-items: center;
 }
 
+.section-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
 .panel-heading h2 {
   font-size: 1rem;
+}
+
+.section-toggle-button {
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.42);
+  color: var(--text-soft);
+}
+
+.section-toggle-button:hover {
+  transform: translateY(-1px);
 }
 
 .validation-summary {
@@ -609,7 +636,6 @@ button {
 }
 
 .segments-empty {
-  min-height: 16rem;
   text-align: center;
   display: flex;
   flex-direction: column;
