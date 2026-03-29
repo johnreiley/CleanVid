@@ -28,7 +28,7 @@ defineProps<{
       <div class="meta-chip meta-chip-filename" :title="movieLabel">{{ movieLabel }}</div>
       <button type="button" class="export-button" data-testid="export-button" @click="$emit('export')">
         <PhExport :size="18" />
-        <span>Export Sequence</span>
+        <span>Export Filters</span>
       </button>
     </div>
   </header>

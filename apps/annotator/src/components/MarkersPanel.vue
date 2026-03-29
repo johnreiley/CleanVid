@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
           {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
         </button>
         <label class="subtle-action">
-          <span>Import JSON</span>
+          <span>Import Filters</span>
           <input
             data-testid="filters-input"
             class="visually-hidden-input"
@@ -327,7 +327,7 @@ onBeforeUnmount(() => {
     <section class="segments-shell">
       <div class="panel-heading">
         <div>
-          <p class="section-kicker">Segments</p>
+          <p class="section-kicker">Filters</p>
           <h2>Timeline</h2>
         </div>
         <div class="section-heading-actions">

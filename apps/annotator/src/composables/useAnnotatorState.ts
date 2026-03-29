@@ -89,7 +89,7 @@ export function useAnnotatorState() {
   const pendingType = ref<FilterType | null>(null);
   const segments = ref<EditableSegment[]>([]);
   const selectedSegmentId = ref<string | null>(null);
-  const statusMessage = ref('Open a local video to begin annotating.');
+  const statusMessage = ref('Open a video to begin annotating.');
   const errorMessage = ref('');
   let previewMutedApplied = false;
   let previewMutedOriginal = false;
@@ -473,7 +473,7 @@ export function useAnnotatorState() {
       importedMovieDuration.value = parsed.movie.duration;
       pendingStart.value = null;
       pendingType.value = null;
-      statusMessage.value = `Imported ${parsed.filters.length} segment${parsed.filters.length === 1 ? '' : 's'}.`;
+      statusMessage.value = `Imported ${parsed.filters.length} filter${parsed.filters.length === 1 ? '' : 's'}.`;
     } catch (error) {
       if (error instanceof FilterValidationError || error instanceof SyntaxError || error instanceof Error) {
         setError(error.message);
@@ -495,7 +495,7 @@ export function useAnnotatorState() {
       if (response.cancelled) {
         statusMessage.value =
           inputPath.value === ''
-            ? 'Open a local video to begin annotating.'
+            ? 'Open a video to begin annotating.'
             : `${inputName.value || 'Current video'} is still ready.`;
         return;
       }
