@@ -16,6 +16,7 @@ const emit = defineEmits<{
   seekTo: [seconds: number];
   selectSegment: [id: string];
   timeUpdate: [video: HTMLVideoElement];
+  togglePreviewPlayback: [];
   togglePlayback: [];
   videoSelected: [file: File];
 }>();
@@ -29,6 +30,8 @@ const props = defineProps<{
   pendingStart: number | null;
   pendingType: FilterType | null;
   pendingTypeLabel: string;
+  previewActiveType: FilterType | null;
+  previewPlaybackEnabled: boolean;
   registerVideoElement: (element: Element | ComponentPublicInstance | null) => void;
   sortedSegments: EditableSegment[];
   videoUrl: string | null;
@@ -222,9 +225,23 @@ onBeforeUnmount(() => {
         @pause="emitVideoEvent($event, 'playStateChange')"
       />
 
-      <div v-if="pendingStart !== null && pendingType !== null" class="viewport-hud">
-        <span :class="['hud-dot', `hud-dot-${pendingType}`]" />
-        <span>{{ pendingTypeLabel }} mode live from {{ formatTimestamp(pendingStart) }}</span>
+      <div
+        v-if="(pendingStart !== null && pendingType !== null) || previewActiveType !== null"
+        class="viewport-hud-stack"
+      >
+        <div v-if="pendingStart !== null && pendingType !== null" class="viewport-hud">
+          <span :class="['hud-dot', `hud-dot-${pendingType}`]" />
+          <span>{{ pendingTypeLabel }} mode live from {{ formatTimestamp(pendingStart) }}</span>
+        </div>
+
+        <div
+          v-if="previewActiveType !== null"
+          :class="['viewport-hud', 'viewport-hud-preview', `viewport-hud-preview-${previewActiveType}`]"
+          data-testid="preview-hud"
+        >
+          <span :class="['hud-dot', `hud-dot-${previewActiveType}`]" />
+          <span>{{ previewActiveType === 'mute' ? 'Mute preview' : 'Skip preview' }}</span>
+        </div>
       </div>
 
       <label v-if="!videoUrl" class="video-placeholder">
@@ -311,10 +328,20 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="transport-meta">
-          <span class="transport-state">{{ isPlaying ? 'Playing' : 'Paused' }}</span>
+          <button
+            type="button"
+            :class="['preview-toggle', { 'preview-toggle-enabled': previewPlaybackEnabled }]"
+            data-testid="preview-toggle"
+            @click="emit('togglePreviewPlayback')"
+          >
+            <span class="preview-toggle-indicator" />
+            <span>{{ previewPlaybackEnabled ? 'Preview On' : 'Preview Off' }}</span>
+          </button>
           <span class="shortcut-pill">SPACE</span>
-          <span class="shortcut-copy">Toggle</span>
-          <span class="shortcut-pill">Shift + Arrows</span>
+          <span class="shortcut-copy">Toggle Play/Pause</span>
+          <span class="shortcut-pill">←/→ Arrows</span>
+          <span class="shortcut-copy">Seek</span>
+          <span class="shortcut-pill">Shift + ←/→ Arrows</span>
           <span class="shortcut-copy">Fine seek</span>
         </div>
       </div>

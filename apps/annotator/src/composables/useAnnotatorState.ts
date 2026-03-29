@@ -1,11 +1,13 @@
-import { computed, ref, type ComponentPublicInstance } from 'vue';
+import { computed, ref, watch, type ComponentPublicInstance } from 'vue';
 import {
   FilterValidationError,
+  buildTimeline,
   normalizeFilters,
   parseFilterFile,
   serializeFilterFile,
   type FilterSegment,
-  type FilterType
+  type FilterType,
+  type TimelineSegment
 } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp } from '../time';
@@ -50,6 +52,8 @@ export function useAnnotatorState() {
   const currentTime = ref(0);
   const videoDuration = ref(0);
   const isPlaying = ref(false);
+  const previewPlaybackEnabled = ref(true);
+  const previewActiveType = ref<FilterType | null>(null);
   const activeType = ref<FilterType>('mute');
   const pendingStart = ref<number | null>(null);
   const pendingType = ref<FilterType | null>(null);
@@ -57,8 +61,34 @@ export function useAnnotatorState() {
   const selectedSegmentId = ref<string | null>(null);
   const statusMessage = ref('Load a local video to begin annotating.');
   const errorMessage = ref('');
+  let previewMutedApplied = false;
+  let previewMutedOriginal = false;
 
   const effectiveDuration = computed(() => videoDuration.value || importedMovieDuration.value || 0);
+  const previewTimeline = computed<TimelineSegment[]>(() => {
+    if (effectiveDuration.value <= 0) {
+      return [];
+    }
+
+    const validSegments = segments.value.filter(
+      (segment) =>
+        Number.isFinite(segment.start) &&
+        Number.isFinite(segment.end) &&
+        segment.start >= 0 &&
+        segment.end >= 0 &&
+        segment.start < segment.end
+    );
+
+    return buildTimeline(
+      validSegments.map((segment) => ({
+        id: segment.id,
+        type: segment.type,
+        start: segment.start,
+        end: segment.end
+      })),
+      effectiveDuration.value
+    );
+  });
 
   function sortSegments(items: EditableSegment[]): EditableSegment[] {
     return [...items].sort(
@@ -158,6 +188,55 @@ export function useAnnotatorState() {
     isPlaying.value = !videoElement.value.paused;
   }
 
+  function clearPreviewMute() {
+    if (!videoElement.value || !previewMutedApplied) {
+      previewMutedApplied = false;
+      return;
+    }
+
+    videoElement.value.muted = previewMutedOriginal;
+    previewMutedApplied = false;
+  }
+
+  function clearPreviewEffects() {
+    previewActiveType.value = null;
+    clearPreviewMute();
+  }
+
+  function applyPreviewPlayback() {
+    const video = videoElement.value;
+
+    if (!video || !previewPlaybackEnabled.value || !isPlaying.value) {
+      clearPreviewEffects();
+      return;
+    }
+
+    const activeSegment = previewTimeline.value.find(
+      (segment) => segment.kind !== 'keep' && currentTime.value >= segment.start && currentTime.value < segment.end
+    );
+
+    if (!activeSegment) {
+      clearPreviewEffects();
+      return;
+    }
+
+    if (activeSegment.kind === 'skip') {
+      previewActiveType.value = 'skip';
+      clearPreviewMute();
+      seekTo(activeSegment.end);
+      return;
+    }
+
+    previewActiveType.value = 'mute';
+
+    if (!previewMutedApplied) {
+      previewMutedOriginal = video.muted;
+      previewMutedApplied = true;
+    }
+
+    video.muted = true;
+  }
+
   function revokeVideoUrl() {
     if (videoUrl.value) {
       URL.revokeObjectURL(videoUrl.value);
@@ -175,13 +254,14 @@ export function useAnnotatorState() {
     }
 
     videoDuration.value = Number.isFinite(videoElement.value?.duration) ? videoElement.value?.duration ?? 0 : 0;
-    statusMessage.value = 'Video ready. Use M or S to mark segments while the video plays.';
+    statusMessage.value = 'Video ready. Use [M] or [S] to mark segments while the video plays.';
     segments.value = segments.value.map((segment) => ({
       ...segment,
       start: clampToDuration(segment.start),
       end: clampToDuration(segment.end)
     }));
     syncVideoState();
+    applyPreviewPlayback();
   }
 
   function handleTimeUpdate(video?: HTMLVideoElement | null) {
@@ -190,6 +270,7 @@ export function useAnnotatorState() {
     }
 
     syncVideoState();
+    applyPreviewPlayback();
   }
 
   function handlePlayStateChange(video?: HTMLVideoElement | null) {
@@ -198,6 +279,7 @@ export function useAnnotatorState() {
     }
 
     syncVideoState();
+    applyPreviewPlayback();
   }
 
   async function togglePlayback() {
@@ -214,6 +296,7 @@ export function useAnnotatorState() {
     }
 
     syncVideoState();
+    applyPreviewPlayback();
   }
 
   function seekBy(deltaSeconds: number) {
@@ -225,6 +308,7 @@ export function useAnnotatorState() {
 
     videoElement.value.currentTime = clampToDuration(videoElement.value.currentTime + deltaSeconds);
     syncVideoState();
+    applyPreviewPlayback();
   }
 
   function seekTo(start: number) {
@@ -234,6 +318,7 @@ export function useAnnotatorState() {
 
     videoElement.value.currentTime = clampToDuration(start);
     syncVideoState();
+    applyPreviewPlayback();
   }
 
   function startMark(type: FilterType) {
@@ -362,6 +447,8 @@ export function useAnnotatorState() {
     videoDuration.value = 0;
     statusMessage.value = `Loaded ${file.name}.`;
     clearFeedback();
+    previewPlaybackEnabled.value = true;
+    clearPreviewEffects();
   }
 
   async function loadFilterFile(file: File) {
@@ -410,6 +497,17 @@ export function useAnnotatorState() {
 
   function selectSegment(id: string | null) {
     selectedSegmentId.value = id;
+  }
+
+  function togglePreviewPlayback() {
+    previewPlaybackEnabled.value = !previewPlaybackEnabled.value;
+
+    if (!previewPlaybackEnabled.value) {
+      clearPreviewEffects();
+      return;
+    }
+
+    applyPreviewPlayback();
   }
 
   function seekToRatio(ratio: number) {
@@ -469,8 +567,13 @@ export function useAnnotatorState() {
   }
 
   function cleanup() {
+    clearPreviewEffects();
     revokeVideoUrl();
   }
+
+  watch([currentTime, isPlaying, previewPlaybackEnabled, previewTimeline], () => {
+    applyPreviewPlayback();
+  });
 
   return {
     SEEK_STEP_SECONDS,
@@ -480,6 +583,8 @@ export function useAnnotatorState() {
     currentTime,
     effectiveDuration,
     isPlaying,
+    previewPlaybackEnabled,
+    previewActiveType,
     activeType,
     pendingStart,
     pendingType,
@@ -504,6 +609,7 @@ export function useAnnotatorState() {
     updateSegmentType,
     deleteSegment,
     selectSegment,
+    togglePreviewPlayback,
     loadVideoFile,
     loadFilterFile,
     exportFilters,

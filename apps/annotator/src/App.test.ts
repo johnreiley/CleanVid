@@ -79,11 +79,21 @@ async function readBlobText(blob: Blob): Promise<string> {
 }
 
 function setVideoMetrics(video: HTMLVideoElement, duration: number, current = 0) {
+  let mutedState = false;
+
   Object.defineProperty(video, 'duration', {
     configurable: true,
     value: duration
   });
   video.currentTime = current;
+  Object.defineProperty(video, 'muted', {
+    configurable: true,
+    get: () => mutedState,
+    set: (value: boolean) => {
+      mutedState = Boolean(value);
+    }
+  });
+  video.muted = false;
   Object.defineProperty(video, 'paused', {
     configurable: true,
     get: () => true
@@ -144,6 +154,7 @@ describe('annotator app', () => {
     await loadVideo(wrapper);
 
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
+    expect(wrapper.get('[data-testid="preview-toggle"]').text()).toContain('Preview On');
   });
 
   it('animates toast visibility, supports manual dismissal, and auto-dismisses after 5 seconds', async () => {
@@ -179,7 +190,7 @@ describe('annotator app', () => {
     await nextTick();
     await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
 
-    expect(wrapper.get('[data-testid="toggle-mute"]').text()).toContain('Close active mute range');
+    expect(wrapper.get('[data-testid="toggle-mute"]').classes()).toContain('action-tile-active');
 
     video.currentTime = 15;
     video.dispatchEvent(new Event('timeupdate'));
@@ -266,6 +277,163 @@ describe('annotator app', () => {
         Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
       }
     }
+  });
+
+  it('mutes audio only during playback inside mute segments and shows the preview hud', async () => {
+    const wrapper = mount(App);
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 10;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 15;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 12;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+
+    expect(video.muted).toBe(false);
+    expect(wrapper.find('[data-testid="preview-hud"]').exists()).toBe(false);
+
+    await wrapper.get('[aria-label="Play video"]').trigger('click');
+    await nextTick();
+
+    expect(video.muted).toBe(true);
+    expect(wrapper.get('[data-testid="preview-hud"]').text()).toContain('Mute preview');
+
+    await wrapper.get('[aria-label="Pause playback"]').trigger('click');
+    await nextTick();
+
+    expect(video.muted).toBe(false);
+    expect(wrapper.find('[data-testid="preview-hud"]').exists()).toBe(false);
+  });
+
+  it('skips to the end of skip segments during playback', async () => {
+    const wrapper = mount(App);
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 22;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[aria-label="Play video"]').trigger('click');
+    await nextTick();
+
+    expect(video.currentTime).toBe(30);
+  });
+
+  it('does not preview mute or skip while paused, scrubbing, or stepping', async () => {
+    const wrapper = mount(App);
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
+    timeline.getBoundingClientRect = vi.fn(() => ({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 40,
+      width: 200,
+      height: 40,
+      toJSON: () => ({})
+    }));
+
+    timeline.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 40 }));
+    await nextTick();
+    expect(video.currentTime).toBe(24);
+    expect(wrapper.find('[data-testid="preview-hud"]').exists()).toBe(false);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    await wrapper.vm.$nextTick();
+    expect(video.currentTime).toBe(29);
+    expect(wrapper.find('[data-testid="preview-hud"]').exists()).toBe(false);
+  });
+
+  it('leaves playback raw when preview is disabled', async () => {
+    const wrapper = mount(App);
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    await wrapper.get('[data-testid="preview-toggle"]').trigger('click');
+    expect(wrapper.get('[data-testid="preview-toggle"]').text()).toContain('Preview Off');
+
+    video.currentTime = 22;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[aria-label="Play video"]').trigger('click');
+    await nextTick();
+
+    expect(video.currentTime).toBe(22);
+    expect(wrapper.find('[data-testid="preview-hud"]').exists()).toBe(false);
+  });
+
+  it('applies skip precedence over mute during preview playback', async () => {
+    const wrapper = mount(App);
+    const video = await loadVideo(wrapper);
+
+    video.currentTime = 10;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 15;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 18;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 16;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[aria-label="Play video"]').trigger('click');
+    await nextTick();
+
+    expect(video.currentTime).toBe(18);
+    expect(video.muted).toBe(true);
+    expect(wrapper.get('[data-testid="preview-hud"]').text()).toContain('Mute preview');
   });
 
   it('imports filters and exports normalized JSON', async () => {
