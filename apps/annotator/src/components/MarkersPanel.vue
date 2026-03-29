@@ -4,6 +4,7 @@ import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp, parseTimestamp } from '../time';
 import PhSkipForward from '@phosphor-icons-vue-icons/PhSkipForward.vue.mjs';
+import PhInfo from '@phosphor-icons-vue-icons/PhInfo.vue.mjs';
 import PhMute from '@phosphor-icons-vue-icons/PhSpeakerSimpleX.vue.mjs';
 import PhTrash from '@phosphor-icons-vue-icons/PhTrash.vue.mjs';
 import PhX from '@phosphor-icons-vue-icons/PhX.vue.mjs';
@@ -247,8 +248,8 @@ onBeforeUnmount(() => {
     <section class="file-actions">
       <div class="panel-heading file-actions-heading">
         <div>
-          <p class="section-kicker">Output</p>
-          <h2>Processing</h2>
+          <p class="section-kicker">Export</p>
+          <h2>Options</h2>
         </div>
         <button
           type="button"
@@ -269,13 +270,27 @@ onBeforeUnmount(() => {
         <p class="file-link-empty">Processing always uses the original source file, not the preview.</p>
 
         <label class="file-path-field">
-          <span>Output path</span>
+          <span class="field-label-with-tooltip">
+            <span>Output path</span>
+            <span class="field-tooltip">
+              <button
+                type="button"
+                class="field-tooltip-button"
+                aria-label="Explain output path"
+              >
+                <PhInfo :size="18" weight="fill" />
+              </button>
+              <span class="field-tooltip-content" role="tooltip">
+                Defaults to the same directory as the opened video
+              </span>
+            </span>
+          </span>
           <input
             data-testid="output-path-input"
             class="file-path-input"
             type="text"
+            placeholder="C:\example\filepath"
             :value="outputPath"
-            placeholder="Auto-generated beside the opened video"
             @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
           />
         </label>
