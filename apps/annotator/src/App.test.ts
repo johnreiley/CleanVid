@@ -137,12 +137,12 @@ async function openVideo(
   fetchMock.mockResolvedValueOnce(mockJsonResponse(responseBody));
 
   const sidebarOpenButton = wrapper.find('[data-testid="open-video-button"]');
-  const stageOpenButton = wrapper.find('[data-testid="stage-open-video-button"]');
+  const videoDropzone = wrapper.find('[data-testid="video-dropzone"]');
 
   if (sidebarOpenButton.exists()) {
     await sidebarOpenButton.trigger('click');
-  } else if (stageOpenButton.exists()) {
-    await stageOpenButton.trigger('click');
+  } else if (videoDropzone.exists()) {
+    await videoDropzone.trigger('click');
   }
 
   await flushPromises();
@@ -193,6 +193,29 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="timeline-track"]')).toBeTruthy();
   });
 
+  it('opens the picker when clicking the empty video stage and removes the redundant stage button', async () => {
+    const wrapper = mount(App);
+
+    expect(wrapper.find('[data-testid="stage-open-video-button"]').exists()).toBe(false);
+
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: false,
+        inputPath: 'C:\\Movies\\movie.mp4',
+        name: 'movie.mp4',
+        outputPath: 'C:\\Movies\\movie.cleaned.mp4',
+        playbackUrl: '/api/media/token-1',
+        playbackSource: 'original'
+      })
+    );
+
+    await wrapper.get('[data-testid="video-dropzone"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/open-video', undefined);
+  });
+
   it('defaults Processing and Segments expanded, and lets both sections toggle', async () => {
     const wrapper = mount(App);
 
@@ -217,6 +240,19 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="preview-toggle"]').text()).toContain('Preview On');
   });
 
+  it('does not reopen the picker when clicking the stage after a video is loaded', async () => {
+    const wrapper = mount(App);
+
+    await openVideo(wrapper);
+    fetchMock.mockClear();
+
+    await wrapper.get('[data-testid="video-dropzone"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('opens a video for playback and keeps it when the picker is cancelled', async () => {
     const wrapper = mount(App);
 
@@ -233,7 +269,7 @@ describe('annotator app', () => {
       )
       .mockResolvedValueOnce(mockJsonResponse({ cancelled: true }));
 
-    await wrapper.get('[data-testid="stage-open-video-button"]').trigger('click');
+    await wrapper.get('[data-testid="video-dropzone"]').trigger('click');
     await flushPromises();
     await nextTick();
 
@@ -263,7 +299,7 @@ describe('annotator app', () => {
     const openRequest = createDeferred<Response>();
     fetchMock.mockReturnValueOnce(openRequest.promise);
 
-    await wrapper.get('[data-testid="stage-open-video-button"]').trigger('click');
+    await wrapper.get('[data-testid="video-dropzone"]').trigger('click');
     await nextTick();
     expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Preparing video...');
 
@@ -298,7 +334,7 @@ describe('annotator app', () => {
       )
     );
 
-    await wrapper.get('[data-testid="stage-open-video-button"]').trigger('click');
+    await wrapper.get('[data-testid="video-placeholder"]').trigger('click');
     await flushPromises();
     await nextTick();
 
@@ -314,7 +350,7 @@ describe('annotator app', () => {
     try {
       const wrapper = mount(App);
 
-      expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Open a local video to begin annotating.');
+      expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Open a video to begin annotating.');
 
       await wrapper.get('[data-testid="toast-dismiss"]').trigger('click');
       await nextTick();
@@ -723,7 +759,7 @@ describe('annotator app', () => {
     await flushPromises();
     await nextTick();
 
-    expect(wrapper.text()).toContain('Imported 1 segment');
+    expect(wrapper.text()).toContain('Imported 1 filter.');
 
     await wrapper.get('[data-testid="export-button"]').trigger('click');
     expect(lastExportBlob).toBeDefined();

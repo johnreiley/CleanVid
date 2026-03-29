@@ -178,6 +178,12 @@ function handleTimelineSegmentClick(segment: EditableSegment) {
   emit('seekTo', segment.start);
 }
 
+function handleViewportClick() {
+  if (!props.videoUrl) {
+    emit('openVideo');
+  }
+}
+
 onBeforeUnmount(() => {
   releaseTimelineDrag();
 });
@@ -185,7 +191,11 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="video-stage" data-testid="video-stage">
-    <div class="viewport-card panel panel-dark" data-testid="video-dropzone">
+    <div
+      :class="['viewport-card', 'panel', 'panel-dark', { 'viewport-card-empty': !videoUrl }]"
+      data-testid="video-dropzone"
+      @click="handleViewportClick"
+    >
       <video
         :ref="registerVideoElement"
         data-testid="video-player"
@@ -216,20 +226,12 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="!videoUrl" class="video-placeholder">
+      <div v-if="!videoUrl" class="video-placeholder" data-testid="video-placeholder">
         <div class="placeholder-mark">
           <PhFilmSlate class="placeholder-mark-icon" :size="48" />
         </div>
-        <p class="video-placeholder-title">Open a local movie</p>
-        <p class="video-placeholder-copy">Choose the source file to annotate and process</p>
-        <button
-          type="button"
-          class="export-button"
-          data-testid="stage-open-video-button"
-          @click="emit('openVideo')"
-        >
-          Open Video
-        </button>
+        <p class="video-placeholder-title">Open a video</p>
+        <p class="video-placeholder-copy">Select a file to annotate and process</p>
       </div>
     </div>
 

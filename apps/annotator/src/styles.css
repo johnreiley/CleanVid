@@ -823,6 +823,10 @@ button {
   overflow: hidden;
 }
 
+.viewport-card-empty {
+  cursor: pointer;
+}
+
 .viewport-card-drag {
   border-color: rgba(99, 102, 241, 0.36);
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.22), 0 25px 50px -12px rgba(0, 0, 0, 0.7);
@@ -832,9 +836,12 @@ button {
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: 1.25rem;
   background: #030712;
   object-fit: contain;
+}
+
+.video-player, .video-placeholder {
+  border-radius: 1.25rem;
 }
 
 .viewport-hud {
@@ -871,7 +878,6 @@ button {
   place-content: center;
   gap: 0.45rem;
   text-align: center;
-  border-radius: 2rem;
   border: 1px solid rgba(148, 163, 184, 0.14);
   background:
     linear-gradient(180deg, rgba(3, 7, 18, 0.3), rgba(3, 7, 18, 0.66)),
