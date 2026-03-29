@@ -143,9 +143,6 @@ async function openVideo(
     await sidebarOpenButton.trigger('click');
   } else if (stageOpenButton.exists()) {
     await stageOpenButton.trigger('click');
-  } else {
-    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
-    await wrapper.get('[data-testid="open-video-button"]').trigger('click');
   }
 
   await flushPromises();
@@ -155,11 +152,6 @@ async function openVideo(
   setVideoMetrics(video, 120, 0);
   video.dispatchEvent(new Event('loadedmetadata'));
   await nextTick();
-
-  if (!wrapper.find('[data-testid="source-section-content"]').exists()) {
-    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
-    await nextTick();
-  }
 
   return video;
 }
@@ -201,15 +193,15 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="timeline-track"]')).toBeTruthy();
   });
 
-  it('defaults Source collapsed and Segments expanded, and lets both sections toggle', async () => {
+  it('defaults Processing and Segments expanded, and lets both sections toggle', async () => {
     const wrapper = mount(App);
 
-    expect(wrapper.find('[data-testid="source-section-content"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="processing-section-content"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="segments-section-content"]').exists()).toBe(true);
 
-    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
+    await wrapper.get('[data-testid="toggle-processing-section"]').trigger('click');
     await nextTick();
-    expect(wrapper.find('[data-testid="source-section-content"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="processing-section-content"]').exists()).toBe(false);
 
     await wrapper.get('[data-testid="toggle-segments-section"]').trigger('click');
     await nextTick();
@@ -241,8 +233,6 @@ describe('annotator app', () => {
       )
       .mockResolvedValueOnce(mockJsonResponse({ cancelled: true }));
 
-    expect(wrapper.find('[data-testid="source-section-content"]').exists()).toBe(false);
-
     await wrapper.get('[data-testid="stage-open-video-button"]').trigger('click');
     await flushPromises();
     await nextTick();
@@ -251,14 +241,7 @@ describe('annotator app', () => {
     setVideoMetrics(video, 120, 0);
     video.dispatchEvent(new Event('loadedmetadata'));
     await nextTick();
-
-    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
-    await nextTick();
-
-    expect(wrapper.get('[data-testid="opened-video-summary"]').text()).toContain('movie.mp4');
-    expect(wrapper.get('[data-testid="opened-video-summary"]').attributes('title')).toBe(
-      'C:\\Movies\\movie.mp4'
-    );
+    expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
     expect((wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement).value).toBe(
       'C:\\Movies\\movie.cleaned.mp4'
     );
@@ -270,9 +253,7 @@ describe('annotator app', () => {
     await flushPromises();
     await nextTick();
 
-    expect(wrapper.get('[data-testid="opened-video-summary"]').attributes('title')).toBe(
-      'C:\\Movies\\movie.mp4'
-    );
+    expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/open-video', undefined);
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/open-video', undefined);
   });
@@ -299,9 +280,6 @@ describe('annotator app', () => {
 
     await flushPromises();
     await nextTick();
-
-    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
-    await nextTick();
     expect(wrapper.get('[data-testid="open-video-button"]').text()).toContain('Open Video');
     expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
       false
@@ -325,8 +303,6 @@ describe('annotator app', () => {
     await nextTick();
 
     expect(wrapper.get('[data-testid="error-message"]').text()).toContain('Unsupported video format.');
-    await wrapper.get('[data-testid="toggle-source-section"]').trigger('click');
-    await nextTick();
     expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
       true
     );
@@ -398,8 +374,8 @@ describe('annotator app', () => {
       playbackSource: 'preview'
     });
 
-    expect(wrapper.get('[data-testid="opened-video-summary"]').text()).toContain(
-      'Processing always uses the original file.'
+    expect(wrapper.get('[data-testid="processing-section-content"]').text()).toContain(
+      'Processing always uses the original source file, not the preview.'
     );
 
     const outputInput = wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement;

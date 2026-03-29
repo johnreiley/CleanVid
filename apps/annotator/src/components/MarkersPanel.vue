@@ -26,16 +26,12 @@ const props = defineProps<{
   activeType: FilterType;
   canProcessVideo: boolean;
   errorMessage: string;
-  inputName: string;
-  inputPath: string;
   isOpeningVideo: boolean;
   isProcessing: boolean;
   markerCountLabel: string;
   outputPath: string;
   pendingStart: number | null;
   pendingType: FilterType | null;
-  playbackSource: 'original' | 'preview' | null;
-  playbackSourceLabel: string;
   selectionScrollKey: number;
   segmentIssues: SegmentIssue[];
   selectedSegmentId: string | null;
@@ -45,7 +41,7 @@ const props = defineProps<{
 
 const segmentCards = new Map<string, HTMLElement>();
 const activeToast = ref<{ kind: 'error' | 'status'; message: string; key: string } | null>(null);
-const isSourceExpanded = ref(false);
+const isProcessingExpanded = ref(true);
 const isSegmentsExpanded = ref(true);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -94,8 +90,8 @@ function dismissToast() {
   activeToast.value = null;
 }
 
-function toggleSourceSection() {
-  isSourceExpanded.value = !isSourceExpanded.value;
+function toggleProcessingSection() {
+  isProcessingExpanded.value = !isProcessingExpanded.value;
 }
 
 function toggleSegmentsSection() {
@@ -225,7 +221,16 @@ onBeforeUnmount(() => {
     <div class="sidebar-header">
       <p class="eyebrow">Session</p>
       <div class="sidebar-header-row">
-        <span class="meta-chip">{{ markerCountLabel }}</span>
+        <!-- <span class="meta-chip">{{ markerCountLabel }}</span> -->
+        <button
+          type="button"
+          class="subtle-action file-link-button"
+          data-testid="open-video-button"
+          :disabled="isOpeningVideo"
+          @click="emit('openVideo')"
+        >
+          {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
+        </button>
         <label class="subtle-action">
           <span>Import JSON</span>
           <input
@@ -242,56 +247,26 @@ onBeforeUnmount(() => {
     <section class="file-actions">
       <div class="panel-heading file-actions-heading">
         <div>
-          <p class="section-kicker">Source</p>
-          <h2>Options</h2>
+          <p class="section-kicker">Output</p>
+          <h2>Processing</h2>
         </div>
         <button
           type="button"
           class="section-toggle-button"
-          data-testid="toggle-source-section"
-          :aria-expanded="isSourceExpanded"
-          @click="toggleSourceSection"
+          data-testid="toggle-processing-section"
+          :aria-expanded="isProcessingExpanded"
+          @click="toggleProcessingSection"
         >
-          {{ isSourceExpanded ? 'Hide' : 'Show' }}
+          {{ isProcessingExpanded ? 'Hide' : 'Show' }}
         </button>
       </div>
 
-      <div v-if="isSourceExpanded" class="collapsible-section-content" data-testid="source-section-content">
-        <div class="file-actions-row">
-          <button
-            type="button"
-            class="subtle-action file-link-button"
-            data-testid="open-video-button"
-            :disabled="isOpeningVideo"
-            @click="emit('openVideo')"
-          >
-            {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
-          </button>
-
-          <button
-            type="button"
-            class="process-button"
-            data-testid="process-video-button"
-            :disabled="!canProcessVideo || isOpeningVideo"
-            @click="emit('processLinkedVideo')"
-          >
-            {{ isProcessing ? 'Processing...' : 'Process Video' }}
-          </button>
-        </div>
-
-        <div
-          v-if="inputPath"
-          class="file-link-summary"
-          data-testid="opened-video-summary"
-          :title="inputPath"
-        >
-          <strong>{{ inputName }}</strong>
-          <span>{{ inputPath }}</span>
-          <span class="file-link-mode">
-            Playback: {{ playbackSourceLabel }}. Processing always uses the original file.
-          </span>
-        </div>
-        <p v-else class="file-link-empty">Open the real local movie file you want to annotate and process.</p>
+      <div
+        v-if="isProcessingExpanded"
+        class="collapsible-section-content"
+        data-testid="processing-section-content"
+      >
+        <p class="file-link-empty">Processing always uses the original source file, not the preview.</p>
 
         <label class="file-path-field">
           <span>Output path</span>
@@ -304,6 +279,16 @@ onBeforeUnmount(() => {
             @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
           />
         </label>
+
+        <button
+          type="button"
+          class="process-button"
+          data-testid="process-video-button"
+          :disabled="!canProcessVideo || isOpeningVideo"
+          @click="emit('processLinkedVideo')"
+        >
+          {{ isProcessing ? 'Processing...' : 'Process Video' }}
+        </button>
       </div>
     </section>
 
