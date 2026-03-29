@@ -50,6 +50,14 @@ const progressPercent = computed(() => {
   return Math.max(0, Math.min(100, (props.currentTime / props.effectiveDuration) * 100));
 });
 
+const pendingStartPercent = computed(() => {
+  if (props.pendingStart === null || props.effectiveDuration <= 0) {
+    return null;
+  }
+
+  return Math.max(0, Math.min(100, (props.pendingStart / props.effectiveDuration) * 100));
+});
+
 function getVideoFromEvent(event: Event): HTMLVideoElement | null {
   return event.target instanceof HTMLVideoElement ? event.target : null;
 }
@@ -259,6 +267,14 @@ onBeforeUnmount(() => {
             @pointerdown.stop
             @click.stop="handleTimelineSegmentClick(segment)"
           />
+          <span
+            v-if="pendingStartPercent !== null"
+            class="timeline-pending-start"
+            data-testid="timeline-pending-start"
+            :style="{ left: `${pendingStartPercent}%` }"
+          >
+            <span class="timeline-pending-start-line" />
+          </span>
           <span class="timeline-caret" data-testid="timeline-caret" :style="{ left: `${progressPercent}%` }">
             <span class="timeline-caret-line" />
           </span>

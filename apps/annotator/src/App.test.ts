@@ -423,6 +423,60 @@ describe('annotator app', () => {
     expect(wrapper.text()).toContain('Timeline is empty');
   });
 
+  it('shows a purple pending start marker on the timeline while a range is active, then removes it when completed', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    expect(wrapper.find('[data-testid="timeline-pending-start"]').exists()).toBe(false);
+
+    video.currentTime = 24;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+    await nextTick();
+
+    const pendingStart = wrapper.get('[data-testid="timeline-pending-start"]');
+    expect((pendingStart.element as HTMLElement).style.left).toBe('20%');
+
+    video.currentTime = 36;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="timeline-pending-start"]').exists()).toBe(false);
+  });
+
+  it('clears the pending timeline start marker when opening another video', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="timeline-pending-start"]').exists()).toBe(true);
+
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: false,
+        inputPath: 'C:\\Movies\\next-movie.mp4',
+        name: 'next-movie.mp4',
+        outputPath: 'C:\\Movies\\next-movie.cleaned.mp4',
+        playbackUrl: '/api/media/token-2',
+        playbackSource: 'original'
+      })
+    );
+
+    await wrapper.get('[data-testid="open-video-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="timeline-pending-start"]').exists()).toBe(false);
+  });
+
   it('shows export progress in the button, then completes processing with the expected payload', async () => {
     const wrapper = mount(App);
 
