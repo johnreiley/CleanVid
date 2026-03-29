@@ -287,7 +287,7 @@ onBeforeUnmount(() => {
           :disabled="!canProcessVideo || isOpeningVideo"
           @click="emit('processLinkedVideo')"
         >
-          {{ isProcessing ? 'Processing...' : 'Process Video' }}
+          {{ isProcessing ? 'Processing...' : 'Export Video' }}
         </button>
       </div>
     </section>
