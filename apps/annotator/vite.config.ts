@@ -16,7 +16,11 @@ import {
   serializeFilterFile,
   type FilterSegment
 } from '../../packages/shared/src/index';
-import { processMedia, type ProcessMediaOptions } from '../cli/src/processor';
+import {
+  processMedia,
+  type ProcessMediaOptions,
+  type ProcessMediaProgressEvent
+} from '../cli/src/processor';
 import {
   preparePreviewPlayback,
   type PlaybackSource,
@@ -49,6 +53,26 @@ export interface ProcessResult {
   filtersPath: string;
   message: string;
 }
+
+export interface ProcessStreamProgressEvent {
+  type: 'progress';
+  progress: ProcessMediaProgressEvent;
+}
+
+export interface ProcessStreamResultEvent {
+  type: 'result';
+  result: ProcessResult;
+}
+
+export interface ProcessStreamErrorEvent {
+  type: 'error';
+  message: string;
+}
+
+export type ProcessStreamEvent =
+  | ProcessStreamProgressEvent
+  | ProcessStreamResultEvent
+  | ProcessStreamErrorEvent;
 
 interface TempFilterFile {
   filtersPath: string;
@@ -401,7 +425,8 @@ function parseProcessRequestBody(body: unknown): Required<ProcessRequestBody> {
 
 export async function handleProcessRequest(
   body: unknown,
-  dependencies: ProcessRequestDependencies = getDefaultProcessRequestDependencies()
+  dependencies: ProcessRequestDependencies = getDefaultProcessRequestDependencies(),
+  onProgress?: (event: ProcessMediaProgressEvent) => void
 ): Promise<ProcessResult> {
   const request = parseProcessRequestBody(body);
   const resolvedInputPath = path.resolve(request.inputPath);
@@ -429,7 +454,8 @@ export async function handleProcessRequest(
     await dependencies.processMediaImpl({
       inputPath: resolvedInputPath,
       filtersPath: tempFilterFile.filtersPath,
-      outputPath: resolvedOutputPath
+      outputPath: resolvedOutputPath,
+      onProgress
     });
     exportedFiltersPath = await dependencies.writeExportedFilterFile(
       resolvedOutputPath,
@@ -472,6 +498,10 @@ function sendJson(response: ServerResponse, statusCode: number, body: unknown) {
   response.statusCode = statusCode;
   response.setHeader('Content-Type', 'application/json; charset=utf-8');
   response.end(JSON.stringify(body));
+}
+
+function sendProcessStreamEvent(response: ServerResponse, event: ProcessStreamEvent) {
+  response.write(`${JSON.stringify(event)}\n`);
 }
 
 async function pipeFileToResponse(
@@ -537,6 +567,35 @@ async function handleApiRequest(request: IncomingMessage, response: ServerRespon
     }
 
     const body = await readJsonBody(request);
+
+    if ((request.headers.accept ?? '').includes('application/x-ndjson')) {
+      response.statusCode = 200;
+      response.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+      response.setHeader('Cache-Control', 'no-store');
+
+      try {
+        const result = await handleProcessRequest(body, getDefaultProcessRequestDependencies(), (event) => {
+          sendProcessStreamEvent(response, {
+            type: 'progress',
+            progress: event
+          });
+        });
+
+        sendProcessStreamEvent(response, {
+          type: 'result',
+          result
+        });
+      } catch (error) {
+        sendProcessStreamEvent(response, {
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Unexpected server error.'
+        });
+      }
+
+      response.end();
+      return true;
+    }
+
     const result = await handleProcessRequest(body);
     sendJson(response, 200, result);
     return true;

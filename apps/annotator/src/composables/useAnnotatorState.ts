@@ -26,8 +26,35 @@ interface OpenVideoResponse {
 
 interface ProcessResponse {
   outputPath: string;
+  filtersPath?: string;
   message: string;
 }
+
+interface ProcessProgressPayload {
+  phase: 'read-filters' | 'probe-media' | 'plan-timeline' | 'build-graph' | 'encode' | 'done';
+  message: string;
+  percent?: number;
+}
+
+interface ProcessProgressStreamEvent {
+  type: 'progress';
+  progress: ProcessProgressPayload;
+}
+
+interface ProcessResultStreamEvent {
+  type: 'result';
+  result: ProcessResponse;
+}
+
+interface ProcessErrorStreamEvent {
+  type: 'error';
+  message: string;
+}
+
+type ProcessStreamEvent =
+  | ProcessProgressStreamEvent
+  | ProcessResultStreamEvent
+  | ProcessErrorStreamEvent;
 
 function createSegmentId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -82,6 +109,7 @@ export function useAnnotatorState() {
   const isPlaying = ref(false);
   const isOpeningVideo = ref(false);
   const isProcessing = ref(false);
+  const processProgressPercent = ref(0);
   const previewPlaybackEnabled = ref(true);
   const previewActiveType = ref<FilterType | null>(null);
   const activeType = ref<FilterType>('mute');
@@ -201,6 +229,105 @@ export function useAnnotatorState() {
 
   function clearFeedback() {
     errorMessage.value = '';
+  }
+
+  function getDisplayProcessPercent(progress: ProcessProgressPayload): number {
+    const phasePercents: Record<ProcessProgressPayload['phase'], number> = {
+      'read-filters': 6,
+      'probe-media': 12,
+      'plan-timeline': 22,
+      'build-graph': 32,
+      'encode': 35,
+      'done': 100
+    };
+
+    if (progress.phase === 'encode') {
+      const encodePercent = Number.isFinite(progress.percent) ? progress.percent ?? 0 : 0;
+      return Math.max(35, Math.min(99, Math.round(35 + encodePercent * 64)));
+    }
+
+    return phasePercents[progress.phase];
+  }
+
+  async function requestProcessWithProgress(body: Record<string, unknown>): Promise<ProcessResponse> {
+    const response = await fetch('/api/process', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/x-ndjson',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const contentType = response.headers.get('content-type') ?? '';
+
+    if (!contentType.includes('application/x-ndjson') || !response.body) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'The request failed.');
+      }
+
+      return payload as ProcessResponse;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let result: ProcessResponse | null = null;
+
+    const handleEvent = (event: ProcessStreamEvent) => {
+      if (event.type === 'progress') {
+        processProgressPercent.value = Math.max(
+          processProgressPercent.value,
+          getDisplayProcessPercent(event.progress)
+        );
+        statusMessage.value = event.progress.message;
+        return;
+      }
+
+      if (event.type === 'result') {
+        processProgressPercent.value = 100;
+        result = event.result;
+        return;
+      }
+
+      throw new Error(event.message);
+    };
+
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+
+      let newlineIndex = buffer.indexOf('\n');
+
+      while (newlineIndex !== -1) {
+        const line = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+
+        if (line !== '') {
+          handleEvent(JSON.parse(line) as ProcessStreamEvent);
+        }
+
+        newlineIndex = buffer.indexOf('\n');
+      }
+
+      if (done) {
+        break;
+      }
+    }
+
+    const trailingLine = buffer.trim();
+
+    if (trailingLine !== '') {
+      handleEvent(JSON.parse(trailingLine) as ProcessStreamEvent);
+    }
+
+    if (result) {
+      return result;
+    }
+
+    throw new Error('Processing stream ended unexpectedly.');
   }
 
   function setError(message: string) {
@@ -550,25 +677,20 @@ export function useAnnotatorState() {
     }
 
     isProcessing.value = true;
+    processProgressPercent.value = 0;
     statusMessage.value = `Processing ${inputName.value || 'opened video'}...`;
 
     try {
-      const response = await requestJson<ProcessResponse>('/api/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          inputPath: inputPath.value,
-          outputPath: outputPath.value.trim(),
-          movieTitle: movieTitle.value,
-          filters: segments.value.map((segment) => ({
-            id: segment.id,
-            type: segment.type,
-            start: segment.start,
-            end: segment.end
-          }))
-        })
+      const response = await requestProcessWithProgress({
+        inputPath: inputPath.value,
+        outputPath: outputPath.value.trim(),
+        movieTitle: movieTitle.value,
+        filters: segments.value.map((segment) => ({
+          id: segment.id,
+          type: segment.type,
+          start: segment.start,
+          end: segment.end
+        }))
       });
 
       outputPath.value = response.outputPath;
@@ -577,6 +699,7 @@ export function useAnnotatorState() {
       setError(error instanceof Error ? error.message : 'Unable to process the opened video.');
     } finally {
       isProcessing.value = false;
+      processProgressPercent.value = 0;
     }
   }
 
@@ -718,6 +841,7 @@ export function useAnnotatorState() {
     isPlaying,
     isOpeningVideo,
     isProcessing,
+    processProgressPercent,
     previewPlaybackEnabled,
     previewActiveType,
     activeType,

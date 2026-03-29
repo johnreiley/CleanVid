@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from 'vue';
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
 import { formatTimestamp, parseTimestamp } from '../time';
@@ -31,6 +31,7 @@ const props = defineProps<{
   isProcessing: boolean;
   markerCountLabel: string;
   outputPath: string;
+  processProgressPercent: number;
   pendingStart: number | null;
   pendingType: FilterType | null;
   selectionScrollKey: number;
@@ -45,6 +46,12 @@ const activeToast = ref<{ kind: 'error' | 'status'; message: string; key: string
 const isProcessingExpanded = ref(true);
 const isSegmentsExpanded = ref(true);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
+const clampedProcessProgressPercent = computed(() =>
+  Math.max(0, Math.min(100, Math.round(props.processProgressPercent)))
+);
+const processButtonLabel = computed(() =>
+  props.isProcessing ? `Exporting ${clampedProcessProgressPercent.value}%` : 'Export Video'
+);
 
 function emitSelectedFile(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -297,12 +304,21 @@ onBeforeUnmount(() => {
 
         <button
           type="button"
-          class="process-button"
+          :class="['process-button', { 'process-button-processing': isProcessing }]"
           data-testid="process-video-button"
           :disabled="!canProcessVideo || isOpeningVideo"
+          :aria-valuenow="isProcessing ? clampedProcessProgressPercent : undefined"
+          aria-valuemin="0"
+          aria-valuemax="100"
           @click="emit('processLinkedVideo')"
         >
-          {{ isProcessing ? 'Processing...' : 'Export Video' }}
+          <span
+            v-if="isProcessing"
+            class="process-button-progress"
+            data-testid="process-progress-fill"
+            :style="{ width: `${clampedProcessProgressPercent}%` }"
+          />
+          <span class="process-button-copy">{{ processButtonLabel }}</span>
         </button>
       </div>
     </section>

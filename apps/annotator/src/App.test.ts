@@ -46,6 +46,31 @@ function mockJsonResponse(body: unknown, init: ResponseInit = {}) {
   });
 }
 
+function createNdjsonResponse() {
+  const encoder = new TextEncoder();
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = new ReadableStream<Uint8Array>({
+    start(nextController) {
+      controller = nextController;
+    }
+  });
+
+  return {
+    response: new Response(stream, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/x-ndjson'
+      }
+    }),
+    push(event: unknown) {
+      controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+    },
+    close() {
+      controller.close();
+    }
+  };
+}
+
 function createDeferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
   let reject!: (reason?: unknown) => void;
@@ -398,7 +423,7 @@ describe('annotator app', () => {
     expect(wrapper.text()).toContain('Timeline is empty');
   });
 
-  it('processes the opened video, disables processing while busy or invalid, and sends the expected payload', async () => {
+  it('shows export progress in the button, then completes processing with the expected payload', async () => {
     const wrapper = mount(App);
 
     await openVideo(wrapper, {
@@ -419,23 +444,60 @@ describe('annotator app', () => {
     outputInput.dispatchEvent(new Event('input'));
     await nextTick();
 
-    const processRequest = createDeferred<Response>();
-    fetchMock.mockReturnValueOnce(processRequest.promise);
+    const processResponse = createNdjsonResponse();
+    fetchMock.mockResolvedValueOnce(processResponse.response);
 
     await wrapper.get('[data-testid="process-video-button"]').trigger('click');
     await nextTick();
 
-    expect(wrapper.get('[data-testid="process-video-button"]').text()).toContain('Processing...');
+    expect(wrapper.get('[data-testid="process-video-button"]').text()).toContain('Exporting 0%');
     expect((wrapper.get('[data-testid="process-video-button"]').element as HTMLButtonElement).disabled).toBe(
       true
     );
-
-    processRequest.resolve(
-      mockJsonResponse({
-        outputPath: 'C:\\Exports\\custom-output.mp4',
-        message: 'Processed video to C:\\Exports\\custom-output.mp4.'
-      })
+    expect((wrapper.get('[data-testid="process-progress-fill"]').element as HTMLElement).style.width).toBe(
+      '0%'
     );
+
+    processResponse.push({
+      type: 'progress',
+      progress: {
+        phase: 'probe-media',
+        message: 'Probing media...'
+      }
+    });
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="process-video-button"]').text()).toContain('Exporting 12%');
+    expect((wrapper.get('[data-testid="process-progress-fill"]').element as HTMLElement).style.width).toBe(
+      '12%'
+    );
+
+    processResponse.push({
+      type: 'progress',
+      progress: {
+        phase: 'encode',
+        message: 'Encoding output...',
+        percent: 0.5
+      }
+    });
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="process-video-button"]').text()).toContain('Exporting 67%');
+    expect((wrapper.get('[data-testid="process-progress-fill"]').element as HTMLElement).style.width).toBe(
+      '67%'
+    );
+
+    processResponse.push({
+      type: 'result',
+      result: {
+        outputPath: 'C:\\Exports\\custom-output.mp4',
+        filtersPath: 'C:\\Exports\\custom-output.filters.json',
+        message: 'Processed video to C:\\Exports\\custom-output.mp4.'
+      }
+    });
+    processResponse.close();
     await flushPromises();
     await nextTick();
 
@@ -447,6 +509,10 @@ describe('annotator app', () => {
     };
 
     expect(processInit.method).toBe('POST');
+    expect(processInit.headers).toMatchObject({
+      Accept: 'application/x-ndjson',
+      'Content-Type': 'application/json'
+    });
     expect(processBody.inputPath).toBe('C:\\Movies\\movie.mkv');
     expect(processBody.outputPath).toBe('C:\\Exports\\custom-output.mp4');
     expect(processBody.filters).toEqual([]);

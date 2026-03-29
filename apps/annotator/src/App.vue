@@ -47,6 +47,7 @@ onBeforeUnmount(() => {
         :is-processing="annotator.isProcessing"
         :marker-count-label="annotator.markerCountLabel"
         :output-path="annotator.outputPath"
+        :process-progress-percent="annotator.processProgressPercent"
         :pending-start="annotator.pendingStart"
         :pending-type="annotator.pendingType"
         :selection-scroll-key="segmentScrollKey"
