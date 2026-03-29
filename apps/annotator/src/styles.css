@@ -118,9 +118,6 @@ button {
 .segment-card-type,
 .segment-card-meta,
 .field-label-with-tooltip,
-.mode-section-header,
-.annotate-summary-bar,
-.compact-metric-grid,
 .sidebar-mode-switch,
 .viewport-mark-tools {
   display: flex;
@@ -163,8 +160,7 @@ button {
 .shortcut-copy,
 .video-placeholder-copy,
 .segment-duration,
-.feedback-card,
-.compact-metric-label {
+.feedback-card {
   color: var(--text-secondary);
 }
 
@@ -176,8 +172,7 @@ button {
 
 .meta-chip,
 .shortcut-pill,
-.subtle-action,
-.compact-mode-chip {
+.subtle-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -228,10 +223,8 @@ button {
   overflow: hidden;
 }
 
-.sidebar-intro,
 .sidebar-mode-panel,
-.mode-summary-panel,
-.session-summary-card,
+.sidebar-section,
 .file-actions,
 .segments-shell {
   display: grid;
@@ -245,36 +238,19 @@ button {
 .sidebar-mode-panel-annotate {
   flex: 1 1 auto;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .sidebar-mode-panel-export {
   align-content: start;
 }
 
-.sidebar-intro-copy,
-.action-copy,
-.compact-metric-card,
-.export-summary-card {
+.action-copy {
   display: grid;
   gap: 0.2rem;
 }
 
-.sidebar-intro-copy strong,
-.session-summary-card strong,
-.export-summary-card strong {
-  font-size: 0.92rem;
-}
-
-.sidebar-intro-copy span,
-.session-summary-card span,
-.export-summary-card span {
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-}
-
-.sidebar-header,
-.mode-summary-panel,
+.sidebar-section,
 .file-actions,
 .segments-shell {
   padding: 0.7rem;
@@ -288,7 +264,8 @@ button {
 .video-placeholder-copy,
 .panel-heading h2,
 .section-kicker,
-.eyebrow {
+.eyebrow,
+.sidebar-section-heading h2 {
   margin: 0;
 }
 
@@ -337,13 +314,13 @@ button {
 }
 
 .panel-heading,
-.mode-section-header {
+.sidebar-section-heading {
   justify-content: space-between;
   gap: 0.75rem;
 }
 
 .panel-heading h2,
-.mode-section-header h2 {
+.sidebar-section-heading h2 {
   font-size: 0.93rem;
 }
 
@@ -353,39 +330,39 @@ button {
   white-space: nowrap;
 }
 
-.session-summary-card,
-.compact-metric-card,
-.export-summary-card {
+.sidebar-section-heading {
+  display: flex;
+  align-items: center;
+}
+
+.loaded-media-row,
+.export-metric-row {
   padding: 0.6rem 0.65rem;
   border: 1px solid var(--border);
-  border-radius: 0;
   background: var(--surface-elevated);
 }
 
-.compact-metric-grid {
-  gap: 0.55rem;
-}
-
-.compact-metric-grid .compact-metric-card {
-  flex: 1 1 0;
-}
-
-.compact-metric-card strong {
+.loaded-media-row {
+  min-width: 0;
+  font-family: var(--mono);
   font-size: 0.76rem;
-  line-height: 1.45;
   color: var(--text-soft);
-  word-break: break-word;
 }
 
-.annotate-summary-bar {
-  flex-wrap: wrap;
-  gap: 0.4rem;
+.export-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
 }
 
-.compact-mode-chip {
-  min-height: 1.8rem;
-  font-size: 0.74rem;
-  color: var(--text-soft);
+.export-metric-row strong {
+  color: var(--text-primary);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
 .quick-actions {
@@ -581,6 +558,8 @@ button {
   margin: 0;
   padding: 0;
   display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 0.45rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(143, 155, 179, 0.24) transparent;
@@ -696,13 +675,13 @@ button {
   padding: 0.7rem;
 }
 
-.file-actions-heading {
-  align-items: flex-start;
-}
-
 .file-link-button,
 .process-button {
   min-height: 2.2rem;
+}
+
+.media-action-row {
+  flex-wrap: wrap;
 }
 
 .file-path-field {
@@ -752,7 +731,7 @@ button {
   left: 50%;
   z-index: 3;
   width: max-content;
-  max-width: min(16rem, 60vw);
+  max-width: min(10rem, 60vw);
   padding: 0.45rem 0.55rem;
   border-radius: 0.35rem;
   border: 1px solid var(--border);
@@ -824,6 +803,21 @@ button {
 .process-button.process-button-processing:disabled {
   opacity: 1;
   cursor: progress;
+}
+
+.coming-soon-section {
+  align-content: start;
+}
+
+.coming-soon-button {
+  min-height: 2.2rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: not-allowed;
 }
 
 .video-stage {

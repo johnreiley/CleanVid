@@ -84,7 +84,6 @@ onBeforeUnmount(() => {
         :is-processing="annotator.isProcessing"
         :marker-count-label="annotator.markerCountLabel"
         :output-path="annotator.outputPath"
-        :playback-source-label="annotator.playbackSourceLabel"
         :process-progress-percent="annotator.processProgressPercent"
         :pending-start="annotator.pendingStart"
         :pending-type="annotator.pendingType"

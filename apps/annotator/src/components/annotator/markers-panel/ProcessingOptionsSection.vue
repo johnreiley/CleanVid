@@ -8,10 +8,9 @@ const emit = defineEmits<{
 
 defineProps<{
   canProcessVideo: boolean;
-  inputName: string;
+  filterCountLabel: string;
   isOpeningVideo: boolean;
   isProcessing: boolean;
-  markerCountLabel: string;
   processButtonLabel: string;
   processProgressPercent: number;
   outputPath: string;
@@ -20,20 +19,13 @@ defineProps<{
 
 <template>
   <section class="file-actions" data-testid="processing-section-content">
-    <div class="panel-heading file-actions-heading">
-      <div>
-        <p class="section-kicker">Export</p>
-        <h2>Render Output</h2>
-      </div>
-      <span class="panel-count">{{ markerCountLabel }}</span>
+    <div class="sidebar-section-heading">
+      <h2>Filter count</h2>
     </div>
 
-    <div class="export-summary-card">
-      <strong>{{ inputName || 'No source video loaded' }}</strong>
-      <span>
-        Processing uses the original source file, not the preview. The filters file is exported
-        with the video.
-      </span>
+    <div class="export-metric-row">
+      <span>Current filters</span>
+      <strong data-testid="filter-count-value">{{ filterCountLabel }}</strong>
     </div>
 
     <label class="file-path-field">

@@ -21,12 +21,8 @@ defineProps<{
 
 <template>
   <section class="segments-shell" data-testid="segments-section-content">
-    <div class="panel-heading">
-      <div>
-        <p class="section-kicker">Timeline</p>
-        <h2>Segments</h2>
-      </div>
-      <span class="panel-count">{{ sortedSegments.length.toString().padStart(2, '0') }}</span>
+    <div class="sidebar-section-heading">
+      <h2>Filter timeline</h2>
     </div>
 
     <div v-if="segmentIssues.length > 0" class="validation-summary" data-testid="validation-summary">

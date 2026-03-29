@@ -21,10 +21,12 @@ function emitSelectedFile(event: Event) {
 </script>
 
 <template>
-  <div class="sidebar-header">
-    <p class="eyebrow">Session</p>
+  <section class="sidebar-section">
+    <div class="sidebar-section-heading">
+      <h2>Import</h2>
+    </div>
 
-    <div class="sidebar-header-row">
+    <div class="sidebar-header-row media-action-row">
       <button
         type="button"
         class="subtle-action file-link-button"
@@ -46,5 +48,5 @@ function emitSelectedFile(event: Event) {
         />
       </label>
     </div>
-  </div>
+  </section>
 </template>

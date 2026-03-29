@@ -233,6 +233,7 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="timeline-track"]')).toBeTruthy();
     expect(wrapper.get('[data-testid="mode-switch"]')).toBeTruthy();
     expect(wrapper.get('[data-testid="mode-panel-media"]')).toBeTruthy();
+    expect(wrapper.find('[data-testid="loaded-video-name"]').exists()).toBe(false);
   });
 
   it('opens the picker when clicking the empty video stage and removes the redundant stage button', async () => {
@@ -277,6 +278,29 @@ describe('annotator app', () => {
     await switchMode(wrapper, 'media');
     await nextTick();
     expect(wrapper.find('[data-testid="mode-panel-media"]').exists()).toBe(true);
+  });
+
+  it('keeps the sidebar content trimmed to the requested tab features', async () => {
+    const wrapper = mount(App);
+
+    expect(wrapper.find('[data-testid="loaded-video-name"]').exists()).toBe(false);
+
+    await openVideo(wrapper);
+    await switchMode(wrapper, 'media');
+
+    expect(wrapper.get('[data-testid="loaded-video-name"]').text()).toContain('movie.mp4');
+
+    await switchMode(wrapper, 'annotate');
+    expect(wrapper.get('[data-testid="mode-panel-annotate"]').text()).toContain('Actions');
+    expect(wrapper.get('[data-testid="segments-section-content"]').text()).toContain('Filter timeline');
+    expect(wrapper.get('[data-testid="auto-analyze-coming-soon"]').text()).toContain('Coming soon');
+    expect(
+      (wrapper.get('[data-testid="auto-analyze-coming-soon"]').element as HTMLButtonElement).disabled
+    ).toBe(true);
+
+    await switchMode(wrapper, 'export');
+    expect(wrapper.get('[data-testid="processing-section-content"]').text()).toContain('Filter count');
+    expect(wrapper.get('[data-testid="filter-count-value"]').text()).toContain('0 markers');
   });
 
   it('shows the loaded filename in the top bar', async () => {
@@ -518,9 +542,7 @@ describe('annotator app', () => {
     });
 
     await switchMode(wrapper, 'export');
-    expect(wrapper.get('[data-testid="processing-section-content"]').text()).toContain(
-      'Processing uses the original source file, not the preview.'
-    );
+    expect(wrapper.get('[data-testid="filter-count-value"]').text()).toContain('0 markers');
 
     const outputInput = wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement;
     outputInput.value = 'C:\\Exports\\custom-output.mp4';
