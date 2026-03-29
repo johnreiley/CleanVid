@@ -274,7 +274,7 @@ onBeforeUnmount(() => {
         class="collapsible-section-content"
         data-testid="processing-section-content"
       >
-        <p class="file-link-empty">Processing always uses the original source file, not the preview.</p>
+        <p class="file-link-empty">Processing always uses the original source file, not the preview. The filters file is exported with the video.</p>
 
         <label class="file-path-field">
           <span class="field-label-with-tooltip">
