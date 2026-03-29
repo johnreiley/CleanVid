@@ -7,6 +7,7 @@ import PhSkipForward from '@phosphor-icons-vue-icons/PhSkipForward.vue.mjs';
 import PhMute from '@phosphor-icons-vue-icons/PhSpeakerSimpleX.vue.mjs';
 import PhTrash from '@phosphor-icons-vue-icons/PhTrash.vue.mjs';
 import PhX from '@phosphor-icons-vue-icons/PhX.vue.mjs';
+import PhWind from '@phosphor-icons-vue-icons/PhWind.vue.mjs';
 
 const emit = defineEmits<{
   activeTypeChange: [value: FilterType];
@@ -268,7 +269,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="sortedSegments.length === 0" class="segments-empty">
-        <div class="empty-stack" />
+        <PhWind :size="32" />
         <p>Timeline is empty</p>
       </div>
 
