@@ -3,6 +3,7 @@ import {
   FilterValidationError,
   buildProfanitySuggestions,
   buildKeptSpans,
+  extractMatchedProfanityTerms,
   buildTimeline,
   mergeProfanitySuggestions,
   normalizeFilters,
@@ -127,6 +128,18 @@ describe('timeline planning', () => {
 });
 
 describe('profanity analysis helpers', () => {
+  it('detects supplemental profanity terms from the bad word dictionary', () => {
+    expect(extractMatchedProfanityTerms('That fuckin scene had a blow-job gag.')).toEqual(
+      expect.arrayContaining(['blow job', 'fuckin'])
+    );
+  });
+
+  it('detects spaced-out dictionary variants after normalization', () => {
+    expect(extractMatchedProfanityTerms('Why would you say f u c k e r on air?')).toEqual(
+      expect.arrayContaining(['f u c k e r'])
+    );
+  });
+
   it('creates profanity suggestions from normalized cue text', () => {
     const suggestions = buildProfanitySuggestions(
       [

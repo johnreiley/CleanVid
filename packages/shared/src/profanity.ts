@@ -1,3 +1,5 @@
+import badWords from './badwords.json' with { type: 'json' };
+
 export type ProfanitySuggestionSource = 'embedded' | 'provided';
 
 export type ProfanityAnalysisPhase =
@@ -38,7 +40,9 @@ export interface ProfanityAnalysisResult {
   message: string;
 }
 
-const PROFANITY_PATTERNS: Array<{ canonical: string; pattern: RegExp }> = [
+type ProfanityPatternRule = { canonical: string; pattern: RegExp };
+
+const BASE_PROFANITY_PATTERNS: ProfanityPatternRule[] = [
   { canonical: 'fuck', pattern: /\bfuck(?:er|ers|ing|ed|s)?\b/gi },
   { canonical: 'motherfucker', pattern: /\bmotherfuck(?:er|ers)?\b/gi },
   { canonical: 'shit', pattern: /\b(?:bull)?shit(?:ty|ting|s)?\b/gi },
@@ -58,10 +62,87 @@ const PROFANITY_PATTERNS: Array<{ canonical: string; pattern: RegExp }> = [
 
 const START_PADDING_SECONDS = 0.15;
 const END_PADDING_SECONDS = 0.25;
+const GENERATED_PATTERN_WILDCARD = "[a-z0-9']*";
 
 function sanitizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
+
+function escapeRegexLiteral(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function normalizeProfanityDictionaryTerm(term: string): string {
+  return sanitizeWhitespace(term.toLowerCase().replace(/[^a-z0-9*'\s-]+/g, ' '));
+}
+
+function canonicalizeProfanityDictionaryTerm(term: string): string {
+  return sanitizeWhitespace(term.replace(/\*/g, ' ').replace(/[-\s]+/g, ' '));
+}
+
+function createProfanityPatternFromDictionaryTerm(term: string): ProfanityPatternRule | null {
+  const normalizedTerm = normalizeProfanityDictionaryTerm(term);
+  const canonical = canonicalizeProfanityDictionaryTerm(normalizedTerm);
+  const alphaNumericLength = canonical.replace(/[^a-z0-9]/g, '').length;
+
+  if (canonical === '' || alphaNumericLength < 3) {
+    return null;
+  }
+
+  const tokens = normalizedTerm.match(/[a-z0-9']+|\*+|[\s-]+/g);
+
+  if (!tokens || tokens.length === 0) {
+    return null;
+  }
+
+  const patternSource = tokens
+    .map((token) => {
+      if (/^\*+$/.test(token)) {
+        return GENERATED_PATTERN_WILDCARD;
+      }
+
+      if (/^[\s-]+$/.test(token)) {
+        return '[\\s-]+';
+      }
+
+      return escapeRegexLiteral(token);
+    })
+    .join('');
+
+  return {
+    canonical,
+    pattern: new RegExp(`\\b${patternSource}\\b`, 'gi')
+  };
+}
+
+function createSupplementalProfanityPatterns(dictionary: Record<string, number>): ProfanityPatternRule[] {
+  const seen = new Set<string>();
+  const patterns: ProfanityPatternRule[] = [];
+
+  for (const term of Object.keys(dictionary)) {
+    const rule = createProfanityPatternFromDictionaryTerm(term);
+
+    if (!rule) {
+      continue;
+    }
+
+    const cacheKey = `${rule.canonical}:${rule.pattern.source}`;
+
+    if (seen.has(cacheKey)) {
+      continue;
+    }
+
+    seen.add(cacheKey);
+    patterns.push(rule);
+  }
+
+  return patterns;
+}
+
+const PROFANITY_PATTERNS: ProfanityPatternRule[] = [
+  ...BASE_PROFANITY_PATTERNS,
+  ...createSupplementalProfanityPatterns(badWords as Record<string, number>)
+];
 
 export function normalizeProfanityText(text: string): string {
   return sanitizeWhitespace(
