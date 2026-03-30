@@ -128,6 +128,18 @@ describe('timeline planning', () => {
 });
 
 describe('profanity analysis helpers', () => {
+  it('detects punctuation-heavy and mixed-case subtitle edge cases', () => {
+    expect(extractMatchedProfanityTerms('Oh, my God!')).toEqual(
+      expect.arrayContaining(['oh my god'])
+    );
+    expect(extractMatchedProfanityTerms('DEAR... LORD?!')).toEqual(
+      expect.arrayContaining(['dear lord'])
+    );
+    expect(extractMatchedProfanityTerms('mother-fucker')).toEqual(
+      expect.arrayContaining(['mother fucker'])
+    );
+  });
+
   it('detects supplemental profanity terms from the bad word dictionary', () => {
     expect(extractMatchedProfanityTerms('That fuckin scene had a blow-job gag.')).toEqual(
       expect.arrayContaining(['blow job', 'fuckin'])
