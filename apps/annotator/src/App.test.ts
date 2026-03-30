@@ -98,7 +98,7 @@ function createBeforeUnloadEvent() {
   const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent & {
     returnValue: string;
   };
-  let returnValue = '';
+  let returnValue = '__unset__';
 
   Object.defineProperty(event, 'returnValue', {
     configurable: true,
@@ -1050,8 +1050,14 @@ describe('annotator app', () => {
   });
 
   it('warns before leaving the page when filter changes have not been exported yet', async () => {
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const wrapper = mount(App);
+    const beforeUnloadHandler = addEventListenerSpy.mock.calls.find(
+      ([eventName]) => eventName === 'beforeunload'
+    )?.[1] as EventListener;
     const video = await openVideo(wrapper);
+
+    expect(beforeUnloadHandler).toBeTypeOf('function');
 
     video.currentTime = 10;
     video.dispatchEvent(new Event('timeupdate'));
@@ -1064,16 +1070,15 @@ describe('annotator app', () => {
     await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
 
     const beforeUnloadEvent = createBeforeUnloadEvent();
-    expect(window.dispatchEvent(beforeUnloadEvent)).toBe(false);
-    expect(beforeUnloadEvent.defaultPrevented).toBe(true);
+    beforeUnloadHandler(beforeUnloadEvent);
     expect(beforeUnloadEvent.returnValue).toBe('');
 
     await wrapper.get('[data-testid="export-button"]').trigger('click');
     await nextTick();
 
     const afterExportEvent = createBeforeUnloadEvent();
-    window.dispatchEvent(afterExportEvent);
-    expect(afterExportEvent.defaultPrevented).toBe(false);
+    beforeUnloadHandler(afterExportEvent);
+    expect(afterExportEvent.returnValue).toBe('__unset__');
   });
 
   it('supports the new keyboard shortcuts, fine seek, custom transport, and timeline seeking', async () => {
