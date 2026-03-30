@@ -14,13 +14,18 @@ import {
   FilterValidationError,
   normalizeFilters,
   serializeFilterFile,
-  type FilterSegment
+  type FilterSegment,
+  type ProfanityAnalysisCapabilities,
+  type ProfanityAnalysisOptions,
+  type ProfanityAnalysisProgressEvent,
+  type ProfanityAnalysisResult
 } from '../../packages/shared/src/index';
 import {
   processMedia,
   type ProcessMediaOptions,
   type ProcessMediaProgressEvent
 } from '../cli/src/processor';
+import { analyzeProfanity, getProfanityAnalysisCapabilities } from './src/profanity-analysis';
 import {
   preparePreviewPlayback,
   type PlaybackSource,
@@ -36,6 +41,7 @@ const OUTPUT_DIALOG_FILTER =
 
 export interface OpenVideoResult {
   cancelled: boolean;
+  analysisCapabilities?: ProfanityAnalysisCapabilities;
   inputPath?: string;
   name?: string;
   outputPath?: string;
@@ -50,6 +56,12 @@ export interface ProcessRequestBody {
   movieTitle?: string;
 }
 
+export interface AnalyzeProfanityRequestBody {
+  inputPath: string;
+  movieTitle?: string;
+  options?: Partial<ProfanityAnalysisOptions>;
+}
+
 export interface SelectOutputPathResult {
   cancelled: boolean;
   outputPath?: string;
@@ -60,6 +72,8 @@ export interface ProcessResult {
   filtersPath: string;
   message: string;
 }
+
+export interface AnalyzeProfanityResult extends ProfanityAnalysisResult {}
 
 export interface ProcessStreamProgressEvent {
   type: 'progress';
@@ -81,6 +95,26 @@ export type ProcessStreamEvent =
   | ProcessStreamResultEvent
   | ProcessStreamErrorEvent;
 
+export interface AnalyzeProfanityStreamProgressEvent {
+  type: 'progress';
+  progress: ProfanityAnalysisProgressEvent;
+}
+
+export interface AnalyzeProfanityStreamResultEvent {
+  type: 'result';
+  result: AnalyzeProfanityResult;
+}
+
+export interface AnalyzeProfanityStreamErrorEvent {
+  type: 'error';
+  message: string;
+}
+
+export type AnalyzeProfanityStreamEvent =
+  | AnalyzeProfanityStreamProgressEvent
+  | AnalyzeProfanityStreamResultEvent
+  | AnalyzeProfanityStreamErrorEvent;
+
 interface TempFilterFile {
   filtersPath: string;
   cleanup: () => Promise<void>;
@@ -91,6 +125,11 @@ interface ProcessRequestDependencies {
   createTempFilterFile: (content: string) => Promise<TempFilterFile>;
   processMediaImpl: (options: ProcessMediaOptions) => Promise<void>;
   writeExportedFilterFile: (outputPath: string, content: string) => Promise<string>;
+}
+
+interface AnalyzeProfanityRequestDependencies {
+  analyzeProfanityImpl: typeof analyzeProfanity;
+  ensureInputExists: (inputPath: string) => Promise<void>;
 }
 
 interface OpenVideoDependencies {
@@ -175,6 +214,13 @@ function getDefaultProcessRequestDependencies(): ProcessRequestDependencies {
     createTempFilterFile,
     processMediaImpl: processMedia,
     writeExportedFilterFile
+  };
+}
+
+function getDefaultAnalyzeProfanityRequestDependencies(): AnalyzeProfanityRequestDependencies {
+  return {
+    analyzeProfanityImpl: analyzeProfanity,
+    ensureInputExists
   };
 }
 
@@ -309,12 +355,62 @@ export async function handleOpenVideoRequest(
 
   return {
     cancelled: false,
+    analysisCapabilities: getProfanityAnalysisCapabilities(),
     inputPath: preparedPlayback.inputPath,
     name: preparedPlayback.name,
     outputPath: deriveDefaultOutputPath(preparedPlayback.inputPath),
     playbackUrl: dependencies.registerPlaybackPath(preparedPlayback.playbackPath),
     playbackSource: preparedPlayback.playbackSource
   };
+}
+
+function parseAnalyzeProfanityRequestBody(body: unknown): {
+  inputPath: string;
+  movieTitle: string;
+  options: ProfanityAnalysisOptions;
+} {
+  if (typeof body !== 'object' || body === null) {
+    throw new HttpError(400, 'Request body must be a JSON object.');
+  }
+
+  const record = body as Record<string, unknown>;
+  const inputPath = typeof record.inputPath === 'string' ? record.inputPath.trim() : '';
+  const movieTitle = typeof record.movieTitle === 'string' ? record.movieTitle.trim() : '';
+  const optionsRecord =
+    typeof record.options === 'object' && record.options !== null
+      ? (record.options as Record<string, unknown>)
+      : {};
+
+  if (inputPath === '') {
+    throw new HttpError(400, 'inputPath is required.');
+  }
+
+  return {
+    inputPath,
+    movieTitle,
+    options: {
+      enhancedMode: Boolean(optionsRecord.enhancedMode),
+      allowRemoteSubtitles: Boolean(optionsRecord.allowRemoteSubtitles)
+    }
+  };
+}
+
+export async function handleAnalyzeProfanityRequest(
+  body: unknown,
+  dependencies: AnalyzeProfanityRequestDependencies = getDefaultAnalyzeProfanityRequestDependencies(),
+  onProgress?: (event: ProfanityAnalysisProgressEvent) => void
+): Promise<AnalyzeProfanityResult> {
+  const request = parseAnalyzeProfanityRequestBody(body);
+  const resolvedInputPath = path.resolve(request.inputPath);
+
+  await dependencies.ensureInputExists(resolvedInputPath);
+
+  return dependencies.analyzeProfanityImpl({
+    inputPath: resolvedInputPath,
+    movieTitle: request.movieTitle,
+    options: request.options,
+    onProgress
+  });
 }
 
 function parseSelectOutputPathRequestBody(body: unknown): { suggestedPath: string } {
@@ -605,6 +701,10 @@ function sendProcessStreamEvent(response: ServerResponse, event: ProcessStreamEv
   response.write(`${JSON.stringify(event)}\n`);
 }
 
+function sendAnalyzeProfanityStreamEvent(response: ServerResponse, event: AnalyzeProfanityStreamEvent) {
+  response.write(`${JSON.stringify(event)}\n`);
+}
+
 async function pipeFileToResponse(
   response: ServerResponse,
   filePath: string,
@@ -710,6 +810,51 @@ async function handleApiRequest(request: IncomingMessage, response: ServerRespon
 
     const body = await readJsonBody(request);
     const result = await handleSelectOutputPathRequest(body);
+    sendJson(response, 200, result);
+    return true;
+  }
+
+  if (url.pathname === '/api/analyze-profanity') {
+    if (request.method !== 'POST') {
+      sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+
+    const body = await readJsonBody(request);
+
+    if ((request.headers.accept ?? '').includes('application/x-ndjson')) {
+      response.statusCode = 200;
+      response.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+      response.setHeader('Cache-Control', 'no-store');
+
+      try {
+        const result = await handleAnalyzeProfanityRequest(
+          body,
+          getDefaultAnalyzeProfanityRequestDependencies(),
+          (event) => {
+            sendAnalyzeProfanityStreamEvent(response, {
+              type: 'progress',
+              progress: event
+            });
+          }
+        );
+
+        sendAnalyzeProfanityStreamEvent(response, {
+          type: 'result',
+          result
+        });
+      } catch (error) {
+        sendAnalyzeProfanityStreamEvent(response, {
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Unexpected server error.'
+        });
+      }
+
+      response.end();
+      return true;
+    }
+
+    const result = await handleAnalyzeProfanityRequest(body);
     sendJson(response, 200, result);
     return true;
   }

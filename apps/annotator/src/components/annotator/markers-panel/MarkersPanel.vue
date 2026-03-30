@@ -1,8 +1,22 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
-import { computed, nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from 'vue';
+import type {
+  ProfanityAnalysisCapabilities,
+  ProfanityAnalysisOptions,
+  ProfanitySuggestion
+} from '@cleanvid/shared';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+  type ComponentPublicInstance
+} from 'vue';
 import type { EditableSegment, SegmentIssue } from '../../../annotator-types';
 import MarkActionTiles from './MarkActionTiles.vue';
+import ProfanityAnalysisSection from './ProfanityAnalysisSection.vue';
 import ProcessingOptionsSection from './ProcessingOptionsSection.vue';
 import SegmentsSection from './SegmentsSection.vue';
 import SessionActions from './SessionActions.vue';
@@ -16,6 +30,9 @@ const emit = defineEmits<{
   changeMode: [value: AnnotatorUiMode];
   deleteSegment: [id: string];
   filtersSelected: [file: File];
+  analyzeProfanity: [];
+  applyProfanitySuggestions: [];
+  discardProfanitySuggestions: [];
   openVideo: [];
   selectOutputPath: [];
   processLinkedVideo: [];
@@ -23,19 +40,28 @@ const emit = defineEmits<{
   selectSegment: [id: string | null];
   toggleMark: [value: FilterType];
   updateOutputPath: [value: string];
+  updateProfanityAllowRemoteSubtitles: [value: boolean];
+  updateProfanityEnhancedMode: [value: boolean];
   updateSegment: [payload: { id: string; field: 'start' | 'end'; value: string }];
 }>();
 
 const props = defineProps<{
   activeType: FilterType;
+  canAnalyzeProfanity: boolean;
   canProcessVideo: boolean;
   currentMode: AnnotatorUiMode;
   errorMessage: string;
   inputName: string;
+  isAnalyzingProfanity: boolean;
   isOpeningVideo: boolean;
   isSelectingOutputPath: boolean;
   isProcessing: boolean;
   markerCountLabel: string;
+  profanityAnalysisCapabilities: ProfanityAnalysisCapabilities;
+  profanityAnalysisOptions: ProfanityAnalysisOptions;
+  profanitySuggestionCountLabel: string;
+  profanitySuggestions: ProfanitySuggestion[];
+  profanityAnalysisProgressPercent: number;
   outputPath: string;
   processProgressPercent: number;
   pendingStart: number | null;
@@ -58,6 +84,7 @@ const processButtonLabel = computed(() =>
   props.isProcessing ? `Exporting ${clampedProcessProgressPercent.value}%` : 'Export Video'
 );
 const hasLoadedVideo = computed(() => props.inputName !== '');
+const isProfanityModalOpen = ref(false);
 
 function clearToastTimer() {
   if (toastTimer !== null) {
@@ -87,6 +114,34 @@ function showToast(kind: 'error' | 'status', message: string) {
 function handleMarkTypeRequest(type: FilterType) {
   emit('activeTypeChange', type);
   emit('toggleMark', type);
+}
+
+function openProfanityModal() {
+  if (!hasLoadedVideo.value) {
+    return;
+  }
+
+  isProfanityModalOpen.value = true;
+}
+
+function closeProfanityModal() {
+  isProfanityModalOpen.value = false;
+}
+
+function handleProfanitySuggestionsApply() {
+  emit('applyProfanitySuggestions');
+  closeProfanityModal();
+}
+
+function handleProfanitySuggestionsDiscard() {
+  emit('discardProfanitySuggestions');
+  closeProfanityModal();
+}
+
+function handleWindowKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && isProfanityModalOpen.value) {
+    closeProfanityModal();
+  }
 }
 
 function registerSegmentCard(id: string, element: Element | ComponentPublicInstance | null) {
@@ -120,6 +175,15 @@ watch(
 );
 
 watch(
+  () => [props.currentMode, hasLoadedVideo.value] as const,
+  ([currentMode, loaded]) => {
+    if (currentMode !== 'annotate' || !loaded) {
+      closeProfanityModal();
+    }
+  }
+);
+
+watch(
   () => [props.errorMessage, props.statusMessage] as const,
   ([errorMessage, statusMessage]) => {
     if (errorMessage) {
@@ -139,6 +203,11 @@ watch(
 
 onBeforeUnmount(() => {
   clearToastTimer();
+  window.removeEventListener('keydown', handleWindowKeydown);
+});
+
+onMounted(() => {
+  window.addEventListener('keydown', handleWindowKeydown);
 });
 </script>
 
@@ -174,6 +243,16 @@ onBeforeUnmount(() => {
           :pending-type="pendingType"
           @select-type="handleMarkTypeRequest"
         />
+
+        <button
+          type="button"
+          class="subtle-action profanity-modal-launch-button"
+          data-testid="open-profanity-modal-button"
+          :disabled="!hasLoadedVideo || isOpeningVideo"
+          @click="openProfanityModal"
+        >
+          Auto-Detect Profanity
+        </button>
       </section>
 
       <SegmentsSection
@@ -186,21 +265,6 @@ onBeforeUnmount(() => {
         @select-segment="emit('selectSegment', $event)"
         @update-segment="emit('updateSegment', $event)"
       />
-
-      <section class="sidebar-section coming-soon-section">
-        <div class="sidebar-section-heading">
-          <h2>Auto-analyze for bad language</h2>
-        </div>
-
-        <button
-          type="button"
-          class="coming-soon-button"
-          data-testid="auto-analyze-coming-soon"
-          disabled
-        >
-          Coming soon
-        </button>
-      </section>
     </div>
 
     <div v-else class="sidebar-mode-panel sidebar-mode-panel-export" data-testid="mode-panel-export">
@@ -219,6 +283,33 @@ onBeforeUnmount(() => {
       />
     </div>
   </aside>
+
+  <div
+    v-if="isProfanityModalOpen"
+    class="modal-backdrop profanity-modal-backdrop"
+    data-testid="profanity-modal"
+    @click.self="closeProfanityModal"
+  >
+    <div class="panel profanity-modal-panel" role="dialog" aria-modal="true" aria-label="Auto-Detect Profanity">
+      <ProfanityAnalysisSection
+        :can-analyze-profanity="canAnalyzeProfanity"
+        :capabilities="profanityAnalysisCapabilities"
+        :is-analyzing-profanity="isAnalyzingProfanity"
+        :options="profanityAnalysisOptions"
+        :progress-percent="profanityAnalysisProgressPercent"
+        :show-close-button="true"
+        :suggestion-count-label="profanitySuggestionCountLabel"
+        :suggestions="profanitySuggestions"
+        @analyze-profanity="emit('analyzeProfanity')"
+        @apply-profanity-suggestions="handleProfanitySuggestionsApply"
+        @close="closeProfanityModal"
+        @discard-profanity-suggestions="handleProfanitySuggestionsDiscard"
+        @seek="emit('seek', $event)"
+        @update-allow-remote-subtitles="emit('updateProfanityAllowRemoteSubtitles', $event)"
+        @update-enhanced-mode="emit('updateProfanityEnhancedMode', $event)"
+      />
+    </div>
+  </div>
 
   <StatusToast :active-toast="activeToast" @dismiss="dismissToast" />
 </template>

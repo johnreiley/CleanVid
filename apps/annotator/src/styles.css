@@ -828,19 +828,96 @@ button {
   cursor: progress;
 }
 
-.coming-soon-section {
-  align-content: start;
+.profanity-analysis-section,
+.profanity-option-list {
+  display: grid;
+  gap: 0.65rem;
 }
 
-.coming-soon-button {
-  min-height: 2.2rem;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-secondary);
+.profanity-modal-panel .profanity-analysis-section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.profanity-modal-launch-button {
+  width: 100%;
+  margin-top: 0.85rem;
+}
+
+.profanity-modal-close-button {
+  justify-self: end;
+}
+
+.profanity-option-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: center;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.profanity-option-row input {
+  margin: 0;
+}
+
+.profanity-option-row-disabled {
+  opacity: 0.55;
+}
+
+.profanity-capability-notice {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(207, 126, 82, 0.45);
+  background: rgba(207, 126, 82, 0.1);
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.profanity-capability-notice p {
+  margin: 0;
+}
+
+.profanity-suggestion-list {
+  max-height: 16rem;
+}
+
+.profanity-suggestion-surface {
+  width: 100%;
+  padding: 0;
   text-align: left;
-  cursor: not-allowed;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.profanity-suggestion-snippet {
+  color: var(--text-soft);
+  line-height: 1.35;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(3, 6, 10, 0.72);
+}
+
+.profanity-modal-backdrop {
+  backdrop-filter: blur(3px);
+}
+
+.profanity-modal-panel {
+  width: min(42rem, 100%);
+  max-height: min(90vh, 48rem);
+  padding: 1.25rem;
+  border-radius: 0.45rem;
 }
 
 .video-stage {

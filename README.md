@@ -17,6 +17,7 @@ CleanVid currently supports:
 - importing and exporting filter JSON
 - previewing mute/skip behavior during playback without rendering a file first
 - toggling preview playback on and off
+- analyzing profanity into draft mute suggestions before applying them to the timeline
 - exporting a cleaned video directly from the annotator with live progress updates
 - running the same processing pipeline from the CLI
 
@@ -73,8 +74,10 @@ packages/
 2. Open the local Vite URL in your browser.
 3. Click the empty stage or `Open Video` to choose a source file.
 4. Annotate `mute` and `skip` ranges.
-5. Fine-tune timestamps or jump around from the timeline and segment list.
-6. Export filters, or switch to Export mode to render the cleaned video.
+5. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles or transcripts.
+6. Review, seek through, and apply the suggestions you want.
+7. Fine-tune timestamps or jump around from the timeline and segment list.
+8. Export filters, or switch to Export mode to render the cleaned video.
 
 The annotator currently opens:
 - `.mp4`
@@ -96,6 +99,44 @@ Keyboard shortcuts:
 - `Space`: play/pause
 - `Left` / `Right`: seek by 5 seconds
 - `Shift` + `Left` / `Right`: seek by 0.1 seconds
+
+## Profanity Analysis
+
+The Annotate tab includes an `Auto-Detect Profanity` button that opens a local-first analysis modal. The flow creates draft `mute` suggestions instead of changing the timeline automatically.
+
+How it works:
+- CleanVid checks embedded text subtitle tracks first
+- if no usable embedded subtitles are found and OpenSubtitles fallback is enabled, it tries to fetch a matching English subtitle
+- if subtitles are still unavailable, it falls back to a local `whisper.cpp` `base` transcription
+- if subtitles do exist, CleanVid detects profanity from subtitle cues
+- `Enhanced mode` runs a local `whisper.cpp` `tiny` pass when you enable it, or when the subtitle cues look incomplete
+- detections are padded, merged, and shown as draft suggestions you can review before applying
+
+Suggestion review behavior:
+- draft suggestions stay separate from your filter timeline until you click `Apply all as mute filters`
+- each suggestion shows its source: embedded subtitles, remote subtitles, Whisper Tiny, or Whisper Base
+- clicking a suggestion seeks playback to its start time
+- `Discard suggestions` clears the draft analysis results without changing your current filters
+
+Current analysis scope:
+- English-first profanity matching
+- image-based subtitle tracks are ignored in v1
+- remote subtitle lookup is opt-in and only used when matching OpenSubtitles credentials are configured locally
+- Whisper refinement is local-only; CleanVid does not call a cloud transcription API
+
+Optional analysis dependencies:
+- `CLEANVID_OPENSUBTITLES_API_KEY`
+- `CLEANVID_OPENSUBTITLES_USERNAME`
+- `CLEANVID_OPENSUBTITLES_PASSWORD`
+- `CLEANVID_WHISPER_CPP_BIN`
+- `CLEANVID_WHISPER_CPP_TINY_MODEL`
+- `CLEANVID_WHISPER_CPP_BASE_MODEL`
+- `CLEANVID_WHISPER_CPP_MODELS_DIR`
+
+Whisper notes:
+- `CLEANVID_WHISPER_CPP_BIN` should point to your local `whisper.cpp` executable
+- you can point directly to the Tiny/Base English model files, or set `CLEANVID_WHISPER_CPP_MODELS_DIR` and let CleanVid look for `ggml-tiny.en.bin` and `ggml-base.en.bin`
+- the analysis modal shows a setup warning when Whisper Base or Whisper Tiny is unavailable, so you can tell ahead of time whether fallback or enhanced mode will work
 
 ## Export From The Annotator
 
@@ -174,10 +215,10 @@ Rules:
 ## Current Scope Limits
 
 Not implemented yet:
-- subtitle processing
 - multi-audio-track handling
 - drag-to-resize segment editing
-- automatic bad-language detection
+- non-English profanity detection
+- OCR/image-subtitle profanity analysis
 - Plex metadata sync
 - GPU tuning controls
 
@@ -193,4 +234,4 @@ npm run build
 These cover:
 - shared schema validation and timeline behavior
 - CLI graph generation, progress parsing, and FFmpeg integration
-- annotator open/import/export flows, preview playback, keyboard shortcuts, and export progress
+- annotator open/import/export flows, preview playback, profanity analysis, keyboard shortcuts, and export progress

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   FilterValidationError,
+  buildProfanitySuggestions,
   buildKeptSpans,
   buildTimeline,
+  mergeProfanitySuggestions,
   normalizeFilters,
   parseFilterFile,
+  subtitlesLookIncomplete,
   serializeFilterFile
 } from './index.js';
 
@@ -121,5 +124,80 @@ describe('timeline planning', () => {
         muteRanges: []
       }
     ]);
+  });
+});
+
+describe('profanity analysis helpers', () => {
+  it('creates profanity suggestions from normalized cue text', () => {
+    const suggestions = buildProfanitySuggestions(
+      [
+        { start: 10, end: 11, text: '[MUSIC] This is bullshit.' },
+        { start: 12, end: 13, text: 'Nothing to flag here.' }
+      ],
+      'embedded'
+    );
+
+    expect(suggestions).toEqual([
+      expect.objectContaining({
+        start: 10,
+        end: 11,
+        source: 'embedded',
+        matchedTerms: ['shit'],
+        snippet: '[MUSIC] This is bullshit.'
+      })
+    ]);
+  });
+
+  it('merges overlapping profanity suggestions after padding', () => {
+    const merged = mergeProfanitySuggestions([
+      {
+        id: 'one',
+        start: 5,
+        end: 5.4,
+        snippet: 'damn',
+        source: 'embedded',
+        matchedTerms: ['damn']
+      },
+      {
+        id: 'two',
+        start: 5.45,
+        end: 5.8,
+        snippet: 'shit',
+        source: 'whisper-tiny',
+        matchedTerms: ['shit']
+      }
+    ]);
+
+    expect(merged).toEqual([
+      expect.objectContaining({
+        id: 'suggestion-1',
+        source: 'embedded',
+        sources: ['embedded', 'whisper-tiny'],
+        matchedTerms: ['damn', 'shit']
+      })
+    ]);
+  });
+
+  it('detects incomplete subtitles from sparse cues or large gaps', () => {
+    expect(
+      subtitlesLookIncomplete(
+        [
+          { start: 0, end: 2, text: 'hello' },
+          { start: 300, end: 302, text: 'world' }
+        ],
+        600
+      )
+    ).toBe(true);
+
+    expect(
+      subtitlesLookIncomplete(
+        Array.from({ length: 120 }, (_, index) => ({
+          start: index * 5,
+          end: index * 5 + 2,
+          text: `cue ${index}`
+        })),
+        600
+      )
+    ).toBe(false);
   });
 });
