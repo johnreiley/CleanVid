@@ -1155,9 +1155,6 @@ button {
   gap: 0.55rem;
   justify-content: space-between;
   padding: 0.4rem 0.5rem;
-  border: 1px solid rgba(143, 155, 179, 0.14);
-  border-radius: 0;
-  background: rgba(7, 10, 16, 0.86);
   pointer-events: auto;
 }
 
