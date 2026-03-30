@@ -1,30 +1,25 @@
 <script setup lang="ts">
-import type {
-  ProfanityAnalysisCapabilities,
-  ProfanityAnalysisOptions,
-  ProfanitySuggestion
-} from '@cleanvid/shared';
-import InfoTooltip from '../../global/InfoTooltip.vue';
+import type { ProfanitySuggestion } from '@cleanvid/shared';
 
 const emit = defineEmits<{
   analyzeProfanity: [];
   applyProfanitySuggestions: [];
+  clearSubtitlePath: [];
   close: [];
   discardProfanitySuggestions: [];
   seek: [start: number];
-  updateAllowRemoteSubtitles: [value: boolean];
-  updateEnhancedMode: [value: boolean];
+  selectSubtitlePath: [];
 }>();
 
 defineProps<{
   canAnalyzeProfanity: boolean;
-  capabilities: ProfanityAnalysisCapabilities;
   isAnalyzingProfanity: boolean;
+  isSelectingSubtitlePath: boolean;
   progressPercent: number;
   showCloseButton?: boolean;
+  subtitlePath: string;
   suggestionCountLabel: string;
   suggestions: ProfanitySuggestion[];
-  options: ProfanityAnalysisOptions;
 }>();
 
 function formatTimestamp(seconds: number): string {
@@ -43,18 +38,7 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
   const sources = suggestion.sources ?? [suggestion.source];
 
   return sources
-    .map((source) => {
-      switch (source) {
-        case 'embedded':
-          return 'Embedded';
-        case 'remote':
-          return 'Remote';
-        case 'whisper-tiny':
-          return 'Whisper Tiny';
-        case 'whisper-base':
-          return 'Whisper Base';
-      }
-    })
+    .map((source) => (source === 'provided' ? 'Provided Subtitle' : 'Embedded Subtitle'))
     .join(' + ');
 }
 </script>
@@ -74,56 +58,48 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
       </button>
     </div>
 
-    <div class="profanity-option-list">
-      <label class="profanity-option-row">
-        <input
-          data-testid="enhanced-mode-toggle"
-          type="checkbox"
-          :checked="options.enhancedMode"
-          :disabled="isAnalyzingProfanity || !capabilities.whisperTinyAvailable"
-          @change="emit('updateEnhancedMode', ($event.target as HTMLInputElement).checked)"
-        />
-        <span>Enhanced mode</span>
-        <InfoTooltip aria-label="Explain enhanced mode">
-          Runs Whisper tiny when subtitles look sparse so missing profanity can still be caught.
-        </InfoTooltip>
-      </label>
-
-      <label
-        :class="[
-          'profanity-option-row',
-          { 'profanity-option-row-disabled': !capabilities.remoteSubtitlesAvailable }
-        ]"
-      >
-        <input
-          data-testid="allow-remote-subtitles-toggle"
-          type="checkbox"
-          :checked="options.allowRemoteSubtitles"
-          :disabled="isAnalyzingProfanity || !capabilities.remoteSubtitlesAvailable"
-          @change="emit('updateAllowRemoteSubtitles', ($event.target as HTMLInputElement).checked)"
-        />
-        <span>Allow OpenSubtitles fallback</span>
-        <InfoTooltip aria-label="Explain remote subtitles">
-          Uses your configured OpenSubtitles credentials if embedded subtitles are missing.
-        </InfoTooltip>
-      </label>
+    <div class="profanity-capability-notice" data-testid="profanity-subtitle-guidance">
+      <p>CleanVid now analyzes profanity from subtitles only.</p>
+      <p>
+        It will use embedded subtitles when available. If the file has no usable subtitles, choose
+        an `.srt`, `.vtt`, or `.ass` file yourself and try again.
+      </p>
+      <p>
+        If you need one, try searching
+        <a href="https://www.opensubtitles.com/" target="_blank" rel="noreferrer">
+          OpenSubtitles
+        </a>
+        and then select the file here.
+      </p>
     </div>
 
-    <div
-      v-if="!capabilities.whisperBaseAvailable || !capabilities.whisperTinyAvailable"
-      class="profanity-capability-notice"
-      data-testid="profanity-capability-notice"
-    >
-      <p v-if="!capabilities.whisperBaseAvailable">
-        Whisper Base fallback is not configured. Movies without usable subtitles need
-        `CLEANVID_WHISPER_CPP_BIN` plus `CLEANVID_WHISPER_CPP_BASE_MODEL`, or
-        `CLEANVID_WHISPER_CPP_MODELS_DIR` with `ggml-base.en.bin`.
-      </p>
-      <p v-if="!capabilities.whisperTinyAvailable">
-        Enhanced mode is unavailable until `CLEANVID_WHISPER_CPP_BIN` plus
-        `CLEANVID_WHISPER_CPP_TINY_MODEL`, or `CLEANVID_WHISPER_CPP_MODELS_DIR` with
-        `ggml-tiny.en.bin`, are configured.
-      </p>
+    <div class="media-action-row">
+      <button
+        type="button"
+        class="subtle-action"
+        data-testid="select-subtitle-path-button"
+        :disabled="isSelectingSubtitlePath || isAnalyzingProfanity"
+        @click="emit('selectSubtitlePath')"
+      >
+        {{ isSelectingSubtitlePath ? 'Choosing Subtitle...' : 'Choose Subtitle File' }}
+      </button>
+
+      <button
+        type="button"
+        class="subtle-action"
+        data-testid="clear-subtitle-path-button"
+        :disabled="subtitlePath === '' || isSelectingSubtitlePath || isAnalyzingProfanity"
+        @click="emit('clearSubtitlePath')"
+      >
+        Clear
+      </button>
+    </div>
+
+    <div class="export-metric-row">
+      <span>Selected subtitle</span>
+      <strong data-testid="selected-subtitle-path">
+        {{ subtitlePath === '' ? 'Embedded only' : subtitlePath }}
+      </strong>
     </div>
 
     <button

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ProfanityAnalysisCapabilities, TimedTextCue } from '@cleanvid/shared';
+import type { TimedTextCue } from '@cleanvid/shared';
 import { analyzeProfanity, type AnalyzeProfanityDependencies } from './profanity-analysis.js';
 
 function createDependencies(
@@ -11,20 +11,7 @@ function createDependencies(
       streams: []
     }),
     extractEmbeddedSubtitleCues: async () => null,
-    fetchRemoteSubtitleCues: async () => null,
-    transcribeWithWhisper: async () => [
-      {
-        start: 10,
-        end: 11,
-        text: 'This is bullshit'
-      }
-    ],
-    getCapabilities: () =>
-      ({
-        remoteSubtitlesAvailable: true,
-        whisperBaseAvailable: true,
-        whisperTinyAvailable: true
-      }) satisfies ProfanityAnalysisCapabilities,
+    loadProvidedSubtitleCues: async () => null,
     ...overrides
   };
 }
@@ -34,19 +21,13 @@ function createCue(start: number, end: number, text: string): TimedTextCue {
 }
 
 describe('analyzeProfanity', () => {
-  it('uses embedded subtitles first without base fallback', async () => {
-    const transcribeWithWhisper = vi.fn(async () => {
-      throw new Error('should not run');
-    });
+  it('uses embedded subtitles when they are available', async () => {
+    const loadProvidedSubtitleCues = vi.fn(async () => [createCue(20, 21, 'should not run')]);
 
     const result = await analyzeProfanity(
       {
         inputPath: 'C:\\Movies\\movie.mp4',
-        movieTitle: 'movie',
-        options: {
-          enhancedMode: false,
-          allowRemoteSubtitles: false
-        }
+        movieTitle: 'movie'
       },
       createDependencies({
         probeSubtitleStreams: async () => ({
@@ -54,7 +35,7 @@ describe('analyzeProfanity', () => {
           streams: [{ index: 2, codec_type: 'subtitle', codec_name: 'subrip' }]
         }),
         extractEmbeddedSubtitleCues: async () => [createCue(15, 16, 'oh shit')],
-        transcribeWithWhisper
+        loadProvidedSubtitleCues
       })
     );
 
@@ -64,184 +45,56 @@ describe('analyzeProfanity', () => {
         matchedTerms: ['shit']
       })
     ]);
-    expect(transcribeWithWhisper).not.toHaveBeenCalled();
+    expect(loadProvidedSubtitleCues).not.toHaveBeenCalled();
   });
 
-  it('uses remote subtitles when embedded subtitles are unavailable and remote fetch is enabled', async () => {
-    const fetchRemoteSubtitleCues = vi.fn(async () => [createCue(20, 21, 'what the fuck')]);
+  it('uses a provided subtitle file when one is selected', async () => {
+    const loadProvidedSubtitleCues = vi.fn(async () => [createCue(20, 21, 'what the fuck')]);
 
     const result = await analyzeProfanity(
       {
         inputPath: 'C:\\Movies\\movie.mp4',
         movieTitle: 'movie',
-        options: {
-          enhancedMode: false,
-          allowRemoteSubtitles: true
-        }
+        subtitlePath: 'C:\\Subtitles\\movie.srt'
       },
       createDependencies({
-        fetchRemoteSubtitleCues
+        loadProvidedSubtitleCues
       })
     );
 
-    expect(fetchRemoteSubtitleCues).toHaveBeenCalledTimes(1);
-    expect(result.remoteLookupUsed).toBe(true);
-    expect(result.usedSources).toContain('remote');
+    expect(loadProvidedSubtitleCues).toHaveBeenCalledWith('C:\\Subtitles\\movie.srt');
+    expect(result.usedSources).toEqual(['provided']);
   });
 
-  it('falls back to whisper base when no subtitles are usable', async () => {
-    const transcribeWithWhisper = vi.fn(async (_inputPath, model: 'tiny' | 'base') => [
-      createCue(40, 41, model === 'base' ? 'damn' : 'should not use tiny')
-    ]);
-
-    const result = await analyzeProfanity(
-      {
-        inputPath: 'C:\\Movies\\movie.mp4',
-        movieTitle: 'movie',
-        options: {
-          enhancedMode: false,
-          allowRemoteSubtitles: false
-        }
-      },
-      createDependencies({
-        transcribeWithWhisper
-      })
-    );
-
-    expect(transcribeWithWhisper).toHaveBeenCalledWith('C:\\Movies\\movie.mp4', 'base');
-    expect(result.usedSources).toEqual(['whisper-base']);
-  });
-
-  it('runs whisper tiny refinement when enhanced mode is enabled', async () => {
-    const transcribeWithWhisper = vi.fn(async () => [createCue(25, 26, 'bitch')]);
-
-    const result = await analyzeProfanity(
-      {
-        inputPath: 'C:\\Movies\\movie.mp4',
-        movieTitle: 'movie',
-        options: {
-          enhancedMode: true,
-          allowRemoteSubtitles: false
-        }
-      },
-      createDependencies({
-        probeSubtitleStreams: async () => ({
-          duration: 120,
-          streams: [{ index: 2, codec_type: 'subtitle', codec_name: 'subrip' }]
-        }),
-        extractEmbeddedSubtitleCues: async () => [createCue(10, 11, 'mild line')],
-        transcribeWithWhisper
-      })
-    );
-
-    expect(transcribeWithWhisper).toHaveBeenCalledWith('C:\\Movies\\movie.mp4', 'tiny');
-    expect(result.whisperRefinementApplied).toBe(true);
-    expect(result.usedSources).toContain('whisper-tiny');
-  });
-
-  it('runs whisper tiny refinement automatically when subtitles look incomplete', async () => {
-    const transcribeWithWhisper = vi.fn(async () => [createCue(300, 301, 'damn')]);
-
-    await analyzeProfanity(
-      {
-        inputPath: 'C:\\Movies\\movie.mp4',
-        movieTitle: 'movie',
-        options: {
-          enhancedMode: false,
-          allowRemoteSubtitles: false
-        }
-      },
-      createDependencies({
-        probeSubtitleStreams: async () => ({
-          duration: 600,
-          streams: [{ index: 2, codec_type: 'subtitle', codec_name: 'subrip' }]
-        }),
-        extractEmbeddedSubtitleCues: async () => [createCue(10, 12, 'hello there')],
-        transcribeWithWhisper
-      })
-    );
-
-    expect(transcribeWithWhisper).toHaveBeenCalledWith('C:\\Movies\\movie.mp4', 'tiny');
-  });
-
-  it('skips remote fetching cleanly when capabilities disable it', async () => {
-    const fetchRemoteSubtitleCues = vi.fn(async () => [createCue(20, 21, 'fuck')]);
-
-    await analyzeProfanity(
-      {
-        inputPath: 'C:\\Movies\\movie.mp4',
-        movieTitle: 'movie',
-        options: {
-          enhancedMode: false,
-          allowRemoteSubtitles: true
-        }
-      },
-      createDependencies({
-        fetchRemoteSubtitleCues,
-        getCapabilities: () => ({
-          remoteSubtitlesAvailable: false,
-          whisperBaseAvailable: true,
-          whisperTinyAvailable: true
-        })
-      })
-    );
-
-    expect(fetchRemoteSubtitleCues).not.toHaveBeenCalled();
-  });
-
-  it('throws a clear setup error when whisper base fallback is required but unavailable', async () => {
+  it('throws a clear error when no usable subtitles are available', async () => {
     await expect(
       analyzeProfanity(
         {
           inputPath: 'C:\\Movies\\movie.mp4',
-          movieTitle: 'movie',
-          options: {
-            enhancedMode: false,
-            allowRemoteSubtitles: false
-          }
+          movieTitle: 'movie'
         },
-        createDependencies({
-          getCapabilities: () => ({
-            remoteSubtitlesAvailable: false,
-            whisperBaseAvailable: false,
-            whisperTinyAvailable: false
-          })
-        })
+        createDependencies()
       )
     ).rejects.toThrow(
-      'No usable embedded or remote subtitles were found, and whisper.cpp base fallback is not configured.'
+      'No usable subtitles were found. Choose an .srt, .vtt, or .ass subtitle file and try again.'
     );
   });
 
-  it('skips enhanced refinement when whisper tiny is unavailable', async () => {
-    const transcribeWithWhisper = vi.fn(async () => [createCue(25, 26, 'bitch')]);
-
+  it('merges subtitle profanity into draft mute suggestions', async () => {
     const result = await analyzeProfanity(
       {
         inputPath: 'C:\\Movies\\movie.mp4',
-        movieTitle: 'movie',
-        options: {
-          enhancedMode: true,
-          allowRemoteSubtitles: false
-        }
+        movieTitle: 'movie'
       },
       createDependencies({
-        probeSubtitleStreams: async () => ({
-          duration: 120,
-          streams: [{ index: 2, codec_type: 'subtitle', codec_name: 'subrip' }]
-        }),
-        extractEmbeddedSubtitleCues: async () => [createCue(10, 11, 'mild line')],
-        transcribeWithWhisper,
-        getCapabilities: () => ({
-          remoteSubtitlesAvailable: true,
-          whisperBaseAvailable: true,
-          whisperTinyAvailable: false
-        })
+        extractEmbeddedSubtitleCues: async () => [
+          createCue(10, 11, 'damn'),
+          createCue(11.05, 12, 'shit')
+        ]
       })
     );
 
-    expect(transcribeWithWhisper).not.toHaveBeenCalled();
-    expect(result.whisperRefinementApplied).toBe(false);
-    expect(result.usedSources).toEqual(['embedded']);
+    expect(result.suggestions).toHaveLength(1);
+    expect(result.suggestions[0]?.matchedTerms).toEqual(['damn', 'shit']);
   });
 });

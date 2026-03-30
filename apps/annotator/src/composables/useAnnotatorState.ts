@@ -5,8 +5,6 @@ import {
   normalizeFilters,
   parseFilterFile,
   serializeFilterFile,
-  type ProfanityAnalysisCapabilities,
-  type ProfanityAnalysisOptions,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult,
   type ProfanitySuggestion,
@@ -21,7 +19,6 @@ const SEEK_STEP_SECONDS = 5;
 const FINE_SEEK_STEP_SECONDS = 0.1;
 
 interface OpenVideoResponse {
-  analysisCapabilities?: ProfanityAnalysisCapabilities;
   cancelled: boolean;
   inputPath?: string;
   name?: string;
@@ -39,6 +36,11 @@ interface ProcessResponse {
 interface SelectOutputPathResponse {
   cancelled: boolean;
   outputPath?: string;
+}
+
+interface SelectSubtitlePathResponse {
+  cancelled: boolean;
+  subtitlePath?: string;
 }
 
 interface AnalyzeProfanityResultStreamEvent {
@@ -140,6 +142,7 @@ export function useAnnotatorState() {
   const isPlaying = ref(false);
   const isOpeningVideo = ref(false);
   const isSelectingOutputPath = ref(false);
+  const isSelectingSubtitlePath = ref(false);
   const isAnalyzingProfanity = ref(false);
   const isProcessing = ref(false);
   const analyzeProfanityProgressPercent = ref(0);
@@ -152,15 +155,7 @@ export function useAnnotatorState() {
   const segments = ref<EditableSegment[]>([]);
   const selectedSegmentId = ref<string | null>(null);
   const profanitySuggestions = ref<ProfanitySuggestion[]>([]);
-  const profanityAnalysisCapabilities = ref<ProfanityAnalysisCapabilities>({
-    remoteSubtitlesAvailable: false,
-    whisperBaseAvailable: false,
-    whisperTinyAvailable: false
-  });
-  const profanityAnalysisOptions = ref<ProfanityAnalysisOptions>({
-    enhancedMode: false,
-    allowRemoteSubtitles: false
-  });
+  const profanitySubtitlePath = ref('');
   const statusMessage = ref('Open a video to begin annotating.');
   const errorMessage = ref('');
   const persistedFiltersSignature = ref('[]');
@@ -567,6 +562,7 @@ export function useAnnotatorState() {
     importedMovieDuration.value = 0;
     markFiltersPersisted([]);
     clearProfanitySuggestions();
+    profanitySubtitlePath.value = '';
   }
 
   function applyPreviewPlayback() {
@@ -848,17 +844,6 @@ export function useAnnotatorState() {
 
       revokeVideoUrl();
       videoUrl.value = response.playbackUrl ?? null;
-      profanityAnalysisCapabilities.value = response.analysisCapabilities ?? {
-        remoteSubtitlesAvailable: false,
-        whisperBaseAvailable: false,
-        whisperTinyAvailable: false
-      };
-      if (!profanityAnalysisCapabilities.value.remoteSubtitlesAvailable) {
-        profanityAnalysisOptions.value.allowRemoteSubtitles = false;
-      }
-      if (!profanityAnalysisCapabilities.value.whisperTinyAvailable) {
-        profanityAnalysisOptions.value.enhancedMode = false;
-      }
       inputPath.value = response.inputPath ?? '';
       inputName.value = response.name ?? '';
       outputPath.value = response.outputPath ?? '';
@@ -886,14 +871,42 @@ export function useAnnotatorState() {
     outputPath.value = value;
   }
 
-  function updateProfanityEnhancedMode(value: boolean) {
-    profanityAnalysisOptions.value.enhancedMode =
-      profanityAnalysisCapabilities.value.whisperTinyAvailable && value;
+  async function selectProfanitySubtitlePath() {
+    clearFeedback();
+
+    if (isOpeningVideo.value || isProcessing.value || inputPath.value === '') {
+      return;
+    }
+
+    isSelectingSubtitlePath.value = true;
+
+    try {
+      const response = await requestJson<SelectSubtitlePathResponse>('/api/select-subtitle-path', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.cancelled) {
+        return;
+      }
+
+      profanitySubtitlePath.value = response.subtitlePath ?? '';
+
+      if (profanitySubtitlePath.value !== '') {
+        statusMessage.value = `Selected subtitle file ${profanitySubtitlePath.value}.`;
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to select a subtitle file.');
+    } finally {
+      isSelectingSubtitlePath.value = false;
+    }
   }
 
-  function updateProfanityAllowRemoteSubtitles(value: boolean) {
-    profanityAnalysisOptions.value.allowRemoteSubtitles =
-      profanityAnalysisCapabilities.value.remoteSubtitlesAvailable && value;
+  function clearProfanitySubtitlePath() {
+    profanitySubtitlePath.value = '';
+    statusMessage.value = 'Cleared the selected subtitle file.';
   }
 
   async function analyzeProfanity() {
@@ -915,7 +928,7 @@ export function useAnnotatorState() {
       const result = await requestAnalyzeProfanityWithProgress({
         inputPath: inputPath.value,
         movieTitle: movieTitle.value,
-        options: profanityAnalysisOptions.value
+        subtitlePath: profanitySubtitlePath.value.trim()
       });
 
       profanitySuggestions.value = result.suggestions;
@@ -1187,6 +1200,7 @@ export function useAnnotatorState() {
     isPlaying,
     isOpeningVideo,
     isSelectingOutputPath,
+    isSelectingSubtitlePath,
     isAnalyzingProfanity,
     isProcessing,
     analyzeProfanityProgressPercent,
@@ -1199,8 +1213,7 @@ export function useAnnotatorState() {
     statusMessage,
     errorMessage,
     profanitySuggestions,
-    profanityAnalysisCapabilities,
-    profanityAnalysisOptions,
+    profanitySubtitlePath,
     sortedSegments,
     segmentIssues,
     canAnalyzeProfanity,
@@ -1226,8 +1239,8 @@ export function useAnnotatorState() {
     togglePreviewPlayback,
     openVideo,
     loadFilterFile,
-    updateProfanityEnhancedMode,
-    updateProfanityAllowRemoteSubtitles,
+    selectProfanitySubtitlePath,
+    clearProfanitySubtitlePath,
     analyzeProfanity,
     discardProfanitySuggestions,
     applyProfanitySuggestions,

@@ -1,30 +1,13 @@
-export type ProfanitySuggestionSource =
-  | 'embedded'
-  | 'remote'
-  | 'whisper-tiny'
-  | 'whisper-base';
+export type ProfanitySuggestionSource = 'embedded' | 'provided';
 
 export type ProfanityAnalysisPhase =
   | 'probe-media'
   | 'extract-embedded-subtitles'
-  | 'fetch-remote-subtitles'
-  | 'transcribe-tiny'
-  | 'transcribe-base'
+  | 'load-provided-subtitles'
   | 'normalize-text'
   | 'detect-profanity'
   | 'merge-detections'
   | 'done';
-
-export interface ProfanityAnalysisOptions {
-  enhancedMode: boolean;
-  allowRemoteSubtitles: boolean;
-}
-
-export interface ProfanityAnalysisCapabilities {
-  remoteSubtitlesAvailable: boolean;
-  whisperBaseAvailable: boolean;
-  whisperTinyAvailable: boolean;
-}
 
 export interface TimedTextCue {
   start: number;
@@ -52,8 +35,6 @@ export interface ProfanityAnalysisResult {
   suggestions: ProfanitySuggestion[];
   usedSources: ProfanitySuggestionSource[];
   subtitleCueCount: number;
-  remoteLookupUsed: boolean;
-  whisperRefinementApplied: boolean;
   message: string;
 }
 

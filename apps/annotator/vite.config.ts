@@ -15,8 +15,6 @@ import {
   normalizeFilters,
   serializeFilterFile,
   type FilterSegment,
-  type ProfanityAnalysisCapabilities,
-  type ProfanityAnalysisOptions,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult
 } from '../../packages/shared/src/index';
@@ -25,7 +23,7 @@ import {
   type ProcessMediaOptions,
   type ProcessMediaProgressEvent
 } from '../cli/src/processor';
-import { analyzeProfanity, getProfanityAnalysisCapabilities } from './src/profanity-analysis';
+import { analyzeProfanity } from './src/profanity-analysis';
 import {
   preparePreviewPlayback,
   type PlaybackSource,
@@ -36,12 +34,13 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const execFile = promisify(execFileCallback);
 const VIDEO_DIALOG_FILTER =
   'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
+const SUBTITLE_DIALOG_FILTER =
+  'Subtitle Files|*.srt;*.vtt;*.ass;*.ssa|All Files|*.*';
 const OUTPUT_DIALOG_FILTER =
   'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
 
 export interface OpenVideoResult {
   cancelled: boolean;
-  analysisCapabilities?: ProfanityAnalysisCapabilities;
   inputPath?: string;
   name?: string;
   outputPath?: string;
@@ -59,12 +58,17 @@ export interface ProcessRequestBody {
 export interface AnalyzeProfanityRequestBody {
   inputPath: string;
   movieTitle?: string;
-  options?: Partial<ProfanityAnalysisOptions>;
+  subtitlePath?: string;
 }
 
 export interface SelectOutputPathResult {
   cancelled: boolean;
   outputPath?: string;
+}
+
+export interface SelectSubtitlePathResult {
+  cancelled: boolean;
+  subtitlePath?: string;
 }
 
 export interface ProcessResult {
@@ -140,6 +144,10 @@ interface OpenVideoDependencies {
 
 interface SelectOutputPathDependencies {
   selectOutputPath: (suggestedPath: string) => Promise<string | null>;
+}
+
+interface SelectSubtitlePathDependencies {
+  selectSubtitlePath: () => Promise<string | null>;
 }
 
 interface PlaybackRegistry {
@@ -235,6 +243,12 @@ function getDefaultOpenVideoDependencies(): OpenVideoDependencies {
 function getDefaultSelectOutputPathDependencies(): SelectOutputPathDependencies {
   return {
     selectOutputPath: openNativeOutputFileDialog
+  };
+}
+
+function getDefaultSelectSubtitlePathDependencies(): SelectSubtitlePathDependencies {
+  return {
+    selectSubtitlePath: openNativeSubtitleFileDialog
   };
 }
 
@@ -342,6 +356,37 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
   return selectedPath === '' ? null : path.resolve(selectedPath);
 }
 
+export async function openNativeSubtitleFileDialog(): Promise<string | null> {
+  if (process.platform !== 'win32') {
+    throw new HttpError(501, 'Native subtitle selection is only supported on Windows in this build.');
+  }
+
+  const script = `
+Add-Type -AssemblyName System.Windows.Forms
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$dialog = New-Object System.Windows.Forms.OpenFileDialog
+$dialog.Title = 'Select subtitle file'
+$dialog.Filter = '${SUBTITLE_DIALOG_FILTER}'
+$dialog.Multiselect = $false
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
+  Write-Output $dialog.FileName
+}
+`;
+
+  const { stdout } = await execFile(
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+    ['-NoProfile', '-STA', '-EncodedCommand', encodePowerShellCommand(script)],
+    {
+      windowsHide: false,
+      maxBuffer: 1024 * 1024
+    }
+  );
+
+  const selectedPath = stdout.trim();
+  return selectedPath === '' ? null : path.resolve(selectedPath);
+}
+
 export async function handleOpenVideoRequest(
   dependencies: OpenVideoDependencies = getDefaultOpenVideoDependencies()
 ): Promise<OpenVideoResult> {
@@ -355,7 +400,6 @@ export async function handleOpenVideoRequest(
 
   return {
     cancelled: false,
-    analysisCapabilities: getProfanityAnalysisCapabilities(),
     inputPath: preparedPlayback.inputPath,
     name: preparedPlayback.name,
     outputPath: deriveDefaultOutputPath(preparedPlayback.inputPath),
@@ -367,7 +411,7 @@ export async function handleOpenVideoRequest(
 function parseAnalyzeProfanityRequestBody(body: unknown): {
   inputPath: string;
   movieTitle: string;
-  options: ProfanityAnalysisOptions;
+  subtitlePath: string;
 } {
   if (typeof body !== 'object' || body === null) {
     throw new HttpError(400, 'Request body must be a JSON object.');
@@ -376,10 +420,7 @@ function parseAnalyzeProfanityRequestBody(body: unknown): {
   const record = body as Record<string, unknown>;
   const inputPath = typeof record.inputPath === 'string' ? record.inputPath.trim() : '';
   const movieTitle = typeof record.movieTitle === 'string' ? record.movieTitle.trim() : '';
-  const optionsRecord =
-    typeof record.options === 'object' && record.options !== null
-      ? (record.options as Record<string, unknown>)
-      : {};
+  const subtitlePath = typeof record.subtitlePath === 'string' ? record.subtitlePath.trim() : '';
 
   if (inputPath === '') {
     throw new HttpError(400, 'inputPath is required.');
@@ -388,10 +429,7 @@ function parseAnalyzeProfanityRequestBody(body: unknown): {
   return {
     inputPath,
     movieTitle,
-    options: {
-      enhancedMode: Boolean(optionsRecord.enhancedMode),
-      allowRemoteSubtitles: Boolean(optionsRecord.allowRemoteSubtitles)
-    }
+    subtitlePath
   };
 }
 
@@ -404,11 +442,17 @@ export async function handleAnalyzeProfanityRequest(
   const resolvedInputPath = path.resolve(request.inputPath);
 
   await dependencies.ensureInputExists(resolvedInputPath);
+  const resolvedSubtitlePath =
+    request.subtitlePath === '' ? '' : path.resolve(request.subtitlePath);
+
+  if (resolvedSubtitlePath !== '') {
+    await dependencies.ensureInputExists(resolvedSubtitlePath);
+  }
 
   return dependencies.analyzeProfanityImpl({
     inputPath: resolvedInputPath,
     movieTitle: request.movieTitle,
-    options: request.options,
+    subtitlePath: resolvedSubtitlePath || undefined,
     onProgress
   });
 }
@@ -437,6 +481,21 @@ export async function handleSelectOutputPathRequest(
   return {
     cancelled: false,
     outputPath: path.resolve(selectedPath)
+  };
+}
+
+export async function handleSelectSubtitlePathRequest(
+  dependencies: SelectSubtitlePathDependencies = getDefaultSelectSubtitlePathDependencies()
+): Promise<SelectSubtitlePathResult> {
+  const selectedPath = await dependencies.selectSubtitlePath();
+
+  if (!selectedPath) {
+    return { cancelled: true };
+  }
+
+  return {
+    cancelled: false,
+    subtitlePath: path.resolve(selectedPath)
   };
 }
 
@@ -810,6 +869,17 @@ async function handleApiRequest(request: IncomingMessage, response: ServerRespon
 
     const body = await readJsonBody(request);
     const result = await handleSelectOutputPathRequest(body);
+    sendJson(response, 200, result);
+    return true;
+  }
+
+  if (url.pathname === '/api/select-subtitle-path') {
+    if (request.method !== 'POST') {
+      sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+
+    const result = await handleSelectSubtitlePathRequest();
     sendJson(response, 200, result);
     return true;
   }

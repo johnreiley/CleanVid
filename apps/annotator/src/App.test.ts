@@ -324,11 +324,11 @@ describe('annotator app', () => {
     );
     expect(wrapper.find('[data-testid="profanity-modal"]').exists()).toBe(false);
     await openProfanityModal(wrapper);
-    expect(wrapper.get('[data-testid="profanity-capability-notice"]').text()).toContain(
-      'Whisper Base fallback is not configured.'
+    expect(wrapper.get('[data-testid="profanity-subtitle-guidance"]').text()).toContain(
+      'CleanVid now analyzes profanity from subtitles only.'
     );
-    expect((wrapper.get('[data-testid="enhanced-mode-toggle"]').element as HTMLInputElement).disabled).toBe(
-      true
+    expect(wrapper.get('[data-testid="select-subtitle-path-button"]').text()).toContain(
+      'Choose Subtitle File'
     );
     await wrapper.get('[data-testid="close-profanity-modal-button"]').trigger('click');
     await nextTick();
@@ -348,7 +348,7 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="preview-toggle"]').text()).toContain('Preview On');
   });
 
-  it('enables profanity analysis only after a video is loaded and only enables remote fallback when configured', async () => {
+  it('enables profanity analysis only after a video is loaded and lets the user choose a subtitle file', async () => {
     const wrapper = mount(App);
 
     await switchMode(wrapper, 'annotate');
@@ -375,12 +375,7 @@ describe('annotator app', () => {
     ).toBe(false);
     await openProfanityModal(wrapper);
     expect(wrapper.get('[data-testid="analyze-profanity-button"]').element).toBeTruthy();
-    expect((wrapper.get('[data-testid="enhanced-mode-toggle"]').element as HTMLInputElement).disabled).toBe(
-      false
-    );
-    expect(
-      (wrapper.get('[data-testid="allow-remote-subtitles-toggle"]').element as HTMLInputElement).disabled
-    ).toBe(false);
+    expect(wrapper.get('[data-testid="selected-subtitle-path"]').text()).toContain('Embedded only');
   });
 
   it('does not reopen the picker when clicking the stage after a video is loaded', async () => {
@@ -759,14 +754,24 @@ describe('annotator app', () => {
     });
 
     fetchMock.mockClear();
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: false,
+        subtitlePath: 'C:\\Subtitles\\movie.srt'
+      })
+    );
     const analysisResponse = createNdjsonResponse();
     fetchMock.mockResolvedValueOnce(analysisResponse.response);
 
     await switchMode(wrapper, 'annotate');
     await openProfanityModal(wrapper);
     expect(wrapper.find('[data-testid="profanity-modal"]').exists()).toBe(true);
-    await wrapper.get('[data-testid="enhanced-mode-toggle"]').setValue(true);
-    await wrapper.get('[data-testid="allow-remote-subtitles-toggle"]').setValue(true);
+    await wrapper.get('[data-testid="select-subtitle-path-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+    expect(wrapper.get('[data-testid="selected-subtitle-path"]').text()).toContain(
+      'C:\\Subtitles\\movie.srt'
+    );
     await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
     await nextTick();
 
@@ -775,15 +780,15 @@ describe('annotator app', () => {
     analysisResponse.push({
       type: 'progress',
       progress: {
-        phase: 'transcribe-tiny',
-        message: 'Running whisper.cpp tiny refinement...',
-        percent: 52
+        phase: 'load-provided-subtitles',
+        message: 'Loading the provided subtitle file...',
+        percent: 38
       }
     });
     await flushPromises();
     await nextTick();
 
-    expect(wrapper.get('[data-testid="analyze-profanity-button"]').text()).toContain('Analyzing 52%');
+    expect(wrapper.get('[data-testid="analyze-profanity-button"]').text()).toContain('Analyzing 38%');
 
     analysisResponse.push({
       type: 'result',
@@ -802,14 +807,12 @@ describe('annotator app', () => {
             start: 22,
             end: 23,
             snippet: 'what the fuck',
-            source: 'whisper-tiny',
+            source: 'provided',
             matchedTerms: ['fuck']
           }
         ],
-        usedSources: ['embedded', 'whisper-tiny'],
+        usedSources: ['provided'],
         subtitleCueCount: 2,
-        remoteLookupUsed: false,
-        whisperRefinementApplied: true,
         message: 'Detected 2 draft mute suggestions.'
       }
     });
@@ -817,16 +820,13 @@ describe('annotator app', () => {
     await flushPromises();
     await nextTick();
 
-    const [analysisUrl, analysisInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [analysisUrl, analysisInit] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(analysisUrl).toBe('/api/analyze-profanity');
     expect(analysisInit.method).toBe('POST');
     expect(JSON.parse(String(analysisInit.body))).toEqual({
       inputPath: 'C:\\Movies\\movie.mp4',
       movieTitle: 'movie',
-      options: {
-        enhancedMode: true,
-        allowRemoteSubtitles: true
-      }
+      subtitlePath: 'C:\\Subtitles\\movie.srt'
     });
     expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toContain('2 suggestions');
     expect(wrapper.get('[data-testid="profanity-suggestion-snippet"]').text()).toContain('oh shit');
@@ -878,8 +878,6 @@ describe('annotator app', () => {
         ],
         usedSources: ['embedded'],
         subtitleCueCount: 1,
-        remoteLookupUsed: false,
-        whisperRefinementApplied: false,
         message: 'Detected 1 draft mute suggestion.'
       })
     );

@@ -12,6 +12,7 @@ import {
   handleAnalyzeProfanityRequest,
   handleMediaRequest,
   handleOpenVideoRequest,
+  handleSelectSubtitlePathRequest,
   handleSelectOutputPathRequest,
   handleProcessRequest
 } from '../vite.config';
@@ -83,9 +84,6 @@ describe('annotator vite api helpers', () => {
         registerPlaybackPath
       })
     ).resolves.toEqual({
-      analysisCapabilities: expect.objectContaining({
-        remoteSubtitlesAvailable: expect.any(Boolean)
-      }),
       cancelled: false,
       inputPath: 'C:\\Movies\\movie.mp4',
       name: 'movie.mp4',
@@ -120,9 +118,6 @@ describe('annotator vite api helpers', () => {
         registerPlaybackPath: () => '/api/media/token-preview'
       })
     ).resolves.toEqual({
-      analysisCapabilities: expect.objectContaining({
-        remoteSubtitlesAvailable: expect.any(Boolean)
-      }),
       cancelled: false,
       inputPath: 'C:\\Movies\\movie.mkv',
       name: 'movie.mkv',
@@ -162,8 +157,25 @@ describe('annotator vite api helpers', () => {
     ).resolves.toEqual({ cancelled: true });
   });
 
+  it('returns the selected subtitle path shape and supports cancellation', async () => {
+    await expect(
+      handleSelectSubtitlePathRequest({
+        selectSubtitlePath: async () => 'C:\\Subtitles\\movie.srt'
+      })
+    ).resolves.toEqual({
+      cancelled: false,
+      subtitlePath: 'C:\\Subtitles\\movie.srt'
+    });
+
+    await expect(
+      handleSelectSubtitlePathRequest({
+        selectSubtitlePath: async () => null
+      })
+    ).resolves.toEqual({ cancelled: true });
+  });
+
   it('validates the profanity analysis request and forwards progress events', async () => {
-    const analyzeProfanityImpl = vi.fn(async ({ onProgress }): Promise<ProfanityAnalysisResult> => {
+    const analyzeProfanityImpl = vi.fn(async ({ onProgress, subtitlePath }): Promise<ProfanityAnalysisResult> => {
       onProgress?.({
         phase: 'detect-profanity',
         message: 'Detecting profanity...',
@@ -177,15 +189,13 @@ describe('annotator vite api helpers', () => {
             start: 10,
             end: 11,
             snippet: 'oh shit',
-            source: 'embedded',
+            source: 'provided',
             matchedTerms: ['shit'],
-            sources: ['embedded']
+            sources: ['provided']
           }
         ],
-        usedSources: ['embedded'],
+        usedSources: [subtitlePath ? 'provided' : 'embedded'],
         subtitleCueCount: 1,
-        remoteLookupUsed: false,
-        whisperRefinementApplied: false,
         message: 'Detected 1 draft mute suggestion.'
       };
     });
@@ -196,10 +206,7 @@ describe('annotator vite api helpers', () => {
         {
           inputPath: 'C:\\Movies\\movie.mp4',
           movieTitle: 'movie',
-          options: {
-            enhancedMode: true,
-            allowRemoteSubtitles: false
-          }
+          subtitlePath: 'C:\\Subtitles\\movie.srt'
         },
         {
           ensureInputExists: async () => undefined,
@@ -216,15 +223,13 @@ describe('annotator vite api helpers', () => {
           start: 10,
           end: 11,
           snippet: 'oh shit',
-          source: 'embedded',
+          source: 'provided',
           matchedTerms: ['shit'],
-          sources: ['embedded']
+          sources: ['provided']
         }
       ],
-      usedSources: ['embedded'],
+      usedSources: ['provided'],
       subtitleCueCount: 1,
-      remoteLookupUsed: false,
-      whisperRefinementApplied: false,
       message: 'Detected 1 draft mute suggestion.'
     });
 
@@ -232,10 +237,7 @@ describe('annotator vite api helpers', () => {
       expect.objectContaining({
         inputPath: 'C:\\Movies\\movie.mp4',
         movieTitle: 'movie',
-        options: {
-          enhancedMode: true,
-          allowRemoteSubtitles: false
-        }
+        subtitlePath: 'C:\\Subtitles\\movie.srt'
       })
     );
     expect(progressEvents).toEqual([

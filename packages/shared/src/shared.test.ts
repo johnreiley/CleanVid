@@ -7,7 +7,6 @@ import {
   mergeProfanitySuggestions,
   normalizeFilters,
   parseFilterFile,
-  subtitlesLookIncomplete,
   serializeFilterFile
 } from './index.js';
 
@@ -163,7 +162,7 @@ describe('profanity analysis helpers', () => {
         start: 5.45,
         end: 5.8,
         snippet: 'shit',
-        source: 'whisper-tiny',
+        source: 'provided',
         matchedTerms: ['shit']
       }
     ]);
@@ -172,32 +171,9 @@ describe('profanity analysis helpers', () => {
       expect.objectContaining({
         id: 'suggestion-1',
         source: 'embedded',
-        sources: ['embedded', 'whisper-tiny'],
+        sources: ['embedded', 'provided'],
         matchedTerms: ['damn', 'shit']
       })
     ]);
-  });
-
-  it('detects incomplete subtitles from sparse cues or large gaps', () => {
-    expect(
-      subtitlesLookIncomplete(
-        [
-          { start: 0, end: 2, text: 'hello' },
-          { start: 300, end: 302, text: 'world' }
-        ],
-        600
-      )
-    ).toBe(true);
-
-    expect(
-      subtitlesLookIncomplete(
-        Array.from({ length: 120 }, (_, index) => ({
-          start: index * 5,
-          end: index * 5 + 2,
-          text: `cue ${index}`
-        })),
-        600
-      )
-    ).toBe(false);
   });
 });

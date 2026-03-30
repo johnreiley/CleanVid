@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
-import type {
-  ProfanityAnalysisCapabilities,
-  ProfanityAnalysisOptions,
-  ProfanitySuggestion
-} from '@cleanvid/shared';
+import type { ProfanitySuggestion } from '@cleanvid/shared';
 import {
   computed,
   nextTick,
@@ -32,16 +28,16 @@ const emit = defineEmits<{
   filtersSelected: [file: File];
   analyzeProfanity: [];
   applyProfanitySuggestions: [];
+  clearProfanitySubtitlePath: [];
   discardProfanitySuggestions: [];
   openVideo: [];
   selectOutputPath: [];
+  selectProfanitySubtitlePath: [];
   processLinkedVideo: [];
   seek: [start: number];
   selectSegment: [id: string | null];
   toggleMark: [value: FilterType];
   updateOutputPath: [value: string];
-  updateProfanityAllowRemoteSubtitles: [value: boolean];
-  updateProfanityEnhancedMode: [value: boolean];
   updateSegment: [payload: { id: string; field: 'start' | 'end'; value: string }];
 }>();
 
@@ -55,13 +51,13 @@ const props = defineProps<{
   isAnalyzingProfanity: boolean;
   isOpeningVideo: boolean;
   isSelectingOutputPath: boolean;
+  isSelectingSubtitlePath: boolean;
   isProcessing: boolean;
   markerCountLabel: string;
-  profanityAnalysisCapabilities: ProfanityAnalysisCapabilities;
-  profanityAnalysisOptions: ProfanityAnalysisOptions;
   profanitySuggestionCountLabel: string;
   profanitySuggestions: ProfanitySuggestion[];
   profanityAnalysisProgressPercent: number;
+  profanitySubtitlePath: string;
   outputPath: string;
   processProgressPercent: number;
   pendingStart: number | null;
@@ -293,20 +289,20 @@ onMounted(() => {
     <div class="panel profanity-modal-panel" role="dialog" aria-modal="true" aria-label="Auto-Detect Profanity">
       <ProfanityAnalysisSection
         :can-analyze-profanity="canAnalyzeProfanity"
-        :capabilities="profanityAnalysisCapabilities"
         :is-analyzing-profanity="isAnalyzingProfanity"
-        :options="profanityAnalysisOptions"
+        :is-selecting-subtitle-path="isSelectingSubtitlePath"
         :progress-percent="profanityAnalysisProgressPercent"
         :show-close-button="true"
+        :subtitle-path="profanitySubtitlePath"
         :suggestion-count-label="profanitySuggestionCountLabel"
         :suggestions="profanitySuggestions"
         @analyze-profanity="emit('analyzeProfanity')"
         @apply-profanity-suggestions="handleProfanitySuggestionsApply"
+        @clear-subtitle-path="emit('clearProfanitySubtitlePath')"
         @close="closeProfanityModal"
         @discard-profanity-suggestions="handleProfanitySuggestionsDiscard"
         @seek="emit('seek', $event)"
-        @update-allow-remote-subtitles="emit('updateProfanityAllowRemoteSubtitles', $event)"
-        @update-enhanced-mode="emit('updateProfanityEnhancedMode', $event)"
+        @select-subtitle-path="emit('selectProfanitySubtitlePath')"
       />
     </div>
   </div>

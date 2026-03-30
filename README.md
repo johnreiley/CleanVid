@@ -74,7 +74,7 @@ packages/
 2. Open the local Vite URL in your browser.
 3. Click the empty stage or `Open Video` to choose a source file.
 4. Annotate `mute` and `skip` ranges.
-5. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles or transcripts.
+5. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles.
 6. Review, seek through, and apply the suggestions you want.
 7. Fine-tune timestamps or jump around from the timeline and segment list.
 8. Export filters, or switch to Export mode to render the cleaned video.
@@ -102,41 +102,24 @@ Keyboard shortcuts:
 
 ## Profanity Analysis
 
-The Annotate tab includes an `Auto-Detect Profanity` button that opens a local-first analysis modal. The flow creates draft `mute` suggestions instead of changing the timeline automatically.
+The Annotate tab includes an `Auto-Detect Profanity` button that opens a subtitle-based analysis modal. The flow creates draft `mute` suggestions instead of changing the timeline automatically.
 
 How it works:
 - CleanVid checks embedded text subtitle tracks first
-- if no usable embedded subtitles are found and OpenSubtitles fallback is enabled, it tries to fetch a matching English subtitle
-- if subtitles are still unavailable, it falls back to a local `whisper.cpp` `base` transcription
-- if subtitles do exist, CleanVid detects profanity from subtitle cues
-- `Enhanced mode` runs a local `whisper.cpp` `tiny` pass when you enable it, or when the subtitle cues look incomplete
+- if the video has no usable subtitles, you can choose your own `.srt`, `.vtt`, `.ass`, or `.ssa` file in the modal
 - detections are padded, merged, and shown as draft suggestions you can review before applying
 
 Suggestion review behavior:
 - draft suggestions stay separate from your filter timeline until you click `Apply all as mute filters`
-- each suggestion shows its source: embedded subtitles, remote subtitles, Whisper Tiny, or Whisper Base
+- each suggestion shows its source: embedded subtitles or a subtitle file you provided
 - clicking a suggestion seeks playback to its start time
 - `Discard suggestions` clears the draft analysis results without changing your current filters
 
 Current analysis scope:
 - English-first profanity matching
 - image-based subtitle tracks are ignored in v1
-- remote subtitle lookup is opt-in and only used when matching OpenSubtitles credentials are configured locally
-- Whisper refinement is local-only; CleanVid does not call a cloud transcription API
-
-Optional analysis dependencies:
-- `CLEANVID_OPENSUBTITLES_API_KEY`
-- `CLEANVID_OPENSUBTITLES_USERNAME`
-- `CLEANVID_OPENSUBTITLES_PASSWORD`
-- `CLEANVID_WHISPER_CPP_BIN`
-- `CLEANVID_WHISPER_CPP_TINY_MODEL`
-- `CLEANVID_WHISPER_CPP_BASE_MODEL`
-- `CLEANVID_WHISPER_CPP_MODELS_DIR`
-
-Whisper notes:
-- `CLEANVID_WHISPER_CPP_BIN` should point to your local `whisper.cpp` executable
-- you can point directly to the Tiny/Base English model files, or set `CLEANVID_WHISPER_CPP_MODELS_DIR` and let CleanVid look for `ggml-tiny.en.bin` and `ggml-base.en.bin`
-- the analysis modal shows a setup warning when Whisper Base or Whisper Tiny is unavailable, so you can tell ahead of time whether fallback or enhanced mode will work
+- if the video has no subtitles, the app prompts you to provide one yourself instead of using automatic remote or transcription fallbacks
+- the modal suggests searching `https://www.opensubtitles.com/` if you need to find a subtitle file yourself
 
 ## Export From The Annotator
 
