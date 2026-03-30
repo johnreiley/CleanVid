@@ -30,6 +30,11 @@ interface ProcessResponse {
   message: string;
 }
 
+interface SelectOutputPathResponse {
+  cancelled: boolean;
+  outputPath?: string;
+}
+
 interface ProcessProgressPayload {
   phase: 'read-filters' | 'probe-media' | 'plan-timeline' | 'build-graph' | 'encode' | 'done';
   message: string;
@@ -108,6 +113,7 @@ export function useAnnotatorState() {
   const videoDuration = ref(0);
   const isPlaying = ref(false);
   const isOpeningVideo = ref(false);
+  const isSelectingOutputPath = ref(false);
   const isProcessing = ref(false);
   const processProgressPercent = ref(0);
   const previewPlaybackEnabled = ref(true);
@@ -726,6 +732,39 @@ export function useAnnotatorState() {
     outputPath.value = value;
   }
 
+  async function selectOutputPath() {
+    clearFeedback();
+
+    if (isOpeningVideo.value || isProcessing.value || inputPath.value === '') {
+      return;
+    }
+
+    isSelectingOutputPath.value = true;
+
+    try {
+      const response = await requestJson<SelectOutputPathResponse>('/api/select-output-path', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          outputPath: outputPath.value.trim()
+        })
+      });
+
+      if (response.cancelled || !response.outputPath) {
+        return;
+      }
+
+      outputPath.value = response.outputPath;
+      statusMessage.value = `Selected output path ${response.outputPath}.`;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to select an output path.');
+    } finally {
+      isSelectingOutputPath.value = false;
+    }
+  }
+
   async function processLinkedVideo() {
     clearFeedback();
 
@@ -924,6 +963,7 @@ export function useAnnotatorState() {
     effectiveDuration,
     isPlaying,
     isOpeningVideo,
+    isSelectingOutputPath,
     isProcessing,
     processProgressPercent,
     previewPlaybackEnabled,
@@ -957,6 +997,7 @@ export function useAnnotatorState() {
     openVideo,
     loadFilterFile,
     updateOutputPath,
+    selectOutputPath,
     processLinkedVideo,
     exportFilters,
     hasUnexportedFilters,

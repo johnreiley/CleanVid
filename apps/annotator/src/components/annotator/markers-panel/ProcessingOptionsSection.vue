@@ -3,6 +3,7 @@ import InfoTooltip from '../../global/InfoTooltip.vue';
 
 const emit = defineEmits<{
   processLinkedVideo: [];
+  selectOutputPath: [];
   updateOutputPath: [value: string];
 }>();
 
@@ -10,6 +11,7 @@ defineProps<{
   canProcessVideo: boolean;
   filterCountLabel: string;
   isOpeningVideo: boolean;
+  isSelectingOutputPath: boolean;
   isProcessing: boolean;
   processButtonLabel: string;
   processProgressPercent: number;
@@ -36,14 +38,26 @@ defineProps<{
         </InfoTooltip>
       </span>
 
-      <input
-        data-testid="output-path-input"
-        class="file-path-input"
-        type="text"
-        placeholder="C:\example\filepath"
-        :value="outputPath"
-        @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
-      />
+      <div class="file-path-row">
+        <input
+          data-testid="output-path-input"
+          class="file-path-input"
+          type="text"
+          placeholder="C:\example\filepath"
+          :value="outputPath"
+          @input="emit('updateOutputPath', ($event.target as HTMLInputElement).value)"
+        />
+
+        <button
+          type="button"
+          class="subtle-action output-path-browse-button"
+          data-testid="output-path-browse-button"
+          :disabled="isOpeningVideo || isProcessing || isSelectingOutputPath"
+          @click="emit('selectOutputPath')"
+        >
+          {{ isSelectingOutputPath ? 'Choosing...' : 'Browse' }}
+        </button>
+      </div>
     </label>
 
     <button

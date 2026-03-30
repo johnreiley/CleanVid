@@ -700,6 +700,13 @@ button {
   gap: 0.35rem;
 }
 
+.file-path-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
 .field-label-with-tooltip {
   gap: 0.35rem;
   color: var(--text-soft);
@@ -779,6 +786,11 @@ button {
   outline: none;
   border-color: rgba(111, 131, 255, 0.42);
   box-shadow: inset 0 0 0 1px rgba(111, 131, 255, 0.16);
+}
+
+.output-path-browse-button {
+  min-width: 5.5rem;
+  justify-content: center;
 }
 
 .process-button {

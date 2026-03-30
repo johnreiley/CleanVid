@@ -31,6 +31,8 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const execFile = promisify(execFileCallback);
 const VIDEO_DIALOG_FILTER =
   'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
+const OUTPUT_DIALOG_FILTER =
+  'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
 
 export interface OpenVideoResult {
   cancelled: boolean;
@@ -46,6 +48,11 @@ export interface ProcessRequestBody {
   inputPath: string;
   outputPath?: string;
   movieTitle?: string;
+}
+
+export interface SelectOutputPathResult {
+  cancelled: boolean;
+  outputPath?: string;
 }
 
 export interface ProcessResult {
@@ -92,6 +99,10 @@ interface OpenVideoDependencies {
   registerPlaybackPath: (filePath: string) => string;
 }
 
+interface SelectOutputPathDependencies {
+  selectOutputPath: (suggestedPath: string) => Promise<string | null>;
+}
+
 interface PlaybackRegistry {
   getPlaybackPath: (token: string) => string | undefined;
   registerPlaybackPath: (filePath: string) => string;
@@ -109,6 +120,10 @@ class HttpError extends Error {
 
 function encodePowerShellCommand(script: string): string {
   return Buffer.from(script, 'utf16le').toString('base64');
+}
+
+function escapePowerShellSingleQuotedString(value: string): string {
+  return value.replace(/'/g, "''");
 }
 
 export function deriveDefaultOutputPath(inputPath: string): string {
@@ -171,6 +186,12 @@ function getDefaultOpenVideoDependencies(): OpenVideoDependencies {
   };
 }
 
+function getDefaultSelectOutputPathDependencies(): SelectOutputPathDependencies {
+  return {
+    selectOutputPath: openNativeOutputFileDialog
+  };
+}
+
 const MEDIA_CONTENT_TYPES: Record<string, string> = {
   '.m4v': 'video/mp4',
   '.mov': 'video/quicktime',
@@ -222,6 +243,59 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
   return selectedPath === '' ? null : selectedPath;
 }
 
+export async function openNativeOutputFileDialog(suggestedPath = ''): Promise<string | null> {
+  if (process.platform !== 'win32') {
+    throw new HttpError(501, 'Native output selection is only supported on Windows in this build.');
+  }
+
+  const resolvedSuggestedPath = suggestedPath.trim() === '' ? '' : path.resolve(suggestedPath);
+  const parsedSuggestedPath = resolvedSuggestedPath === '' ? null : path.parse(resolvedSuggestedPath);
+  const initialDirectory = parsedSuggestedPath?.dir
+    ? escapePowerShellSingleQuotedString(parsedSuggestedPath.dir)
+    : '';
+  const fileName = parsedSuggestedPath?.base
+    ? escapePowerShellSingleQuotedString(parsedSuggestedPath.base)
+    : '';
+  const defaultExtension = parsedSuggestedPath?.ext
+    ? escapePowerShellSingleQuotedString(parsedSuggestedPath.ext.replace(/^\./, ''))
+    : '';
+
+  const script = `
+Add-Type -AssemblyName System.Windows.Forms
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$dialog = New-Object System.Windows.Forms.SaveFileDialog
+$dialog.Title = 'Choose output video file'
+$dialog.Filter = '${OUTPUT_DIALOG_FILTER}'
+$dialog.OverwritePrompt = $true
+$dialog.AddExtension = $true
+if ('${initialDirectory}' -ne '') {
+  $dialog.InitialDirectory = '${initialDirectory}'
+}
+if ('${fileName}' -ne '') {
+  $dialog.FileName = '${fileName}'
+}
+if ('${defaultExtension}' -ne '') {
+  $dialog.DefaultExt = '${defaultExtension}'
+}
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
+  Write-Output $dialog.FileName
+}
+`;
+
+  const { stdout } = await execFile(
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+    ['-NoProfile', '-STA', '-EncodedCommand', encodePowerShellCommand(script)],
+    {
+      windowsHide: false,
+      maxBuffer: 1024 * 1024
+    }
+  );
+
+  const selectedPath = stdout.trim();
+  return selectedPath === '' ? null : path.resolve(selectedPath);
+}
+
 export async function handleOpenVideoRequest(
   dependencies: OpenVideoDependencies = getDefaultOpenVideoDependencies()
 ): Promise<OpenVideoResult> {
@@ -240,6 +314,33 @@ export async function handleOpenVideoRequest(
     outputPath: deriveDefaultOutputPath(preparedPlayback.inputPath),
     playbackUrl: dependencies.registerPlaybackPath(preparedPlayback.playbackPath),
     playbackSource: preparedPlayback.playbackSource
+  };
+}
+
+function parseSelectOutputPathRequestBody(body: unknown): { suggestedPath: string } {
+  if (typeof body !== 'object' || body === null) {
+    return { suggestedPath: '' };
+  }
+
+  const record = body as Record<string, unknown>;
+  const suggestedPath = typeof record.outputPath === 'string' ? record.outputPath.trim() : '';
+  return { suggestedPath };
+}
+
+export async function handleSelectOutputPathRequest(
+  body: unknown,
+  dependencies: SelectOutputPathDependencies = getDefaultSelectOutputPathDependencies()
+): Promise<SelectOutputPathResult> {
+  const request = parseSelectOutputPathRequestBody(body);
+  const selectedPath = await dependencies.selectOutputPath(request.suggestedPath);
+
+  if (!selectedPath) {
+    return { cancelled: true };
+  }
+
+  return {
+    cancelled: false,
+    outputPath: path.resolve(selectedPath)
   };
 }
 
@@ -597,6 +698,18 @@ async function handleApiRequest(request: IncomingMessage, response: ServerRespon
     }
 
     const result = await handleProcessRequest(body);
+    sendJson(response, 200, result);
+    return true;
+  }
+
+  if (url.pathname === '/api/select-output-path') {
+    if (request.method !== 'POST') {
+      sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+
+    const body = await readJsonBody(request);
+    const result = await handleSelectOutputPathRequest(body);
     sendJson(response, 200, result);
     return true;
   }

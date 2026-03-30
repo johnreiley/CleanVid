@@ -635,6 +635,61 @@ describe('annotator app', () => {
     expect(wrapper.find('[data-testid="timeline-pending-start"]').exists()).toBe(false);
   });
 
+  it('lets the user browse for an output path instead of typing it manually', async () => {
+    const wrapper = mount(App);
+
+    await openVideo(wrapper);
+    await switchMode(wrapper, 'export');
+
+    fetchMock.mockClear();
+
+    const browseRequest = createDeferred<Response>();
+    fetchMock.mockReturnValueOnce(browseRequest.promise);
+
+    const browseButton = wrapper.get('[data-testid="output-path-browse-button"]');
+    const outputInput = wrapper.get('[data-testid="output-path-input"]').element as HTMLInputElement;
+
+    await browseButton.trigger('click');
+    await nextTick();
+
+    expect(browseButton.text()).toContain('Choosing...');
+    expect((browseButton.element as HTMLButtonElement).disabled).toBe(true);
+
+    browseRequest.resolve(
+      mockJsonResponse({
+        cancelled: false,
+        outputPath: 'C:\\Exports\\picked-output.mp4'
+      })
+    );
+
+    await flushPromises();
+    await nextTick();
+
+    const [browseUrl, browseInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(browseUrl).toBe('/api/select-output-path');
+    expect(browseInit.method).toBe('POST');
+    expect(browseInit.headers).toMatchObject({
+      'Content-Type': 'application/json'
+    });
+    expect(JSON.parse(String(browseInit.body))).toEqual({
+      outputPath: 'C:\\Movies\\movie.cleaned.mp4'
+    });
+    expect(outputInput.value).toBe('C:\\Exports\\picked-output.mp4');
+
+    fetchMock.mockClear();
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: true
+      })
+    );
+
+    await browseButton.trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(outputInput.value).toBe('C:\\Exports\\picked-output.mp4');
+  });
+
   it('shows export progress in the button, then completes processing with the expected payload', async () => {
     const wrapper = mount(App);
 

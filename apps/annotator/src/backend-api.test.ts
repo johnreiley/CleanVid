@@ -10,6 +10,7 @@ import {
   deriveExportedFiltersPath,
   handleMediaRequest,
   handleOpenVideoRequest,
+  handleSelectOutputPathRequest,
   handleProcessRequest
 } from '../vite.config';
 
@@ -121,6 +122,36 @@ describe('annotator vite api helpers', () => {
       playbackUrl: '/api/media/token-preview',
       playbackSource: 'preview'
     });
+  });
+
+  it('returns the selected output path shape and supports cancellation', async () => {
+    await expect(
+      handleSelectOutputPathRequest(
+        {
+          outputPath: 'C:\\Exports\\movie.cleaned.mp4'
+        },
+        {
+          selectOutputPath: async (suggestedPath) => {
+            expect(suggestedPath).toBe('C:\\Exports\\movie.cleaned.mp4');
+            return 'C:\\Exports\\custom-output.mp4';
+          }
+        }
+      )
+    ).resolves.toEqual({
+      cancelled: false,
+      outputPath: 'C:\\Exports\\custom-output.mp4'
+    });
+
+    await expect(
+      handleSelectOutputPathRequest(
+        {
+          outputPath: 'C:\\Exports\\movie.cleaned.mp4'
+        },
+        {
+          selectOutputPath: async () => null
+        }
+      )
+    ).resolves.toEqual({ cancelled: true });
   });
 
   it('derives the default cleaned output path beside the input file', () => {

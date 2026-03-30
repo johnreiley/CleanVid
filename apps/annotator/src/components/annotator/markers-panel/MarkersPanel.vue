@@ -17,6 +17,7 @@ const emit = defineEmits<{
   deleteSegment: [id: string];
   filtersSelected: [file: File];
   openVideo: [];
+  selectOutputPath: [];
   processLinkedVideo: [];
   seek: [start: number];
   selectSegment: [id: string | null];
@@ -32,6 +33,7 @@ const props = defineProps<{
   errorMessage: string;
   inputName: string;
   isOpeningVideo: boolean;
+  isSelectingOutputPath: boolean;
   isProcessing: boolean;
   markerCountLabel: string;
   outputPath: string;
@@ -206,10 +208,12 @@ onBeforeUnmount(() => {
         :can-process-video="canProcessVideo"
         :filter-count-label="markerCountLabel"
         :is-opening-video="isOpeningVideo"
+        :is-selecting-output-path="isSelectingOutputPath"
         :is-processing="isProcessing"
         :output-path="outputPath"
         :process-button-label="processButtonLabel"
         :process-progress-percent="clampedProcessProgressPercent"
+        @select-output-path="emit('selectOutputPath')"
         @process-linked-video="emit('processLinkedVideo')"
         @update-output-path="emit('updateOutputPath', $event)"
       />
