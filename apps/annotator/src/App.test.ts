@@ -8,6 +8,7 @@ import App from './App.vue';
 const originalFetch = globalThis.fetch;
 const originalCreateObjectURL = URL.createObjectURL;
 const originalRevokeObjectURL = URL.revokeObjectURL;
+const originalConfirm = window.confirm;
 let lastExportBlob: Blob | null = null;
 let fetchMock: ReturnType<typeof vi.fn>;
 const playMock = vi.fn(async function play(this: HTMLVideoElement) {
@@ -88,6 +89,23 @@ function createPointerEvent(type: string, clientX: number, pointerId = 1) {
   Object.defineProperties(event, {
     clientX: { value: clientX },
     pointerId: { value: pointerId }
+  });
+
+  return event;
+}
+
+function createBeforeUnloadEvent() {
+  const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent & {
+    returnValue: string;
+  };
+  let returnValue = '';
+
+  Object.defineProperty(event, 'returnValue', {
+    configurable: true,
+    get: () => returnValue,
+    set: (value: string) => {
+      returnValue = value;
+    }
   });
 
   return event;
@@ -215,6 +233,7 @@ beforeEach(() => {
   });
   URL.revokeObjectURL = vi.fn();
   globalThis.fetch = fetchMock as typeof fetch;
+  window.confirm = vi.fn(() => true);
   HTMLMediaElement.prototype.play = playMock;
   HTMLMediaElement.prototype.pause = pauseMock;
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
@@ -369,6 +388,91 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/open-video', undefined);
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/open-video', undefined);
+  });
+
+  it('prompts to export unexported filters before opening another video and resets the timeline', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 10;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 15;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    fetchMock.mockClear();
+    lastExportBlob = null;
+
+    const confirmMock = window.confirm as unknown as ReturnType<typeof vi.fn>;
+    confirmMock.mockReturnValueOnce(true);
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: false,
+        inputPath: 'C:\\Movies\\next-movie.mp4',
+        name: 'next-movie.mp4',
+        outputPath: 'C:\\Movies\\next-movie.cleaned.mp4',
+        playbackUrl: '/api/media/token-2',
+        playbackSource: 'original'
+      })
+    );
+
+    await switchMode(wrapper, 'media');
+    await wrapper.get('[data-testid="open-video-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    const reloadedVideo = wrapper.get('[data-testid="video-player"]').element as HTMLVideoElement;
+    setVideoMetrics(reloadedVideo, 90, 0);
+    reloadedVideo.dispatchEvent(new Event('loadedmetadata'));
+    await nextTick();
+
+    expect(confirmMock).toHaveBeenCalledWith(
+      'You have unexported filter changes. Select OK to export them before opening another video.'
+    );
+    expect(lastExportBlob).toBeTruthy();
+    await expect(readBlobText(lastExportBlob as Blob)).resolves.toContain('"type": "mute"');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('/api/open-video', undefined);
+    expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('next-movie.mp4');
+
+    await switchMode(wrapper, 'annotate');
+    expect(wrapper.text()).toContain('Timeline is empty');
+  });
+
+  it('keeps the current session when replacing a video is cancelled after the unsaved-filters prompt', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    fetchMock.mockClear();
+
+    const confirmMock = window.confirm as unknown as ReturnType<typeof vi.fn>;
+    confirmMock.mockReturnValueOnce(false).mockReturnValueOnce(false);
+
+    await switchMode(wrapper, 'media');
+    await wrapper.get('[data-testid="open-video-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(confirmMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
+
+    await switchMode(wrapper, 'annotate');
+    expect(wrapper.findAll('.segment-card')).toHaveLength(1);
   });
 
   it('shows a preparing state while the backend opens a video', async () => {
@@ -945,6 +1049,33 @@ describe('annotator app', () => {
     await expect(readBlobText(lastExportBlob as Blob)).resolves.toContain('"id": "seg-1"');
   });
 
+  it('warns before leaving the page when filter changes have not been exported yet', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 10;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 15;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    const beforeUnloadEvent = createBeforeUnloadEvent();
+    expect(window.dispatchEvent(beforeUnloadEvent)).toBe(false);
+    expect(beforeUnloadEvent.defaultPrevented).toBe(true);
+    expect(beforeUnloadEvent.returnValue).toBe('');
+
+    await wrapper.get('[data-testid="export-button"]').trigger('click');
+    await nextTick();
+
+    const afterExportEvent = createBeforeUnloadEvent();
+    window.dispatchEvent(afterExportEvent);
+    expect(afterExportEvent.defaultPrevented).toBe(false);
+  });
+
   it('supports the new keyboard shortcuts, fine seek, custom transport, and timeline seeking', async () => {
     const wrapper = mount(App);
     const video = await openVideo(wrapper);
@@ -1041,5 +1172,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   URL.createObjectURL = originalCreateObjectURL;
   URL.revokeObjectURL = originalRevokeObjectURL;
+  window.confirm = originalConfirm;
   vi.restoreAllMocks();
 });

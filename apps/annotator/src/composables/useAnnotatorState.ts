@@ -119,6 +119,7 @@ export function useAnnotatorState() {
   const selectedSegmentId = ref<string | null>(null);
   const statusMessage = ref('Open a video to begin annotating.');
   const errorMessage = ref('');
+  const persistedFiltersSignature = ref('[]');
   let previewMutedApplied = false;
   let previewMutedOriginal = false;
 
@@ -156,6 +157,41 @@ export function useAnnotatorState() {
         left.type.localeCompare(right.type) ||
         left.id.localeCompare(right.id)
     );
+  }
+
+  function serializeSegmentNumber(value: number): number | string {
+    if (Number.isNaN(value)) {
+      return 'NaN';
+    }
+
+    if (value === Number.POSITIVE_INFINITY) {
+      return 'Infinity';
+    }
+
+    if (value === Number.NEGATIVE_INFINITY) {
+      return '-Infinity';
+    }
+
+    if (Object.is(value, -0)) {
+      return '-0';
+    }
+
+    return value;
+  }
+
+  function createFiltersSignature(items: EditableSegment[]): string {
+    return JSON.stringify(
+      sortSegments(items).map((segment) => ({
+        id: segment.id,
+        type: segment.type,
+        start: serializeSegmentNumber(segment.start),
+        end: serializeSegmentNumber(segment.end)
+      }))
+    );
+  }
+
+  function markFiltersPersisted(items: EditableSegment[] = segments.value) {
+    persistedFiltersSignature.value = createFiltersSignature(items);
   }
 
   function getSegmentIssues(segment: EditableSegment): string[] {
@@ -212,6 +248,9 @@ export function useAnnotatorState() {
       !isOpeningVideo.value
   );
   const sortedSegments = computed(() => sortSegments(segments.value));
+  const hasUnexportedFilters = computed(
+    () => inputPath.value !== '' && createFiltersSignature(segments.value) !== persistedFiltersSignature.value
+  );
   const activeTypeLabel = computed(() => (activeType.value === 'mute' ? 'Mute' : 'Skip'));
   const pendingTypeLabel = computed(() =>
     pendingType.value === null ? '' : pendingType.value === 'mute' ? 'Mute' : 'Skip'
@@ -372,6 +411,13 @@ export function useAnnotatorState() {
   function clearPreviewEffects() {
     previewActiveType.value = null;
     clearPreviewMute();
+  }
+
+  function clearFiltersForNextVideo() {
+    segments.value = [];
+    selectedSegmentId.value = null;
+    importedMovieDuration.value = 0;
+    markFiltersPersisted([]);
   }
 
   function applyPreviewPlayback() {
@@ -600,6 +646,7 @@ export function useAnnotatorState() {
       importedMovieDuration.value = parsed.movie.duration;
       pendingStart.value = null;
       pendingType.value = null;
+      markFiltersPersisted(segments.value);
       statusMessage.value = `Imported ${parsed.filters.length} filter${parsed.filters.length === 1 ? '' : 's'}.`;
     } catch (error) {
       if (error instanceof FilterValidationError || error instanceof SyntaxError || error instanceof Error) {
@@ -611,8 +658,31 @@ export function useAnnotatorState() {
     }
   }
 
+  async function confirmVideoReplacement(): Promise<boolean> {
+    if (!hasUnexportedFilters.value) {
+      return true;
+    }
+
+    const shouldExportFirst = window.confirm(
+      'You have unexported filter changes. Select OK to export them before opening another video.'
+    );
+
+    if (shouldExportFirst) {
+      return exportFilters();
+    }
+
+    return window.confirm(
+      'If you open another video now, the current filters will be lost. Select OK to continue without exporting, or Cancel to keep editing.'
+    );
+  }
+
   async function openVideo() {
     clearFeedback();
+
+    if (!(await confirmVideoReplacement())) {
+      return;
+    }
+
     isOpeningVideo.value = true;
     statusMessage.value = 'Preparing video...';
 
@@ -634,6 +704,7 @@ export function useAnnotatorState() {
       outputPath.value = response.outputPath ?? '';
       playbackSource.value = response.playbackSource ?? 'original';
       movieTitle.value = (response.name ?? '').replace(/\.[^.]+$/, '');
+      clearFiltersForNextVideo();
       pendingStart.value = null;
       pendingType.value = null;
       currentTime.value = 0;
@@ -694,6 +765,7 @@ export function useAnnotatorState() {
       });
 
       outputPath.value = response.outputPath;
+      markFiltersPersisted();
       statusMessage.value = response.message;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unable to process the opened video.');
@@ -707,12 +779,12 @@ export function useAnnotatorState() {
     await importFilterFile(file);
   }
 
-  function exportFilters() {
+  function exportFilters(): boolean {
     clearFeedback();
 
     if (!canExport.value) {
       setError('Resolve validation issues before exporting.');
-      return;
+      return false;
     }
 
     try {
@@ -741,10 +813,22 @@ export function useAnnotatorState() {
       anchor.download = `${movieTitle.value || 'cleanvid'}.filters.json`;
       anchor.click();
       URL.revokeObjectURL(url);
+      markFiltersPersisted();
       statusMessage.value = 'Exported filter JSON.';
+      return true;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unable to export the filter file.');
+      return false;
     }
+  }
+
+  function handleBeforeUnload(event: BeforeUnloadEvent) {
+    if (!hasUnexportedFilters.value) {
+      return;
+    }
+
+    event.preventDefault();
+    event.returnValue = '';
   }
 
   function selectSegment(id: string | null) {
@@ -875,6 +959,8 @@ export function useAnnotatorState() {
     updateOutputPath,
     processLinkedVideo,
     exportFilters,
+    hasUnexportedFilters,
+    handleBeforeUnload,
     handleKeydown,
     cleanup
   };

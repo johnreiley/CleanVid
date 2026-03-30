@@ -63,10 +63,12 @@ watch(
 
 onMounted(() => {
   window.addEventListener('keydown', annotator.handleKeydown);
+  window.addEventListener('beforeunload', annotator.handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', annotator.handleKeydown);
+  window.removeEventListener('beforeunload', annotator.handleBeforeUnload);
   annotator.cleanup();
 });
 </script>
