@@ -1,20 +1,24 @@
 # CleanVid
 
-CleanVid is a local-first tool for creating a cleaned movie cut that still plays cleanly in Plex.
+CleanVid is a local-first video cleanup tool for building a family-friendly cut that still plays cleanly in Plex or any normal media library.
 
-It has three pieces:
-- a Vue 3 annotator for marking `mute` and `skip` segments
-- a shared JSON filter format
-- a Node/TypeScript CLI that uses FFmpeg to render the cleaned `.mp4`
+Today the repo includes:
+- a Vue 3 annotator with a small local backend
+- a shared JSON filter format and timeline planner
+- a Node/TypeScript CLI that renders the cleaned output with FFmpeg
 
-## What It Does
+## Current Functionality
 
-With the current MVP you can:
-- load a local video in the browser
-- mark mute and skip segments
-- edit or delete segments
-- import and export filter JSON
-- process a source movie into a cleaned H.264/AAC MP4
+CleanVid currently supports:
+- opening a local video from the annotator with a native file picker
+- marking `mute` and `skip` regions from the keyboard, action tiles, or the timeline
+- editing segment start and end times inline
+- selecting timeline regions to jump to matching segments
+- importing and exporting filter JSON
+- previewing mute/skip behavior during playback without rendering a file first
+- toggling preview playback on and off
+- exporting a cleaned video directly from the annotator with live progress updates
+- running the same processing pipeline from the CLI
 
 ## Requirements
 
@@ -23,6 +27,9 @@ Install these first:
 - npm
 - `ffmpeg` on your `PATH`
 - `ffprobe` on your `PATH`
+
+Annotator note:
+- the built-in native file picker is Windows-only in the current build
 
 ## Install
 
@@ -54,27 +61,51 @@ npm run build
 
 ```text
 apps/
-  annotator/   Vue 3 + Vite web annotator
-  cli/         Node CLI processor
+  annotator/   Vue 3 + Vite annotator with local API endpoints
+  cli/         Node CLI processor and preview-prep helpers
 packages/
-  shared/      shared schema, validation, and timeline planning
+  shared/      filter schema, validation, normalization, and timeline planning
 ```
 
-## Annotator Usage
+## Annotator Workflow
 
 1. Start the annotator with `npm run dev:annotator`.
 2. Open the local Vite URL in your browser.
-3. Load a local video file.
-4. Choose segment type: `mute` or `skip`.
-5. Mark a start time and an end time.
-6. Adjust segments in the list if needed.
-7. Export the filter JSON.
+3. Click the empty stage or `Open Video` to choose a source file.
+4. Annotate `mute` and `skip` ranges.
+5. Fine-tune timestamps or jump around from the timeline and segment list.
+6. Export filters, or switch to Export mode to render the cleaned video.
+
+The annotator currently opens:
+- `.mp4`
+- `.m4v`
+- `.mov`
+- `.webm`
+- `.mkv`
+
+Playback behavior:
+- `.mp4`, `.m4v`, `.mov`, and `.webm` play directly
+- `.mkv` creates a cached browser-safe preview automatically
+- processing still runs against the original source file, not the preview file
+- preview playback simulates `skip` by jumping forward and `mute` by muting audio only while playing
+- `skip` takes precedence over `mute`
 
 Keyboard shortcuts:
-- `S`: mark start
-- `E`: mark end
+- `M`: start/finish a mute segment
+- `S`: start/finish a skip segment
 - `Space`: play/pause
 - `Left` / `Right`: seek by 5 seconds
+- `Shift` + `Left` / `Right`: seek by 0.1 seconds
+
+## Export From The Annotator
+
+The annotator can process the currently opened source file directly.
+
+Export details:
+- the default output path is next to the source file with `.cleaned` added to the name
+- you can override the output path before exporting
+- exported filters are also written beside the rendered file as `*.filters.json`
+- export progress streams back into the UI while FFmpeg runs
 
 ## CLI Usage
 
@@ -93,21 +124,21 @@ node apps/cli/dist/index.js input.mp4 filters.json output.mp4
 CLI shape:
 
 ```bash
-cleanvid <input> <filters.json> <output.mp4>
+cleanvid <input> <filters.json> <output>
 ```
 
-Example:
-
-```bash
-node apps/cli/dist/index.js movie.mp4 movie.filters.json movie.cleaned.mp4
-```
-
-The processor:
+What the CLI does:
 - validates the filter file
 - probes the media with `ffprobe`
-- applies `skip` by trimming and concatenating kept spans
-- applies `mute` only to retained spans
-- encodes the result as H.264/AAC MP4 with `+faststart`
+- plans the keep, mute, and skip timeline
+- trims skipped spans
+- applies mute ranges only within retained spans
+- encodes video as H.264 and audio as AAC
+- prints stage updates plus live encode progress
+
+The processor expects:
+- at least one video stream
+- at least one audio stream
 
 ## Filter File Format
 
@@ -131,34 +162,24 @@ The processor:
 
 Rules:
 - supported types are `mute` and `skip`
-- times are seconds as numbers
+- times are seconds as finite numbers
 - `start` must be less than `end`
-- `id` values must be unique
-- exported filters are sorted
-- processor-time validation clamps ranges to media duration
-- `skip` takes precedence over `mute`
+- `movie.duration` must be zero or greater
+- filter ids must be unique
+- filters are normalized and sorted on parse/export
+- processor-side timeline building clamps ranges to the actual media duration
+- segments clamped completely outside the media duration are dropped
+- `skip` overrides `mute` in overlapping ranges
 
-## Output Notes
+## Current Scope Limits
 
-The MVP currently assumes:
-- one primary video stream
-- one primary audio stream
-- no subtitle processing
-- no multi-audio-track support
-
-The output target is a single MP4 encoded as:
-- video: H.264
-- audio: AAC
-
-## Known Scope Limits
-
-Not in the current MVP:
-- GPU tuning
-- subtitle handling
-- waveform editing
-- drag-to-resize timeline editing
+Not implemented yet:
+- subtitle processing
+- multi-audio-track handling
+- drag-to-resize segment editing
+- automatic bad-language detection
 - Plex metadata sync
-- dry-run CLI mode
+- GPU tuning controls
 
 ## Verification
 
@@ -170,6 +191,6 @@ npm run build
 ```
 
 These cover:
-- shared schema and timeline behavior
-- CLI integration with FFmpeg
-- annotator import/export and shortcut flows
+- shared schema validation and timeline behavior
+- CLI graph generation, progress parsing, and FFmpeg integration
+- annotator open/import/export flows, preview playback, keyboard shortcuts, and export progress
