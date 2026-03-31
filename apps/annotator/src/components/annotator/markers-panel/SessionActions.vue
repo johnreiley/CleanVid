@@ -1,13 +1,23 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+
 const emit = defineEmits<{
   filtersSelected: [file: File];
   openVideo: [];
 }>();
 
-defineProps<{
+const props = defineProps<{
   canImportFilters: boolean;
   isOpeningVideo: boolean;
+  openVideoProgressPercent: number;
 }>();
+
+const clampedOpenVideoProgressPercent = computed(() =>
+  Math.max(0, Math.min(100, Math.round(props.openVideoProgressPercent)))
+);
+const openVideoButtonLabel = computed(() =>
+  props.isOpeningVideo ? `Importing ${clampedOpenVideoProgressPercent.value}%` : 'Open Video'
+);
 
 function emitSelectedFile(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -30,22 +40,34 @@ function emitSelectedFile(event: Event) {
     <div class="sidebar-header-row media-action-row">
       <button
         type="button"
-        class="subtle-action file-link-button"
+        :class="[
+          'file-link-button',
+          props.isOpeningVideo ? 'process-button process-button-processing' : 'subtle-action'
+        ]"
         data-testid="open-video-button"
-        :disabled="isOpeningVideo"
+        :disabled="props.isOpeningVideo"
+        :aria-valuenow="props.isOpeningVideo ? clampedOpenVideoProgressPercent : undefined"
+        aria-valuemin="0"
+        aria-valuemax="100"
         @click="emit('openVideo')"
       >
-        {{ isOpeningVideo ? 'Preparing...' : 'Open Video' }}
+        <span
+          v-if="props.isOpeningVideo"
+          class="process-button-progress"
+          data-testid="open-video-progress-fill"
+          :style="{ width: `${clampedOpenVideoProgressPercent}%` }"
+        />
+        <span class="process-button-copy">{{ openVideoButtonLabel }}</span>
       </button>
 
-      <label :class="['subtle-action', { 'subtle-action-disabled': !canImportFilters }]">
+      <label :class="['subtle-action', { 'subtle-action-disabled': !props.canImportFilters }]">
         <span>Import Filters</span>
         <input
           data-testid="filters-input"
           class="visually-hidden-input"
           type="file"
           accept="application/json,.json,.skp"
-          :disabled="!canImportFilters"
+          :disabled="!props.canImportFilters"
           @change="emitSelectedFile"
         />
       </label>

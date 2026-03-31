@@ -2,12 +2,18 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { probeMedia, runCommand } from './ffmpeg.js';
+import { probeMedia, runCommand, type CommandResult } from './ffmpeg.js';
 import {
   buildPreviewCacheKey,
+  buildPreviewEncodeArgs,
+  buildPreviewEncodePlans,
+  detectAvailablePreviewEncoders,
   encodePreview,
+  encodePreviewWithPlans,
   preparePreviewPlayback,
-  remuxPreview
+  remuxPreview,
+  resetPreviewEncoderAvailabilityCache,
+  type PreviewEncodePlan
 } from './preview.js';
 
 const tempDirectories: string[] = [];
@@ -42,6 +48,8 @@ async function createFixtureMkv(outputPath: string): Promise<void> {
 }
 
 afterEach(async () => {
+  resetPreviewEncoderAvailabilityCache();
+
   await Promise.all(
     tempDirectories.splice(0).map((directory) =>
       rm(directory, {
@@ -53,44 +61,213 @@ afterEach(async () => {
 });
 
 describe('preview cache keys', () => {
-  it('changes when the source size or modified time changes', () => {
-    const first = buildPreviewCacheKey('C:\\Movies\\movie.mkv', {
-      size: 100,
-      mtimeMs: 1_000
-    });
-    const second = buildPreviewCacheKey('C:\\Movies\\movie.mkv', {
-      size: 200,
-      mtimeMs: 1_000
-    });
-    const third = buildPreviewCacheKey('C:\\Movies\\movie.mkv', {
-      size: 100,
-      mtimeMs: 2_000
-    });
+  it('changes when the source size, modified time, or output profile changes', () => {
+    const first = buildPreviewCacheKey(
+      'C:\\Movies\\movie.mkv',
+      {
+        size: 100,
+        mtimeMs: 1_000
+      },
+      'normal'
+    );
+    const second = buildPreviewCacheKey(
+      'C:\\Movies\\movie.mkv',
+      {
+        size: 200,
+        mtimeMs: 1_000
+      },
+      'normal'
+    );
+    const third = buildPreviewCacheKey(
+      'C:\\Movies\\movie.mkv',
+      {
+        size: 100,
+        mtimeMs: 2_000
+      },
+      'normal'
+    );
+    const fourth = buildPreviewCacheKey(
+      'C:\\Movies\\movie.mkv',
+      {
+        size: 100,
+        mtimeMs: 1_000
+      },
+      'weak-480p'
+    );
 
     expect(first).not.toBe(second);
     expect(first).not.toBe(third);
+    expect(first).not.toBe(fourth);
+  });
+});
+
+describe('preview encoder detection', () => {
+  it('probes hardware encoders with the expected sample size and records availability', async () => {
+    const runCommandImpl = vi.fn(
+      async (_command: string, args: string[]): Promise<CommandResult> => {
+        if (args.includes('h264_nvenc') || args.includes('h264_qsv')) {
+          return { stdout: '', stderr: '' };
+        }
+
+        throw new Error('encoder unavailable');
+      }
+    );
+
+    await expect(detectAvailablePreviewEncoders(runCommandImpl)).resolves.toEqual({
+      h264_nvenc: true,
+      h264_amf: false,
+      h264_qsv: true
+    });
+
+    const nvencArgs = runCommandImpl.mock.calls.find(([, args]) => args.includes('h264_nvenc'))?.[1];
+    expect(nvencArgs).toContain('color=c=black:s=128x72:r=1');
+  });
+});
+
+describe('preview encode plans', () => {
+  it('prefers dedicated GPU encoders ahead of qsv and software on stronger machines', () => {
+    expect(
+      buildPreviewEncodePlans(
+        {
+          h264_nvenc: true,
+          h264_amf: false,
+          h264_qsv: true
+        },
+        8
+      )
+    ).toEqual([
+      { encoder: 'h264_nvenc', weakMachine: false, profile: 'normal' },
+      { encoder: 'h264_qsv', weakMachine: false, profile: 'normal' },
+      { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+    ]);
+  });
+
+  it('switches to the weak profile when no hardware encoder is usable', () => {
+    expect(
+      buildPreviewEncodePlans(
+        {
+          h264_nvenc: false,
+          h264_amf: false,
+          h264_qsv: false
+        },
+        8
+      )
+    ).toEqual([{ encoder: 'libx264', weakMachine: true, profile: 'weak-480p' }]);
+  });
+
+  it('switches to the weak profile on low-core machines even with hardware encoding available', () => {
+    expect(
+      buildPreviewEncodePlans(
+        {
+          h264_nvenc: false,
+          h264_amf: false,
+          h264_qsv: true
+        },
+        4
+      )
+    ).toEqual([
+      { encoder: 'h264_qsv', weakMachine: true, profile: 'weak-480p' },
+      { encoder: 'libx264', weakMachine: true, profile: 'weak-480p' }
+    ]);
+  });
+});
+
+describe('preview encode args', () => {
+  it('uses the weak-machine filter and lighter audio settings when the plan is weak', () => {
+    const args = buildPreviewEncodeArgs('input.mkv', 'output.mp4', {
+      encoder: 'libx264',
+      weakMachine: true,
+      profile: 'weak-480p'
+    });
+
+    expect(args).toContain('-vf');
+    expect(args).toContain('scale=854:480:force_original_aspect_ratio=decrease:flags=fast_bilinear');
+    expect(args).toContain('ultrafast');
+    expect(args).toContain('96k');
+  });
+});
+
+describe('preview encoding fallback', () => {
+  it('falls through to the next encoder plan when an earlier attempt fails', async () => {
+    const plans: PreviewEncodePlan[] = [
+      { encoder: 'h264_nvenc', weakMachine: false, profile: 'normal' },
+      { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+    ];
+    const runCommandImpl = vi.fn(
+      async (_command: string, args: string[]): Promise<CommandResult> => {
+        if (args.includes('h264_nvenc')) {
+          throw new Error('nvenc failed');
+        }
+
+        return { stdout: '', stderr: '' };
+      }
+    );
+
+    await expect(
+      encodePreviewWithPlans('C:\\Movies\\movie.mkv', 'C:\\Temp\\preview.mp4', plans, runCommandImpl)
+    ).resolves.toBeUndefined();
+
+    expect(runCommandImpl).toHaveBeenCalledTimes(2);
+    expect(runCommandImpl.mock.calls[0]?.[1]).toContain('h264_nvenc');
+    expect(runCommandImpl.mock.calls[1]?.[1]).toContain('libx264');
   });
 });
 
 describe('preview preparation', () => {
+  it('reports direct-play progress without generating a preview', async () => {
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
+
+    await expect(
+      preparePreviewPlayback('C:\\Movies\\movie.mp4', undefined, (event) => {
+        progressEvents.push(event);
+      })
+    ).resolves.toEqual({
+      inputPath: 'C:\\Movies\\movie.mp4',
+      playbackPath: 'C:\\Movies\\movie.mp4',
+      playbackSource: 'original',
+      name: 'movie.mp4'
+    });
+
+    expect(progressEvents).toEqual([
+      {
+        phase: 'check-format',
+        message: 'Checking video format...',
+        percent: 15
+      },
+      {
+        phase: 'finalize',
+        message: 'Opening original file...',
+        percent: 95
+      }
+    ]);
+  });
+
   it('reuses cached previews when present', async () => {
     const probeStreams = vi.fn(async () => ({
       streams: [{ codec_type: 'video', codec_name: 'h264' }, { codec_type: 'audio', codec_name: 'aac' }]
     }));
     const remuxPreviewImpl = vi.fn(async () => undefined);
     const encodePreviewImpl = vi.fn(async () => undefined);
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
 
     await expect(
       preparePreviewPlayback('C:\\Movies\\movie.mkv', {
         ensureCacheDirectory: async () => 'C:\\Cache',
         getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
+        getLogicalCpuCount: () => 8,
         probeStreams,
         pathExists: async () => true,
         pruneCacheDirectory: async () => undefined,
+        resolveEncodePlans: async () => [
+          { encoder: 'h264_nvenc', weakMachine: false, profile: 'normal' },
+          { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+        ],
         remuxPreview: remuxPreviewImpl,
         encodePreview: encodePreviewImpl,
         moveFile: async () => undefined,
         removeFile: async () => undefined
+      }, (event) => {
+        progressEvents.push(event);
       })
     ).resolves.toMatchObject({
       inputPath: 'C:\\Movies\\movie.mkv',
@@ -100,19 +277,47 @@ describe('preview preparation', () => {
     expect(probeStreams).not.toHaveBeenCalled();
     expect(remuxPreviewImpl).not.toHaveBeenCalled();
     expect(encodePreviewImpl).not.toHaveBeenCalled();
+    expect(progressEvents).toEqual([
+      {
+        phase: 'check-format',
+        message: 'Checking video format...',
+        percent: 15
+      },
+      {
+        phase: 'check-cache',
+        message: 'Checking preview cache...',
+        percent: 25
+      },
+      {
+        phase: 'check-cache',
+        message: 'Using cached preview...',
+        percent: 80
+      },
+      {
+        phase: 'finalize',
+        message: 'Finalizing preview...',
+        percent: 95
+      }
+    ]);
   });
 
   it('falls back to preview encoding when remuxing fails', async () => {
+    const encodePlans: PreviewEncodePlan[] = [
+      { encoder: 'h264_nvenc', weakMachine: false, profile: 'normal' },
+      { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+    ];
     const encodePreviewImpl = vi.fn(async () => undefined);
 
     await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
       ensureCacheDirectory: async () => 'C:\\Cache',
       getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
+      getLogicalCpuCount: () => 8,
       probeStreams: async () => ({
         streams: [{ codec_type: 'video', codec_name: 'h264' }, { codec_type: 'audio', codec_name: 'aac' }]
       }),
       pathExists: async () => false,
       pruneCacheDirectory: async () => undefined,
+      resolveEncodePlans: async () => encodePlans,
       remuxPreview: async () => {
         throw new Error('copy failed');
       },
@@ -122,6 +327,94 @@ describe('preview preparation', () => {
     });
 
     expect(encodePreviewImpl).toHaveBeenCalledTimes(1);
+    expect(encodePreviewImpl).toHaveBeenCalledWith(
+      'C:\\Movies\\movie.mkv',
+      expect.stringContaining('.tmp.mp4'),
+      encodePlans,
+      expect.objectContaining({
+        mediaDurationSeconds: undefined,
+        onProgress: expect.any(Function)
+      })
+    );
+  });
+
+  it('maps remux ffmpeg progress into import progress updates', async () => {
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
+
+    await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
+      ensureCacheDirectory: async () => 'C:\\Cache',
+      getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
+      getLogicalCpuCount: () => 8,
+      probeStreams: async () => ({
+        streams: [{ codec_type: 'video', codec_name: 'h264' }, { codec_type: 'audio', codec_name: 'aac' }],
+        format: { duration: '100' }
+      }),
+      pathExists: async () => false,
+      pruneCacheDirectory: async () => undefined,
+      resolveEncodePlans: async () => [
+        { encoder: 'h264_nvenc', weakMachine: false, profile: 'normal' },
+        { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+      ],
+      remuxPreview: async (_inputPath, _outputPath, options) => {
+        options?.onProgress?.(50);
+        options?.onProgress?.(100);
+      },
+      encodePreview: async () => undefined,
+      moveFile: async () => undefined,
+      removeFile: async () => undefined
+    }, (event) => {
+      progressEvents.push(event);
+    });
+
+    expect(progressEvents).toContainEqual({
+      phase: 'remux',
+      message: 'Remuxing browser-safe preview...',
+      percent: 62.5
+    });
+    expect(progressEvents).toContainEqual({
+      phase: 'remux',
+      message: 'Remuxing browser-safe preview...',
+      percent: 90
+    });
+  });
+
+  it('maps encode ffmpeg progress into import progress updates', async () => {
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
+
+    await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
+      ensureCacheDirectory: async () => 'C:\\Cache',
+      getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
+      getLogicalCpuCount: () => 8,
+      probeStreams: async () => ({
+        streams: [{ codec_type: 'video', codec_name: 'hevc' }],
+        format: { duration: '120' }
+      }),
+      pathExists: async () => false,
+      pruneCacheDirectory: async () => undefined,
+      resolveEncodePlans: async () => [
+        { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+      ],
+      remuxPreview: async () => undefined,
+      encodePreview: async (_inputPath, _outputPath, _plans, options) => {
+        options?.onProgress?.(25);
+        options?.onProgress?.(100);
+      },
+      moveFile: async () => undefined,
+      removeFile: async () => undefined
+    }, (event) => {
+      progressEvents.push(event);
+    });
+
+    expect(progressEvents).toContainEqual({
+      phase: 'encode',
+      message: 'Encoding browser-safe preview...',
+      percent: 48.75
+    });
+    expect(progressEvents).toContainEqual({
+      phase: 'encode',
+      message: 'Encoding browser-safe preview...',
+      percent: 90
+    });
   });
 });
 
@@ -142,13 +435,15 @@ describe('preview ffmpeg integration', () => {
     expect(mediaInfo.duration).toBeLessThan(4.2);
   });
 
-  it('creates a playable mp4 through the encode path', async () => {
+  it('creates a playable mp4 through the software encode path', async () => {
     const directory = await createTempDir();
     const inputPath = path.join(directory, 'input.mkv');
     const outputPath = path.join(directory, 'output-encode.mp4');
 
     await createFixtureMkv(inputPath);
-    await encodePreview(inputPath, outputPath);
+    await encodePreview(inputPath, outputPath, [
+      { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+    ]);
 
     const mediaInfo = await probeMedia(outputPath);
     const outputContents = await readFile(outputPath);
