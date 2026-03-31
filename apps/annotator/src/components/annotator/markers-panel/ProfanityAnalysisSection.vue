@@ -151,10 +151,14 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
             <span class="segment-range-separator">-&gt;</span>
             <span>{{ formatTimestamp(suggestion.end) }}</span>
           </div>
-          <div class="profanity-suggestion-snippet" data-testid="profanity-suggestion-snippet">
+          <div
+            class="profanity-suggestion-snippet"
+            data-testid="profanity-suggestion-snippet"
+            :title="suggestion.snippet"
+          >
             {{ suggestion.snippet }}
           </div>
-          <div class="segment-duration">
+          <div class="segment-duration" :title="suggestion.matchedTerms.join(', ')">
             {{ suggestion.matchedTerms.join(', ') }}
           </div>
         </button>
