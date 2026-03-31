@@ -27,6 +27,32 @@ interface OpenVideoResponse {
   playbackSource?: 'original' | 'preview';
 }
 
+interface OpenVideoProgressPayload {
+  phase: 'select-file' | 'check-format' | 'check-cache' | 'remux' | 'encode' | 'finalize';
+  message: string;
+  percent?: number;
+}
+
+interface OpenVideoProgressStreamEvent {
+  type: 'progress';
+  progress: OpenVideoProgressPayload;
+}
+
+interface OpenVideoResultStreamEvent {
+  type: 'result';
+  result: OpenVideoResponse;
+}
+
+interface OpenVideoErrorStreamEvent {
+  type: 'error';
+  message: string;
+}
+
+type OpenVideoStreamEvent =
+  | OpenVideoProgressStreamEvent
+  | OpenVideoResultStreamEvent
+  | OpenVideoErrorStreamEvent;
+
 interface ProcessResponse {
   outputPath: string;
   filtersPath?: string;
@@ -145,6 +171,7 @@ export function useAnnotatorState() {
   const isSelectingSubtitlePath = ref(false);
   const isAnalyzingProfanity = ref(false);
   const isProcessing = ref(false);
+  const openVideoProgressPercent = ref(0);
   const analyzeProfanityProgressPercent = ref(0);
   const processProgressPercent = ref(0);
   const previewPlaybackEnabled = ref(true);
@@ -334,6 +361,84 @@ export function useAnnotatorState() {
     }
 
     return phasePercents[progress.phase];
+  }
+
+  async function requestOpenVideoWithProgress(): Promise<OpenVideoResponse> {
+    const response = await fetch('/api/open-video', {
+      headers: {
+        Accept: 'application/x-ndjson'
+      }
+    });
+
+    const contentType = response.headers.get('content-type') ?? '';
+
+    if (!contentType.includes('application/x-ndjson') || !response.body) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'The request failed.');
+      }
+
+      return payload as OpenVideoResponse;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let result: OpenVideoResponse | null = null;
+
+    const handleEvent = (event: OpenVideoStreamEvent) => {
+      if (event.type === 'progress') {
+        openVideoProgressPercent.value = Math.max(
+          openVideoProgressPercent.value,
+          Math.max(0, Math.min(99, Math.round(event.progress.percent ?? 0)))
+        );
+        statusMessage.value = event.progress.message;
+        return;
+      }
+
+      if (event.type === 'result') {
+        openVideoProgressPercent.value = 100;
+        result = event.result;
+        return;
+      }
+
+      throw new Error(event.message);
+    };
+
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+
+      let newlineIndex = buffer.indexOf('\n');
+
+      while (newlineIndex !== -1) {
+        const line = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+
+        if (line !== '') {
+          handleEvent(JSON.parse(line) as OpenVideoStreamEvent);
+        }
+
+        newlineIndex = buffer.indexOf('\n');
+      }
+
+      if (done) {
+        break;
+      }
+    }
+
+    const trailingLine = buffer.trim();
+
+    if (trailingLine !== '') {
+      handleEvent(JSON.parse(trailingLine) as OpenVideoStreamEvent);
+    }
+
+    if (result) {
+      return result;
+    }
+
+    throw new Error('Open-video stream ended unexpectedly.');
   }
 
   async function requestProcessWithProgress(body: Record<string, unknown>): Promise<ProcessResponse> {
@@ -829,10 +934,11 @@ export function useAnnotatorState() {
     }
 
     isOpeningVideo.value = true;
-    statusMessage.value = 'Preparing video...';
+    openVideoProgressPercent.value = 0;
+    statusMessage.value = 'Waiting for video selection...';
 
     try {
-      const response = await requestJson<OpenVideoResponse>('/api/open-video');
+      const response = await requestOpenVideoWithProgress();
 
       if (response.cancelled) {
         statusMessage.value =
@@ -864,6 +970,7 @@ export function useAnnotatorState() {
       setError(error instanceof Error ? error.message : 'Unable to open the selected video.');
     } finally {
       isOpeningVideo.value = false;
+      openVideoProgressPercent.value = 0;
     }
   }
 
@@ -1199,6 +1306,7 @@ export function useAnnotatorState() {
     effectiveDuration,
     isPlaying,
     isOpeningVideo,
+    openVideoProgressPercent,
     isSelectingOutputPath,
     isSelectingSubtitlePath,
     isAnalyzingProfanity,

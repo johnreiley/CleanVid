@@ -71,17 +71,28 @@ afterEach(async () => {
 describe('annotator vite api helpers', () => {
   it('returns the expected open-video shapes for original playback and cancellation', async () => {
     const registerPlaybackPath = vi.fn(() => '/api/media/token-1');
+    const progressEvents: unknown[] = [];
 
     await expect(
       handleOpenVideoRequest({
         selectFilePath: async () => 'C:\\Movies\\movie.mp4',
-        preparePlaybackFile: async () => ({
-          inputPath: 'C:\\Movies\\movie.mp4',
-          playbackPath: 'C:\\Movies\\movie.mp4',
-          playbackSource: 'original',
-          name: 'movie.mp4'
-        }),
+        preparePlaybackFile: async (_inputPath, onProgress) => {
+          onProgress?.({
+            phase: 'check-format',
+            message: 'Checking video format...',
+            percent: 15
+          });
+
+          return {
+            inputPath: 'C:\\Movies\\movie.mp4',
+            playbackPath: 'C:\\Movies\\movie.mp4',
+            playbackSource: 'original',
+            name: 'movie.mp4'
+          };
+        },
         registerPlaybackPath
+      }, (event) => {
+        progressEvents.push(event);
       })
     ).resolves.toEqual({
       cancelled: false,
@@ -93,6 +104,18 @@ describe('annotator vite api helpers', () => {
     });
 
     expect(registerPlaybackPath).toHaveBeenCalledWith('C:\\Movies\\movie.mp4');
+    expect(progressEvents).toEqual([
+      {
+        phase: 'select-file',
+        message: 'Waiting for video selection...',
+        percent: 5
+      },
+      {
+        phase: 'check-format',
+        message: 'Checking video format...',
+        percent: 15
+      }
+    ]);
 
     await expect(
       handleOpenVideoRequest({

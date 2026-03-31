@@ -50,6 +50,7 @@ const props = defineProps<{
   inputName: string;
   isAnalyzingProfanity: boolean;
   isOpeningVideo: boolean;
+  openVideoProgressPercent: number;
   isSelectingOutputPath: boolean;
   isSelectingSubtitlePath: boolean;
   isProcessing: boolean;
@@ -215,6 +216,7 @@ onMounted(() => {
       <SessionActions
         :can-import-filters="hasLoadedVideo"
         :is-opening-video="isOpeningVideo"
+        :open-video-progress-percent="openVideoProgressPercent"
         @filters-selected="emit('filtersSelected', $event)"
         @open-video="emit('openVideo')"
       />
