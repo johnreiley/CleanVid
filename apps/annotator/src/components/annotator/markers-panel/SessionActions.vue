@@ -44,7 +44,7 @@ function emitSelectedFile(event: Event) {
           data-testid="filters-input"
           class="visually-hidden-input"
           type="file"
-          accept="application/json,.json"
+          accept="application/json,.json,.skp"
           :disabled="!canImportFilters"
           @change="emitSelectedFile"
         />

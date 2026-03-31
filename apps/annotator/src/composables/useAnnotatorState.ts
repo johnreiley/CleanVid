@@ -4,12 +4,14 @@ import {
   buildTimeline,
   normalizeFilters,
   parseFilterFile,
+  parseSkpFile,
   serializeFilterFile,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult,
   type ProfanitySuggestion,
   type FilterSegment,
   type FilterType,
+  type SkpDraftSegment,
   type TimelineSegment
 } from '@cleanvid/shared';
 import type { EditableSegment, SegmentIssue } from '../annotator-types';
@@ -155,6 +157,9 @@ export function useAnnotatorState() {
   const segments = ref<EditableSegment[]>([]);
   const selectedSegmentId = ref<string | null>(null);
   const profanitySuggestions = ref<ProfanitySuggestion[]>([]);
+  const skpDraftSegments = ref<SkpDraftSegment[]>([]);
+  const skpImportWarnings = ref<string[]>([]);
+  const skpReviewRequestKey = ref(0);
   const profanitySubtitlePath = ref('');
   const statusMessage = ref('Open a video to begin annotating.');
   const errorMessage = ref('');
@@ -313,6 +318,25 @@ export function useAnnotatorState() {
         profanitySuggestions.value.length === 1 ? '' : 's'
       }`
   );
+  const skpDraftCountLabel = computed(
+    () => `${skpDraftSegments.value.length} draft${skpDraftSegments.value.length === 1 ? '' : 's'}`
+  );
+  const skpImportSummaryText = computed(() => {
+    const importedCount = skpDraftSegments.value.length;
+    const skippedCount = skpImportWarnings.value.length;
+
+    if (importedCount === 0) {
+      return 'No SKP entries are ready to review.';
+    }
+
+    if (skippedCount === 0) {
+      return `Imported ${importedCount} SKP entr${importedCount === 1 ? 'y' : 'ies'} for review.`;
+    }
+
+    return `Imported ${importedCount} SKP entr${importedCount === 1 ? 'y' : 'ies'} for review and skipped ${skippedCount} malformed entr${
+      skippedCount === 1 ? 'y' : 'ies'
+    }.`;
+  });
 
   function clearFeedback() {
     errorMessage.value = '';
@@ -556,12 +580,18 @@ export function useAnnotatorState() {
     analyzeProfanityProgressPercent.value = 0;
   }
 
+  function clearSkpDraftSegments() {
+    skpDraftSegments.value = [];
+    skpImportWarnings.value = [];
+  }
+
   function clearFiltersForNextVideo() {
     segments.value = [];
     selectedSegmentId.value = null;
     importedMovieDuration.value = 0;
     markFiltersPersisted([]);
     clearProfanitySuggestions();
+    clearSkpDraftSegments();
     profanitySubtitlePath.value = '';
   }
 
@@ -784,6 +814,7 @@ export function useAnnotatorState() {
   async function importFilterFile(file: File) {
     try {
       clearFeedback();
+      clearSkpDraftSegments();
       const parsed = parseFilterFile(await readTextFile(file));
       segments.value = parsed.filters.map((segment) => ({ ...segment }));
       selectedSegmentId.value = null;
@@ -800,6 +831,31 @@ export function useAnnotatorState() {
       }
 
       setError('Unable to import the filter file.');
+    }
+  }
+
+  async function importSkpFile(file: File) {
+    try {
+      clearFeedback();
+      clearSkpDraftSegments();
+      const parsed = parseSkpFile(await readTextFile(file));
+
+      skpDraftSegments.value = parsed.segments.map((segment) => ({ ...segment }));
+      skpImportWarnings.value = [...parsed.warnings];
+      skpReviewRequestKey.value += 1;
+      statusMessage.value =
+        parsed.skippedEntryCount === 0
+          ? `Imported ${parsed.segments.length} SKP entr${parsed.segments.length === 1 ? 'y' : 'ies'} for review.`
+          : `Imported ${parsed.segments.length} SKP entr${parsed.segments.length === 1 ? 'y' : 'ies'} for review and skipped ${parsed.skippedEntryCount} malformed entr${
+              parsed.skippedEntryCount === 1 ? 'y' : 'ies'
+            }.`;
+    } catch (error) {
+      if (error instanceof FilterValidationError || error instanceof Error) {
+        setError(error.message);
+        return;
+      }
+
+      setError('Unable to import the SKP file.');
     }
   }
 
@@ -968,6 +1024,38 @@ export function useAnnotatorState() {
     } as mute filters.`;
   }
 
+  function applySkpImport() {
+    clearFeedback();
+
+    if (skpDraftSegments.value.length === 0) {
+      return;
+    }
+
+    const nextSegments = skpDraftSegments.value.map((segment) => ({
+      id: createSegmentId(),
+      type: segment.type,
+      start: clampToDuration(segment.start),
+      end: clampToDuration(segment.end),
+      source: 'skp' as const,
+      category: segment.category,
+      severity: segment.severity,
+      description: segment.description
+    }));
+
+    segments.value = sortSegments(nextSegments);
+    selectedSegmentId.value = nextSegments[0]?.id ?? null;
+    clearSkpDraftSegments();
+    markFiltersPersisted(segments.value);
+    statusMessage.value = `Replaced the timeline with ${nextSegments.length} imported SKP filter${
+      nextSegments.length === 1 ? '' : 's'
+    }.`;
+  }
+
+  function discardSkpImport() {
+    clearSkpDraftSegments();
+    statusMessage.value = 'Discarded imported SKP filters.';
+  }
+
   async function selectOutputPath() {
     clearFeedback();
 
@@ -1051,6 +1139,13 @@ export function useAnnotatorState() {
   }
 
   async function loadFilterFile(file: File) {
+    const normalizedFileName = file.name.trim().toLowerCase();
+
+    if (normalizedFileName.endsWith('.skp')) {
+      await importSkpFile(file);
+      return;
+    }
+
     await importFilterFile(file);
   }
 
@@ -1213,6 +1308,10 @@ export function useAnnotatorState() {
     statusMessage,
     errorMessage,
     profanitySuggestions,
+    skpDraftSegments,
+    skpImportWarnings,
+    skpImportSummaryText,
+    skpReviewRequestKey,
     profanitySubtitlePath,
     sortedSegments,
     segmentIssues,
@@ -1223,6 +1322,7 @@ export function useAnnotatorState() {
     pendingTypeLabel,
     markerCountLabel,
     profanitySuggestionCountLabel,
+    skpDraftCountLabel,
     registerVideoElement,
     handleLoadedMetadata,
     handleTimeUpdate,
@@ -1244,6 +1344,8 @@ export function useAnnotatorState() {
     analyzeProfanity,
     discardProfanitySuggestions,
     applyProfanitySuggestions,
+    applySkpImport,
+    discardSkpImport,
     updateOutputPath,
     selectOutputPath,
     processLinkedVideo,

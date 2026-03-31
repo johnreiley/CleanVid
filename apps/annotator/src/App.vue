@@ -61,6 +61,19 @@ watch(
   }
 );
 
+watch(
+  () => annotator.skpReviewRequestKey,
+  (skpReviewRequestKey, previousKey) => {
+    if (
+      skpReviewRequestKey > 0 &&
+      skpReviewRequestKey !== previousKey &&
+      annotator.skpDraftSegments.length > 0
+    ) {
+      uiMode.value = 'annotate';
+    }
+  }
+);
+
 onMounted(() => {
   window.addEventListener('keydown', annotator.handleKeydown);
   window.addEventListener('beforeunload', annotator.handleBeforeUnload);
@@ -98,6 +111,11 @@ onBeforeUnmount(() => {
         :profanity-suggestion-count-label="annotator.profanitySuggestionCountLabel"
         :profanity-subtitle-path="annotator.profanitySubtitlePath"
         :profanity-suggestions="annotator.profanitySuggestions"
+        :skp-draft-count-label="annotator.skpDraftCountLabel"
+        :skp-draft-segments="annotator.skpDraftSegments"
+        :skp-import-summary-text="annotator.skpImportSummaryText"
+        :skp-import-warnings="annotator.skpImportWarnings"
+        :skp-review-request-key="annotator.skpReviewRequestKey"
         :output-path="annotator.outputPath"
         :process-progress-percent="annotator.processProgressPercent"
         :pending-start="annotator.pendingStart"
@@ -110,8 +128,10 @@ onBeforeUnmount(() => {
         @active-type-change="handleActiveTypeChange"
         @analyze-profanity="annotator.analyzeProfanity"
         @apply-profanity-suggestions="annotator.applyProfanitySuggestions"
+        @apply-skp-import="annotator.applySkpImport"
         @clear-profanity-subtitle-path="annotator.clearProfanitySubtitlePath"
         @change-mode="handleModeChange"
+        @discard-skp-import="annotator.discardSkpImport"
         @discard-profanity-suggestions="annotator.discardProfanitySuggestions"
         @filters-selected="annotator.loadFilterFile"
         @open-video="annotator.openVideo"

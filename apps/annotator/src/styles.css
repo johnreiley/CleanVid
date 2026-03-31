@@ -652,9 +652,34 @@ button {
   justify-content: flex-end;
 }
 
+.segment-card-imported-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
 .segment-duration {
   font-size: 0.74rem;
   letter-spacing: 0.01em;
+}
+
+.segment-imported-description {
+  flex: 1 1 100%;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.segment-imported-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.28rem;
+  border-radius: 999px;
+  background: rgba(111, 131, 255, 0.12);
+  color: var(--text-soft);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
 }
 
 .segment-type-label:focus,
@@ -831,7 +856,8 @@ button {
 }
 
 .profanity-analysis-section,
-.profanity-option-list {
+.profanity-option-list,
+.skp-import-section {
   display: grid;
   gap: 0.65rem;
 }

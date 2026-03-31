@@ -220,6 +220,13 @@ async function openProfanityModal(wrapper: ReturnType<typeof mount>) {
   await nextTick();
 }
 
+function setFileText(file: File, value: string) {
+  Object.defineProperty(file, 'text', {
+    configurable: true,
+    value: async () => value
+  });
+}
+
 beforeEach(() => {
   let blobCounter = 0;
   lastExportBlob = null;
@@ -1278,6 +1285,7 @@ describe('annotator app', () => {
     await switchMode(wrapper, 'media');
 
     const importInput = wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement;
+    expect(importInput.accept).toContain('.skp');
     const filterFile = new File(
       [
         JSON.stringify({
@@ -1289,15 +1297,14 @@ describe('annotator app', () => {
       'filters.json',
       { type: 'application/json' }
     );
-    Object.defineProperty(filterFile, 'text', {
-      configurable: true,
-      value: async () =>
-        JSON.stringify({
-          version: 1,
-          movie: { title: 'Imported', duration: 120 },
-          filters: [{ id: 'seg-1', type: 'mute', start: 5, end: 8 }]
-        })
-    });
+    setFileText(
+      filterFile,
+      JSON.stringify({
+        version: 1,
+        movie: { title: 'Imported', duration: 120 },
+        filters: [{ id: 'seg-1', type: 'mute', start: 5, end: 8 }]
+      })
+    );
 
     assignFiles(importInput, [filterFile]);
     importInput.dispatchEvent(new Event('change'));
@@ -1305,10 +1312,118 @@ describe('annotator app', () => {
     await nextTick();
 
     expect(wrapper.text()).toContain('Imported 1 filter.');
+    expect(wrapper.find('[data-testid="skp-import-modal"]').exists()).toBe(false);
 
     await wrapper.get('[data-testid="export-button"]').trigger('click');
     expect(lastExportBlob).toBeDefined();
     await expect(readBlobText(lastExportBlob as Blob)).resolves.toContain('"id": "seg-1"');
+  });
+
+  it('stages skp imports for review and discards them without changing the timeline', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 5;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 8;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
+
+    await switchMode(wrapper, 'media');
+    const importInput = wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement;
+    const skpFile = new File([''], 'movie.skp', { type: 'text/plain' });
+    setFileText(
+      skpFile,
+      `
+00:00:12.000 - 00:00:15.000
+Violence skip 2
+
+00:00:17.000 - 00:00:19.000
+Broken label
+`
+    );
+
+    assignFiles(importInput, [skpFile]);
+    importInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="skp-import-modal"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="mode-panel-annotate"]').exists()).toBe(true);
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
+    expect(wrapper.get('[data-testid="skp-import-summary"]').text()).toContain('Imported 1 SKP entry');
+    expect(wrapper.get('[data-testid="skp-import-summary"]').text()).toContain('replacing the current filter timeline');
+    expect(wrapper.get('[data-testid="skp-draft-description"]').text()).toContain('Violence');
+    expect(wrapper.get('[data-testid="skp-draft-category"]').text()).toContain('Violence');
+    expect(wrapper.get('[data-testid="skp-import-warnings"]').text()).toContain('1 skipped entry');
+
+    await wrapper.get('[data-testid="discard-skp-import-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="skp-import-modal"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
+  });
+
+  it('applies reviewed skp imports as replacement filters and keeps metadata out of exported json', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 2;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+
+    video.currentTime = 4;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
+
+    await switchMode(wrapper, 'media');
+    const importInput = wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement;
+    const skpFile = new File([''], 'movie.skp', { type: 'text/plain' });
+    setFileText(
+      skpFile,
+      `
+00:00:20.000 - 00:00:23.000
+Brief nudity skip 1
+
+00:00:30.000 - 00:00:31.500
+Profanity mute 3
+`
+    );
+
+    assignFiles(importInput, [skpFile]);
+    importInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+    await nextTick();
+
+    await wrapper.get('[data-testid="apply-skp-import-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="skp-import-modal"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(2);
+    expect(wrapper.get('[data-testid="segment-skp-meta"]').text()).toContain('Brief nudity');
+    expect(wrapper.get('[data-testid="segment-skp-meta"]').text()).toContain('Nude');
+    expect(wrapper.get('[data-testid="segment-skp-meta"]').text()).toContain('Severity 1');
+    expect(wrapper.text()).toContain('Replaced the timeline with 2 imported SKP filters.');
+
+    await wrapper.get('[data-testid="export-button"]').trigger('click');
+    expect(lastExportBlob).toBeDefined();
+    const exportedText = await readBlobText(lastExportBlob as Blob);
+    expect(exportedText).toContain('"type": "skip"');
+    expect(exportedText).not.toContain('Brief nudity');
+    expect(exportedText).not.toContain('"severity"');
+    expect(exportedText).not.toContain('"category"');
   });
 
   it('warns before leaving the page when filter changes have not been exported yet', async () => {
