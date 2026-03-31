@@ -5,3 +5,8 @@
 
 - Open the output folder once the video is exported
 
+- Add a button for selecting the output location so the user doesn't have to type it
+
+- Playback speed control
+
+- Waveform visualization on the timeline

@@ -3,13 +3,16 @@ import { once } from 'node:events';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import type { ProfanityAnalysisResult } from '@cleanvid/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createPlaybackRegistry,
   deriveDefaultOutputPath,
   deriveExportedFiltersPath,
+  handleAnalyzeProfanityRequest,
   handleMediaRequest,
   handleOpenVideoRequest,
+  handleSelectSubtitlePathRequest,
   handleSelectOutputPathRequest,
   handleProcessRequest
 } from '../vite.config';
@@ -152,6 +155,98 @@ describe('annotator vite api helpers', () => {
         }
       )
     ).resolves.toEqual({ cancelled: true });
+  });
+
+  it('returns the selected subtitle path shape and supports cancellation', async () => {
+    await expect(
+      handleSelectSubtitlePathRequest({
+        selectSubtitlePath: async () => 'C:\\Subtitles\\movie.srt'
+      })
+    ).resolves.toEqual({
+      cancelled: false,
+      subtitlePath: 'C:\\Subtitles\\movie.srt'
+    });
+
+    await expect(
+      handleSelectSubtitlePathRequest({
+        selectSubtitlePath: async () => null
+      })
+    ).resolves.toEqual({ cancelled: true });
+  });
+
+  it('validates the profanity analysis request and forwards progress events', async () => {
+    const analyzeProfanityImpl = vi.fn(async ({ onProgress, subtitlePath }): Promise<ProfanityAnalysisResult> => {
+      onProgress?.({
+        phase: 'detect-profanity',
+        message: 'Detecting profanity...',
+        percent: 88
+      });
+
+      return {
+        suggestions: [
+          {
+            id: 'suggestion-1',
+            start: 10,
+            end: 11,
+            snippet: 'oh shit',
+            source: 'provided',
+            matchedTerms: ['shit'],
+            sources: ['provided']
+          }
+        ],
+        usedSources: [subtitlePath ? 'provided' : 'embedded'],
+        subtitleCueCount: 1,
+        message: 'Detected 1 draft mute suggestion.'
+      };
+    });
+    const progressEvents: unknown[] = [];
+
+    await expect(
+      handleAnalyzeProfanityRequest(
+        {
+          inputPath: 'C:\\Movies\\movie.mp4',
+          movieTitle: 'movie',
+          subtitlePath: 'C:\\Subtitles\\movie.srt'
+        },
+        {
+          ensureInputExists: async () => undefined,
+          analyzeProfanityImpl
+        },
+        (event) => {
+          progressEvents.push(event);
+        }
+      )
+    ).resolves.toEqual({
+      suggestions: [
+        {
+          id: 'suggestion-1',
+          start: 10,
+          end: 11,
+          snippet: 'oh shit',
+          source: 'provided',
+          matchedTerms: ['shit'],
+          sources: ['provided']
+        }
+      ],
+      usedSources: ['provided'],
+      subtitleCueCount: 1,
+      message: 'Detected 1 draft mute suggestion.'
+    });
+
+    expect(analyzeProfanityImpl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inputPath: 'C:\\Movies\\movie.mp4',
+        movieTitle: 'movie',
+        subtitlePath: 'C:\\Subtitles\\movie.srt'
+      })
+    );
+    expect(progressEvents).toEqual([
+      {
+        phase: 'detect-profanity',
+        message: 'Detecting profanity...',
+        percent: 88
+      }
+    ]);
   });
 
   it('derives the default cleaned output path beside the input file', () => {

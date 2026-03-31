@@ -5,6 +5,9 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
+      "@cleanvid/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
       "@phosphor-icons-vue-icons/*": [
         "../../node_modules/@phosphor-icons/vue/dist/icons/*"
       ],
