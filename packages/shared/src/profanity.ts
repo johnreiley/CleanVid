@@ -150,7 +150,7 @@ export function normalizeProfanityText(text: string): string {
       .toLowerCase()
       .replace(/<[^>]+>/g, ' ')
       .replace(/\[[^\]]*\]|\([^)]*\)|\{[^}]*\}/g, ' ')
-      .replace(/^[A-Z][A-Z0-9 .'-]{1,24}:\s*/gm, ' ')
+      .replace(/^[A-Z][A-Z0-9 .'-]{1,24}:\s*/gim, ' ')
       .replace(/[^a-z0-9'\s-]+/g, ' ')
   );
 }

@@ -107,9 +107,6 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
       :class="['process-button', { 'process-button-processing': isAnalyzingProfanity }]"
       data-testid="analyze-profanity-button"
       :disabled="!canAnalyzeProfanity"
-      :aria-valuenow="isAnalyzingProfanity ? progressPercent : undefined"
-      aria-valuemin="0"
-      aria-valuemax="100"
       @click="emit('analyzeProfanity')"
     >
       <span
