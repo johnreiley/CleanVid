@@ -27,6 +27,7 @@ import { analyzeProfanity } from './src/profanity-analysis';
 import {
   preparePreviewPlayback,
   type PlaybackSource,
+  type PreviewPreparationProgressEvent,
   type PreviewPreparationResult
 } from '../cli/src/preview';
 
@@ -47,6 +48,26 @@ export interface OpenVideoResult {
   playbackUrl?: string;
   playbackSource?: PlaybackSource;
 }
+
+export interface OpenVideoStreamProgressEvent {
+  type: 'progress';
+  progress: PreviewPreparationProgressEvent;
+}
+
+export interface OpenVideoStreamResultEvent {
+  type: 'result';
+  result: OpenVideoResult;
+}
+
+export interface OpenVideoStreamErrorEvent {
+  type: 'error';
+  message: string;
+}
+
+export type OpenVideoStreamEvent =
+  | OpenVideoStreamProgressEvent
+  | OpenVideoStreamResultEvent
+  | OpenVideoStreamErrorEvent;
 
 export interface ProcessRequestBody {
   filters: FilterSegment[];
@@ -138,7 +159,10 @@ interface AnalyzeProfanityRequestDependencies {
 
 interface OpenVideoDependencies {
   selectFilePath: () => Promise<string | null>;
-  preparePlaybackFile: (inputPath: string) => Promise<PreviewPreparationResult>;
+  preparePlaybackFile: (
+    inputPath: string,
+    onProgress?: (event: PreviewPreparationProgressEvent) => void
+  ) => Promise<PreviewPreparationResult>;
   registerPlaybackPath: (filePath: string) => string;
 }
 
@@ -235,7 +259,8 @@ function getDefaultAnalyzeProfanityRequestDependencies(): AnalyzeProfanityReques
 function getDefaultOpenVideoDependencies(): OpenVideoDependencies {
   return {
     selectFilePath: openNativeVideoFileDialog,
-    preparePlaybackFile: preparePreviewPlayback,
+    preparePlaybackFile: (inputPath, onProgress) =>
+      preparePreviewPlayback(inputPath, undefined, onProgress),
     registerPlaybackPath: defaultPlaybackRegistry.registerPlaybackPath
   };
 }
@@ -388,15 +413,22 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
 }
 
 export async function handleOpenVideoRequest(
-  dependencies: OpenVideoDependencies = getDefaultOpenVideoDependencies()
+  dependencies: OpenVideoDependencies = getDefaultOpenVideoDependencies(),
+  onProgress?: (event: PreviewPreparationProgressEvent) => void
 ): Promise<OpenVideoResult> {
+  onProgress?.({
+    phase: 'select-file',
+    message: 'Waiting for video selection...',
+    percent: 5
+  });
+
   const selectedPath = await dependencies.selectFilePath();
 
   if (!selectedPath) {
     return { cancelled: true };
   }
 
-  const preparedPlayback = await dependencies.preparePlaybackFile(selectedPath);
+  const preparedPlayback = await dependencies.preparePlaybackFile(selectedPath, onProgress);
 
   return {
     cancelled: false,
@@ -760,6 +792,10 @@ function sendProcessStreamEvent(response: ServerResponse, event: ProcessStreamEv
   response.write(`${JSON.stringify(event)}\n`);
 }
 
+function sendOpenVideoStreamEvent(response: ServerResponse, event: OpenVideoStreamEvent) {
+  response.write(`${JSON.stringify(event)}\n`);
+}
+
 function sendAnalyzeProfanityStreamEvent(response: ServerResponse, event: AnalyzeProfanityStreamEvent) {
   response.write(`${JSON.stringify(event)}\n`);
 }
@@ -812,6 +848,34 @@ async function handleApiRequest(request: IncomingMessage, response: ServerRespon
   if (url.pathname === '/api/open-video') {
     if (request.method !== 'GET') {
       sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+
+    if ((request.headers.accept ?? '').includes('application/x-ndjson')) {
+      response.statusCode = 200;
+      response.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+      response.setHeader('Cache-Control', 'no-store');
+
+      try {
+        const result = await handleOpenVideoRequest(getDefaultOpenVideoDependencies(), (event) => {
+          sendOpenVideoStreamEvent(response, {
+            type: 'progress',
+            progress: event
+          });
+        });
+
+        sendOpenVideoStreamEvent(response, {
+          type: 'result',
+          result
+        });
+      } catch (error) {
+        sendOpenVideoStreamEvent(response, {
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Unexpected server error.'
+        });
+      }
+
+      response.end();
       return true;
     }
 

@@ -214,12 +214,41 @@ describe('preview encoding fallback', () => {
 });
 
 describe('preview preparation', () => {
+  it('reports direct-play progress without generating a preview', async () => {
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
+
+    await expect(
+      preparePreviewPlayback('C:\\Movies\\movie.mp4', undefined, (event) => {
+        progressEvents.push(event);
+      })
+    ).resolves.toEqual({
+      inputPath: 'C:\\Movies\\movie.mp4',
+      playbackPath: 'C:\\Movies\\movie.mp4',
+      playbackSource: 'original',
+      name: 'movie.mp4'
+    });
+
+    expect(progressEvents).toEqual([
+      {
+        phase: 'check-format',
+        message: 'Checking video format...',
+        percent: 15
+      },
+      {
+        phase: 'finalize',
+        message: 'Opening original file...',
+        percent: 95
+      }
+    ]);
+  });
+
   it('reuses cached previews when present', async () => {
     const probeStreams = vi.fn(async () => ({
       streams: [{ codec_type: 'video', codec_name: 'h264' }, { codec_type: 'audio', codec_name: 'aac' }]
     }));
     const remuxPreviewImpl = vi.fn(async () => undefined);
     const encodePreviewImpl = vi.fn(async () => undefined);
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
 
     await expect(
       preparePreviewPlayback('C:\\Movies\\movie.mkv', {
@@ -237,6 +266,8 @@ describe('preview preparation', () => {
         encodePreview: encodePreviewImpl,
         moveFile: async () => undefined,
         removeFile: async () => undefined
+      }, (event) => {
+        progressEvents.push(event);
       })
     ).resolves.toMatchObject({
       inputPath: 'C:\\Movies\\movie.mkv',
@@ -246,6 +277,28 @@ describe('preview preparation', () => {
     expect(probeStreams).not.toHaveBeenCalled();
     expect(remuxPreviewImpl).not.toHaveBeenCalled();
     expect(encodePreviewImpl).not.toHaveBeenCalled();
+    expect(progressEvents).toEqual([
+      {
+        phase: 'check-format',
+        message: 'Checking video format...',
+        percent: 15
+      },
+      {
+        phase: 'check-cache',
+        message: 'Checking preview cache...',
+        percent: 25
+      },
+      {
+        phase: 'check-cache',
+        message: 'Using cached preview...',
+        percent: 80
+      },
+      {
+        phase: 'finalize',
+        message: 'Finalizing preview...',
+        percent: 95
+      }
+    ]);
   });
 
   it('falls back to preview encoding when remuxing fails', async () => {
@@ -277,8 +330,91 @@ describe('preview preparation', () => {
     expect(encodePreviewImpl).toHaveBeenCalledWith(
       'C:\\Movies\\movie.mkv',
       expect.stringContaining('.tmp.mp4'),
-      encodePlans
+      encodePlans,
+      expect.objectContaining({
+        mediaDurationSeconds: undefined,
+        onProgress: expect.any(Function)
+      })
     );
+  });
+
+  it('maps remux ffmpeg progress into import progress updates', async () => {
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
+
+    await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
+      ensureCacheDirectory: async () => 'C:\\Cache',
+      getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
+      getLogicalCpuCount: () => 8,
+      probeStreams: async () => ({
+        streams: [{ codec_type: 'video', codec_name: 'h264' }, { codec_type: 'audio', codec_name: 'aac' }],
+        format: { duration: '100' }
+      }),
+      pathExists: async () => false,
+      pruneCacheDirectory: async () => undefined,
+      resolveEncodePlans: async () => [
+        { encoder: 'h264_nvenc', weakMachine: false, profile: 'normal' },
+        { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+      ],
+      remuxPreview: async (_inputPath, _outputPath, options) => {
+        options?.onProgress?.(50);
+        options?.onProgress?.(100);
+      },
+      encodePreview: async () => undefined,
+      moveFile: async () => undefined,
+      removeFile: async () => undefined
+    }, (event) => {
+      progressEvents.push(event);
+    });
+
+    expect(progressEvents).toContainEqual({
+      phase: 'remux',
+      message: 'Remuxing browser-safe preview...',
+      percent: 62.5
+    });
+    expect(progressEvents).toContainEqual({
+      phase: 'remux',
+      message: 'Remuxing browser-safe preview...',
+      percent: 90
+    });
+  });
+
+  it('maps encode ffmpeg progress into import progress updates', async () => {
+    const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
+
+    await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
+      ensureCacheDirectory: async () => 'C:\\Cache',
+      getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
+      getLogicalCpuCount: () => 8,
+      probeStreams: async () => ({
+        streams: [{ codec_type: 'video', codec_name: 'hevc' }],
+        format: { duration: '120' }
+      }),
+      pathExists: async () => false,
+      pruneCacheDirectory: async () => undefined,
+      resolveEncodePlans: async () => [
+        { encoder: 'libx264', weakMachine: false, profile: 'normal' }
+      ],
+      remuxPreview: async () => undefined,
+      encodePreview: async (_inputPath, _outputPath, _plans, options) => {
+        options?.onProgress?.(25);
+        options?.onProgress?.(100);
+      },
+      moveFile: async () => undefined,
+      removeFile: async () => undefined
+    }, (event) => {
+      progressEvents.push(event);
+    });
+
+    expect(progressEvents).toContainEqual({
+      phase: 'encode',
+      message: 'Encoding browser-safe preview...',
+      percent: 48.75
+    });
+    expect(progressEvents).toContainEqual({
+      phase: 'encode',
+      message: 'Encoding browser-safe preview...',
+      percent: 90
+    });
   });
 });
 

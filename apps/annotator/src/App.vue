@@ -90,6 +90,7 @@ onBeforeUnmount(() => {
         :input-name="annotator.inputName"
         :is-analyzing-profanity="annotator.isAnalyzingProfanity"
         :is-opening-video="annotator.isOpeningVideo"
+        :open-video-progress-percent="annotator.openVideoProgressPercent"
         :is-selecting-output-path="annotator.isSelectingOutputPath"
         :is-selecting-subtitle-path="annotator.isSelectingSubtitlePath"
         :is-processing="annotator.isProcessing"

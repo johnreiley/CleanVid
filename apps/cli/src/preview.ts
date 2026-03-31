@@ -10,7 +10,12 @@ import {
 } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { runCommand, type CommandResult, type ProbeResponse } from './ffmpeg.js';
+import {
+  runCommand,
+  runFfmpegWithProgress,
+  type CommandResult,
+  type ProbeResponse
+} from './ffmpeg.js';
 
 const DIRECT_PLAY_EXTENSIONS = new Set(['.mp4', '.m4v', '.mov', '.webm']);
 const PREPROCESS_EXTENSION = '.mkv';
@@ -27,6 +32,24 @@ const REMUXABLE_AUDIO_CODECS = new Set(['aac', 'mp3']);
 export type PlaybackSource = 'original' | 'preview';
 export type PreviewVideoEncoder = 'h264_nvenc' | 'h264_amf' | 'h264_qsv' | 'libx264';
 export type PreviewOutputProfile = 'normal' | 'weak-480p';
+export type PreviewPreparationPhase =
+  | 'select-file'
+  | 'check-format'
+  | 'check-cache'
+  | 'remux'
+  | 'encode'
+  | 'finalize';
+
+export interface PreviewPreparationProgressEvent {
+  phase: PreviewPreparationPhase;
+  message: string;
+  percent?: number;
+}
+
+export interface PreviewFfmpegProgressOptions {
+  mediaDurationSeconds?: number;
+  onProgress?: (percent: number) => void;
+}
 
 export interface PreviewPreparationResult {
   inputPath: string;
@@ -55,11 +78,16 @@ export interface PreviewPreparationDependencies {
   pathExists: (candidatePath: string) => Promise<boolean>;
   pruneCacheDirectory: (cacheDirectory: string) => Promise<void>;
   resolveEncodePlans: (logicalCpuCount: number) => Promise<PreviewEncodePlan[]>;
-  remuxPreview: (inputPath: string, outputPath: string) => Promise<void>;
+  remuxPreview: (
+    inputPath: string,
+    outputPath: string,
+    options?: PreviewFfmpegProgressOptions
+  ) => Promise<void>;
   encodePreview: (
     inputPath: string,
     outputPath: string,
-    plans: PreviewEncodePlan[]
+    plans: PreviewEncodePlan[],
+    options?: PreviewFfmpegProgressOptions
   ) => Promise<void>;
   moveFile: (sourcePath: string, targetPath: string) => Promise<void>;
   removeFile: (targetPath: string) => Promise<void>;
@@ -160,6 +188,7 @@ export async function probeStreams(inputPath: string): Promise<ProbeResponse> {
     '-print_format',
     'json',
     '-show_streams',
+    '-show_format',
     inputPath
   ]);
 
@@ -195,6 +224,52 @@ export function getLogicalCpuCount(): number {
   }
 
   return Math.max(os.cpus().length, 1);
+}
+
+function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(value, 100));
+}
+
+function mapProgressToRange(progressPercent: number, startPercent: number, endPercent: number): number {
+  const clamped = clampPercent(progressPercent);
+  return startPercent + ((endPercent - startPercent) * clamped) / 100;
+}
+
+function calculateTaskProgressPercent(outTimeSeconds: number, mediaDurationSeconds?: number): number | null {
+  if (
+    !Number.isFinite(outTimeSeconds) ||
+    outTimeSeconds < 0 ||
+    !Number.isFinite(mediaDurationSeconds) ||
+    (mediaDurationSeconds ?? 0) <= 0
+  ) {
+    return null;
+  }
+
+  return Math.min((outTimeSeconds / (mediaDurationSeconds ?? 1)) * 100, 100);
+}
+
+function emitPreviewPreparationProgress(
+  onProgress: ((event: PreviewPreparationProgressEvent) => void) | undefined,
+  event: PreviewPreparationProgressEvent
+) {
+  if (!onProgress) {
+    return;
+  }
+
+  try {
+    onProgress(event);
+  } catch {
+    // Progress reporting is best-effort and should never break preview preparation.
+  }
+}
+
+function getPreviewDurationSeconds(probeResponse: ProbeResponse): number | undefined {
+  const durationSeconds = Number(probeResponse.format?.duration);
+  return Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : undefined;
 }
 
 function buildPreviewEncoderProbeArgs(encoder: Exclude<PreviewVideoEncoder, 'libx264'>): string[] {
@@ -408,7 +483,105 @@ export function buildPreviewEncodeArgs(
   return args;
 }
 
-export async function remuxPreview(inputPath: string, outputPath: string): Promise<void> {
+export async function remuxPreviewWithProgress(
+  inputPath: string,
+  outputPath: string,
+  options: PreviewFfmpegProgressOptions = {}
+): Promise<void> {
+  await runFfmpegWithProgress(
+    [
+      '-y',
+      '-i',
+      inputPath,
+      '-map',
+      '0:v:0',
+      '-map',
+      '0:a?',
+      '-c',
+      'copy',
+      '-movflags',
+      '+faststart',
+      outputPath
+    ],
+    (event) => {
+      const progressPercent = calculateTaskProgressPercent(
+        event.outTimeSeconds ?? 0,
+        options.mediaDurationSeconds
+      );
+
+      if (progressPercent !== null) {
+        options.onProgress?.(progressPercent);
+      } else if (event.progress === 'end') {
+        options.onProgress?.(100);
+      }
+    }
+  );
+}
+
+function isPreviewEncodePlanArray(
+  value: PreviewEncodePlan[] | PreviewFfmpegProgressOptions | undefined
+): value is PreviewEncodePlan[] {
+  return Array.isArray(value);
+}
+
+function buildEncodeOptions(
+  plansOrOptions: PreviewEncodePlan[] | PreviewFfmpegProgressOptions | undefined,
+  maybeOptions: PreviewFfmpegProgressOptions | undefined
+): PreviewFfmpegProgressOptions | undefined {
+  return isPreviewEncodePlanArray(plansOrOptions) ? maybeOptions : plansOrOptions;
+}
+
+function buildEncodePlans(
+  plansOrOptions: PreviewEncodePlan[] | PreviewFfmpegProgressOptions | undefined
+): PreviewEncodePlan[] | undefined {
+  return isPreviewEncodePlanArray(plansOrOptions) ? plansOrOptions : undefined;
+}
+
+async function encodePreviewWithProgress(
+  inputPath: string,
+  outputPath: string,
+  plans: PreviewEncodePlan[],
+  options: PreviewFfmpegProgressOptions = {}
+): Promise<void> {
+  let lastError: unknown = null;
+
+  for (const plan of plans) {
+    try {
+      await runFfmpegWithProgress(buildPreviewEncodeArgs(inputPath, outputPath, plan), (event) => {
+        const progressPercent = calculateTaskProgressPercent(
+          event.outTimeSeconds ?? 0,
+          options.mediaDurationSeconds
+        );
+
+        if (progressPercent !== null) {
+          options.onProgress?.(progressPercent);
+        } else if (event.progress === 'end') {
+          options.onProgress?.(100);
+        }
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError instanceof Error) {
+    throw lastError;
+  }
+
+  throw new Error('No preview encoders were available.');
+}
+
+export async function remuxPreview(
+  inputPath: string,
+  outputPath: string,
+  options?: PreviewFfmpegProgressOptions
+): Promise<void> {
+  if (options?.onProgress) {
+    await remuxPreviewWithProgress(inputPath, outputPath, options);
+    return;
+  }
+
   await runCommand('ffmpeg', [
     '-y',
     '-i',
@@ -452,23 +625,42 @@ export async function encodePreviewWithPlans(
 export async function encodePreview(
   inputPath: string,
   outputPath: string,
-  plans?: PreviewEncodePlan[]
+  plansOrOptions?: PreviewEncodePlan[] | PreviewFfmpegProgressOptions,
+  maybeOptions?: PreviewFfmpegProgressOptions
 ): Promise<void> {
-  await encodePreviewWithPlans(
-    inputPath,
-    outputPath,
-    plans && plans.length > 0 ? plans : await resolveEncodePlans()
-  );
+  const plans = buildEncodePlans(plansOrOptions);
+  const options = buildEncodeOptions(plansOrOptions, maybeOptions);
+  const resolvedPlans = plans && plans.length > 0 ? plans : await resolveEncodePlans();
+
+  if (options?.onProgress) {
+    await encodePreviewWithProgress(inputPath, outputPath, resolvedPlans, options);
+    return;
+  }
+
+  await encodePreviewWithPlans(inputPath, outputPath, resolvedPlans);
 }
 
 export async function preparePreviewPlayback(
   inputPath: string,
-  dependencies: PreviewPreparationDependencies = createDefaultPreviewPreparationDependencies()
+  dependencies: PreviewPreparationDependencies = createDefaultPreviewPreparationDependencies(),
+  onProgress?: (event: PreviewPreparationProgressEvent) => void
 ): Promise<PreviewPreparationResult> {
   const resolvedInputPath = path.resolve(inputPath);
   const extension = path.extname(resolvedInputPath).toLowerCase();
 
+  emitPreviewPreparationProgress(onProgress, {
+    phase: 'check-format',
+    message: 'Checking video format...',
+    percent: 15
+  });
+
   if (isDirectPlayExtension(extension)) {
+    emitPreviewPreparationProgress(onProgress, {
+      phase: 'finalize',
+      message: 'Opening original file...',
+      percent: 95
+    });
+
     return {
       inputPath: resolvedInputPath,
       playbackPath: resolvedInputPath,
@@ -500,7 +692,24 @@ export async function preparePreviewPlayback(
   const cacheKey = buildPreviewCacheKey(resolvedInputPath, inputStats, preferredPlan.profile);
   const previewPath = path.join(cacheDirectory, `${cacheKey}.preview.mp4`);
 
+  emitPreviewPreparationProgress(onProgress, {
+    phase: 'check-cache',
+    message: 'Checking preview cache...',
+    percent: 25
+  });
+
   if (await dependencies.pathExists(previewPath)) {
+    emitPreviewPreparationProgress(onProgress, {
+      phase: 'check-cache',
+      message: 'Using cached preview...',
+      percent: 80
+    });
+    emitPreviewPreparationProgress(onProgress, {
+      phase: 'finalize',
+      message: 'Finalizing preview...',
+      percent: 95
+    });
+
     return {
       inputPath: resolvedInputPath,
       playbackPath: previewPath,
@@ -516,16 +725,68 @@ export async function preparePreviewPlayback(
 
   try {
     const probeResponse = await dependencies.probeStreams(resolvedInputPath);
+    const mediaDurationSeconds = getPreviewDurationSeconds(probeResponse);
 
     if (canRemuxToBrowserSafeMp4(probeResponse)) {
       try {
-        await dependencies.remuxPreview(resolvedInputPath, temporaryPreviewPath);
+        emitPreviewPreparationProgress(onProgress, {
+          phase: 'remux',
+          message: 'Remuxing browser-safe preview...',
+          percent: 35
+        });
+
+        await dependencies.remuxPreview(resolvedInputPath, temporaryPreviewPath, {
+          mediaDurationSeconds,
+          onProgress: (progressPercent) => {
+            emitPreviewPreparationProgress(onProgress, {
+              phase: 'remux',
+              message: 'Remuxing browser-safe preview...',
+              percent: mapProgressToRange(progressPercent, 35, 90)
+            });
+          }
+        });
       } catch {
-        await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath, encodePlans);
+        emitPreviewPreparationProgress(onProgress, {
+          phase: 'encode',
+          message: 'Encoding browser-safe preview...',
+          percent: 35
+        });
+
+        await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath, encodePlans, {
+          mediaDurationSeconds,
+          onProgress: (progressPercent) => {
+            emitPreviewPreparationProgress(onProgress, {
+              phase: 'encode',
+              message: 'Encoding browser-safe preview...',
+              percent: mapProgressToRange(progressPercent, 35, 90)
+            });
+          }
+        });
       }
     } else {
-      await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath, encodePlans);
+      emitPreviewPreparationProgress(onProgress, {
+        phase: 'encode',
+        message: 'Encoding browser-safe preview...',
+        percent: 35
+      });
+
+      await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath, encodePlans, {
+        mediaDurationSeconds,
+        onProgress: (progressPercent) => {
+          emitPreviewPreparationProgress(onProgress, {
+            phase: 'encode',
+            message: 'Encoding browser-safe preview...',
+            percent: mapProgressToRange(progressPercent, 35, 90)
+          });
+        }
+      });
     }
+
+    emitPreviewPreparationProgress(onProgress, {
+      phase: 'finalize',
+      message: 'Finalizing preview...',
+      percent: 95
+    });
 
     await dependencies.moveFile(temporaryPreviewPath, previewPath);
   } catch (error) {

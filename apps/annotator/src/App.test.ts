@@ -280,7 +280,15 @@ describe('annotator app', () => {
     await flushPromises();
     await nextTick();
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/open-video', undefined);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/open-video',
+      expect.objectContaining({
+        headers: {
+          Accept: 'application/x-ndjson'
+        }
+      })
+    );
   });
 
   it('defaults to Media mode, auto-switches to Annotate after open, and allows manual mode changes', async () => {
@@ -430,8 +438,24 @@ describe('annotator app', () => {
     await nextTick();
 
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('movie.mp4');
-    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/open-video', undefined);
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/open-video', undefined);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/open-video',
+      expect.objectContaining({
+        headers: {
+          Accept: 'application/x-ndjson'
+        }
+      })
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/open-video',
+      expect.objectContaining({
+        headers: {
+          Accept: 'application/x-ndjson'
+        }
+      })
+    );
   });
 
   it('prompts to export unexported filters before opening another video and resets the timeline', async () => {
@@ -483,7 +507,14 @@ describe('annotator app', () => {
     }
     await expect(readBlobText(lastExportBlob)).resolves.toContain('"type": "mute"');
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith('/api/open-video', undefined);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/open-video',
+      expect.objectContaining({
+        headers: {
+          Accept: 'application/x-ndjson'
+        }
+      })
+    );
     expect(wrapper.get('[data-testid="top-bar"]').text()).toContain('next-movie.mp4');
 
     await switchMode(wrapper, 'annotate');
@@ -522,31 +553,50 @@ describe('annotator app', () => {
     expect(wrapper.findAll('.segment-card')).toHaveLength(1);
   });
 
-  it('shows a preparing state while the backend opens a video', async () => {
+  it('shows streamed import progress while the backend opens a video', async () => {
     const wrapper = mount(App);
-    const openRequest = createDeferred<Response>();
-    fetchMock.mockReturnValueOnce(openRequest.promise);
+    const openVideoResponse = createNdjsonResponse();
+    fetchMock.mockResolvedValueOnce(openVideoResponse.response);
 
     await wrapper.get('[data-testid="video-dropzone"]').trigger('click');
     await nextTick();
-    expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Preparing video...');
+    expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Waiting for video selection...');
+    expect(wrapper.get('[data-testid="open-video-button"]').text()).toContain('Importing 0%');
 
-    openRequest.resolve(
-      mockJsonResponse({
+    openVideoResponse.push({
+      type: 'progress',
+      progress: {
+        phase: 'check-cache',
+        message: 'Checking preview cache...',
+        percent: 42
+      }
+    });
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Checking preview cache...');
+    expect(wrapper.get('[data-testid="open-video-button"]').text()).toContain('Importing 42%');
+    expect(wrapper.get('[data-testid="open-video-progress-fill"]').attributes('style')).toContain('42%');
+
+    openVideoResponse.push({
+      type: 'result',
+      result: {
         cancelled: false,
         inputPath: 'C:\\Movies\\movie.mp4',
         name: 'movie.mp4',
         outputPath: 'C:\\Movies\\movie.cleaned.mp4',
         playbackUrl: '/api/media/token-1',
         playbackSource: 'original'
-      })
-    );
+      }
+    });
+    openVideoResponse.close();
 
     await flushPromises();
     await nextTick();
     expect(wrapper.find('[data-testid="mode-panel-annotate"]').exists()).toBe(true);
     await switchMode(wrapper, 'media');
     expect(wrapper.get('[data-testid="open-video-button"]').text()).toContain('Open Video');
+    expect(wrapper.find('[data-testid="open-video-progress-fill"]').exists()).toBe(false);
   });
 
   it('shows backend validation errors for unsupported formats and keeps processing disabled', async () => {
