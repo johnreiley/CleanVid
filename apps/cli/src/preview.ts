@@ -10,15 +10,23 @@ import {
 } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { runCommand, type ProbeResponse } from './ffmpeg.js';
+import { runCommand, type CommandResult, type ProbeResponse } from './ffmpeg.js';
 
 const DIRECT_PLAY_EXTENSIONS = new Set(['.mp4', '.m4v', '.mov', '.webm']);
 const PREPROCESS_EXTENSION = '.mkv';
 const PREVIEW_CACHE_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+const PREVIEW_CACHE_SCHEMA_VERSION = 2;
+const PREVIEW_ENCODER_PROBE_SIZE = '128x72';
+const PREVIEW_WEAK_SCALE_FILTER =
+  'scale=854:480:force_original_aspect_ratio=decrease:flags=fast_bilinear';
+const PREVIEW_NORMAL_AUDIO_BITRATE = '128k';
+const PREVIEW_WEAK_AUDIO_BITRATE = '96k';
 const REMUXABLE_VIDEO_CODECS = new Set(['h264']);
 const REMUXABLE_AUDIO_CODECS = new Set(['aac', 'mp3']);
 
 export type PlaybackSource = 'original' | 'preview';
+export type PreviewVideoEncoder = 'h264_nvenc' | 'h264_amf' | 'h264_qsv' | 'libx264';
+export type PreviewOutputProfile = 'normal' | 'weak-480p';
 
 export interface PreviewPreparationResult {
   inputPath: string;
@@ -27,22 +35,43 @@ export interface PreviewPreparationResult {
   name: string;
 }
 
+export interface PreviewEncodePlan {
+  encoder: PreviewVideoEncoder;
+  weakMachine: boolean;
+  profile: PreviewOutputProfile;
+}
+
+export interface PreviewEncoderAvailability {
+  h264_nvenc: boolean;
+  h264_amf: boolean;
+  h264_qsv: boolean;
+}
+
 export interface PreviewPreparationDependencies {
   ensureCacheDirectory: () => Promise<string>;
   getInputStats: (inputPath: string) => Promise<Pick<Stats, 'size' | 'mtimeMs'>>;
+  getLogicalCpuCount: () => number;
   probeStreams: (inputPath: string) => Promise<ProbeResponse>;
   pathExists: (candidatePath: string) => Promise<boolean>;
   pruneCacheDirectory: (cacheDirectory: string) => Promise<void>;
+  resolveEncodePlans: (logicalCpuCount: number) => Promise<PreviewEncodePlan[]>;
   remuxPreview: (inputPath: string, outputPath: string) => Promise<void>;
-  encodePreview: (inputPath: string, outputPath: string) => Promise<void>;
+  encodePreview: (
+    inputPath: string,
+    outputPath: string,
+    plans: PreviewEncodePlan[]
+  ) => Promise<void>;
   moveFile: (sourcePath: string, targetPath: string) => Promise<void>;
   removeFile: (targetPath: string) => Promise<void>;
 }
+
+let previewEncoderAvailabilityPromise: Promise<PreviewEncoderAvailability> | null = null;
 
 function createDefaultPreviewPreparationDependencies(): PreviewPreparationDependencies {
   return {
     ensureCacheDirectory: ensurePreviewCacheDirectory,
     getInputStats: async (inputPath) => stat(inputPath),
+    getLogicalCpuCount,
     probeStreams,
     pathExists: async (candidatePath) => {
       try {
@@ -53,6 +82,7 @@ function createDefaultPreviewPreparationDependencies(): PreviewPreparationDepend
       }
     },
     pruneCacheDirectory: prunePreviewCacheDirectory,
+    resolveEncodePlans,
     remuxPreview,
     encodePreview,
     moveFile: rename,
@@ -72,10 +102,19 @@ export function requiresPreviewGeneration(extension: string): boolean {
 
 export function buildPreviewCacheKey(
   inputPath: string,
-  stats: Pick<Stats, 'size' | 'mtimeMs'>
+  stats: Pick<Stats, 'size' | 'mtimeMs'>,
+  profile: PreviewOutputProfile = 'normal'
 ): string {
   return createHash('sha1')
-    .update(JSON.stringify([path.resolve(inputPath), stats.size, Math.trunc(stats.mtimeMs)]))
+    .update(
+      JSON.stringify([
+        PREVIEW_CACHE_SCHEMA_VERSION,
+        path.resolve(inputPath),
+        stats.size,
+        Math.trunc(stats.mtimeMs),
+        profile
+      ])
+    )
     .digest('hex');
 }
 
@@ -146,6 +185,229 @@ export function canRemuxToBrowserSafeMp4(probeResponse: ProbeResponse): boolean 
   return videoCompatible && audioCompatible;
 }
 
+export function getLogicalCpuCount(): number {
+  const availableParallelism = (os as typeof os & {
+    availableParallelism?: () => number;
+  }).availableParallelism;
+
+  if (typeof availableParallelism === 'function') {
+    return Math.max(availableParallelism(), 1);
+  }
+
+  return Math.max(os.cpus().length, 1);
+}
+
+function buildPreviewEncoderProbeArgs(encoder: Exclude<PreviewVideoEncoder, 'libx264'>): string[] {
+  const baseArgs = [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    `color=c=black:s=${PREVIEW_ENCODER_PROBE_SIZE}:r=1`,
+    '-frames:v',
+    '1',
+    '-an'
+  ];
+
+  switch (encoder) {
+    case 'h264_nvenc':
+      return [
+        ...baseArgs,
+        '-c:v',
+        'h264_nvenc',
+        '-preset',
+        'p1',
+        '-rc',
+        'vbr',
+        '-cq',
+        '31',
+        '-b:v',
+        '0',
+        '-pix_fmt',
+        'yuv420p',
+        '-f',
+        'null',
+        '-'
+      ];
+    case 'h264_amf':
+      return [
+        ...baseArgs,
+        '-c:v',
+        'h264_amf',
+        '-usage',
+        'transcoding',
+        '-quality',
+        'speed',
+        '-rc',
+        'qvbr',
+        '-qvbr_quality_level',
+        '30',
+        '-pix_fmt',
+        'nv12',
+        '-f',
+        'null',
+        '-'
+      ];
+    case 'h264_qsv':
+      return [
+        ...baseArgs,
+        '-c:v',
+        'h264_qsv',
+        '-preset',
+        'veryfast',
+        '-global_quality',
+        '28',
+        '-look_ahead',
+        '0',
+        '-pix_fmt',
+        'nv12',
+        '-f',
+        'null',
+        '-'
+      ];
+  }
+}
+
+async function canUsePreviewEncoder(
+  encoder: Exclude<PreviewVideoEncoder, 'libx264'>,
+  runCommandImpl: (command: string, args: string[]) => Promise<CommandResult>
+): Promise<boolean> {
+  try {
+    await runCommandImpl('ffmpeg', buildPreviewEncoderProbeArgs(encoder));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function detectAvailablePreviewEncoders(
+  runCommandImpl: (command: string, args: string[]) => Promise<CommandResult> = runCommand
+): Promise<PreviewEncoderAvailability> {
+  const [h264_nvenc, h264_amf, h264_qsv] = await Promise.all([
+    canUsePreviewEncoder('h264_nvenc', runCommandImpl),
+    canUsePreviewEncoder('h264_amf', runCommandImpl),
+    canUsePreviewEncoder('h264_qsv', runCommandImpl)
+  ]);
+
+  return {
+    h264_nvenc,
+    h264_amf,
+    h264_qsv
+  };
+}
+
+export function resetPreviewEncoderAvailabilityCache() {
+  previewEncoderAvailabilityPromise = null;
+}
+
+async function getPreviewEncoderAvailability(): Promise<PreviewEncoderAvailability> {
+  if (!previewEncoderAvailabilityPromise) {
+    previewEncoderAvailabilityPromise = detectAvailablePreviewEncoders();
+  }
+
+  return previewEncoderAvailabilityPromise;
+}
+
+export function buildPreviewEncodePlans(
+  availability: PreviewEncoderAvailability,
+  logicalCpuCount: number
+): PreviewEncodePlan[] {
+  const hardwareEncoders: PreviewVideoEncoder[] = [];
+
+  if (availability.h264_nvenc) {
+    hardwareEncoders.push('h264_nvenc');
+  }
+
+  if (availability.h264_amf) {
+    hardwareEncoders.push('h264_amf');
+  }
+
+  if (availability.h264_qsv) {
+    hardwareEncoders.push('h264_qsv');
+  }
+
+  const weakMachine = logicalCpuCount <= 4 || hardwareEncoders.length === 0;
+  const profile: PreviewOutputProfile = weakMachine ? 'weak-480p' : 'normal';
+  const encoderOrder: PreviewVideoEncoder[] = [...hardwareEncoders, 'libx264'];
+
+  return encoderOrder.map((encoder): PreviewEncodePlan => ({
+    encoder,
+    weakMachine,
+    profile
+  }));
+}
+
+export async function resolveEncodePlans(logicalCpuCount = getLogicalCpuCount()): Promise<PreviewEncodePlan[]> {
+  const availability = await getPreviewEncoderAvailability();
+  return buildPreviewEncodePlans(availability, logicalCpuCount);
+}
+
+function buildPreviewVideoArgs(plan: PreviewEncodePlan): string[] {
+  switch (plan.encoder) {
+    case 'h264_nvenc':
+      return ['-c:v', 'h264_nvenc', '-preset', 'p1', '-rc', 'vbr', '-cq', '31', '-b:v', '0', '-pix_fmt', 'yuv420p'];
+    case 'h264_amf':
+      return [
+        '-c:v',
+        'h264_amf',
+        '-usage',
+        'transcoding',
+        '-quality',
+        'speed',
+        '-rc',
+        'qvbr',
+        '-qvbr_quality_level',
+        '30',
+        '-pix_fmt',
+        'nv12'
+      ];
+    case 'h264_qsv':
+      return [
+        '-c:v',
+        'h264_qsv',
+        '-preset',
+        'veryfast',
+        '-global_quality',
+        '28',
+        '-look_ahead',
+        '0',
+        '-pix_fmt',
+        'nv12'
+      ];
+    case 'libx264':
+      return plan.weakMachine
+        ? ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '30', '-pix_fmt', 'yuv420p']
+        : ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-pix_fmt', 'yuv420p'];
+  }
+}
+
+export function buildPreviewEncodeArgs(
+  inputPath: string,
+  outputPath: string,
+  plan: PreviewEncodePlan
+): string[] {
+  const args = ['-y', '-i', inputPath, '-map', '0:v:0', '-map', '0:a?'];
+
+  if (plan.weakMachine) {
+    args.push('-vf', PREVIEW_WEAK_SCALE_FILTER);
+  }
+
+  args.push(
+    ...buildPreviewVideoArgs(plan),
+    '-c:a',
+    'aac',
+    '-b:a',
+    plan.weakMachine ? PREVIEW_WEAK_AUDIO_BITRATE : PREVIEW_NORMAL_AUDIO_BITRATE,
+    '-movflags',
+    '+faststart',
+    outputPath
+  );
+
+  return args;
+}
+
 export async function remuxPreview(inputPath: string, outputPath: string): Promise<void> {
   await runCommand('ffmpeg', [
     '-y',
@@ -163,31 +425,40 @@ export async function remuxPreview(inputPath: string, outputPath: string): Promi
   ]);
 }
 
-export async function encodePreview(inputPath: string, outputPath: string): Promise<void> {
-  await runCommand('ffmpeg', [
-    '-y',
-    '-i',
+export async function encodePreviewWithPlans(
+  inputPath: string,
+  outputPath: string,
+  plans: PreviewEncodePlan[],
+  runCommandImpl: (command: string, args: string[]) => Promise<CommandResult> = runCommand
+): Promise<void> {
+  let lastError: unknown = null;
+
+  for (const plan of plans) {
+    try {
+      await runCommandImpl('ffmpeg', buildPreviewEncodeArgs(inputPath, outputPath, plan));
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError instanceof Error) {
+    throw lastError;
+  }
+
+  throw new Error('No preview encoders were available.');
+}
+
+export async function encodePreview(
+  inputPath: string,
+  outputPath: string,
+  plans?: PreviewEncodePlan[]
+): Promise<void> {
+  await encodePreviewWithPlans(
     inputPath,
-    '-map',
-    '0:v:0',
-    '-map',
-    '0:a?',
-    '-c:v',
-    'libx264',
-    '-preset',
-    'veryfast',
-    '-crf',
-    '28',
-    '-pix_fmt',
-    'yuv420p',
-    '-c:a',
-    'aac',
-    '-b:a',
-    '128k',
-    '-movflags',
-    '+faststart',
-    outputPath
-  ]);
+    outputPath,
+    plans && plans.length > 0 ? plans : await resolveEncodePlans()
+  );
 }
 
 export async function preparePreviewPlayback(
@@ -217,8 +488,16 @@ export async function preparePreviewPlayback(
     // Best-effort cache pruning should never block opening a video.
   });
 
+  const logicalCpuCount = dependencies.getLogicalCpuCount();
+  const encodePlans = await dependencies.resolveEncodePlans(logicalCpuCount);
+  const preferredPlan = encodePlans[0];
+
+  if (!preferredPlan) {
+    throw new Error('Unable to determine a preview encoding strategy.');
+  }
+
   const inputStats = await dependencies.getInputStats(resolvedInputPath);
-  const cacheKey = buildPreviewCacheKey(resolvedInputPath, inputStats);
+  const cacheKey = buildPreviewCacheKey(resolvedInputPath, inputStats, preferredPlan.profile);
   const previewPath = path.join(cacheDirectory, `${cacheKey}.preview.mp4`);
 
   if (await dependencies.pathExists(previewPath)) {
@@ -242,10 +521,10 @@ export async function preparePreviewPlayback(
       try {
         await dependencies.remuxPreview(resolvedInputPath, temporaryPreviewPath);
       } catch {
-        await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath);
+        await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath, encodePlans);
       }
     } else {
-      await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath);
+      await dependencies.encodePreview(resolvedInputPath, temporaryPreviewPath, encodePlans);
     }
 
     await dependencies.moveFile(temporaryPreviewPath, previewPath);
