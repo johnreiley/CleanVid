@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   FilterValidationError,
+  buildProfanitySuggestions,
   buildKeptSpans,
+  extractMatchedProfanityTerms,
   buildTimeline,
+  mergeProfanitySuggestions,
   normalizeFilters,
   parseFilterFile,
   serializeFilterFile
@@ -120,6 +123,82 @@ describe('timeline planning', () => {
         end: 30,
         muteRanges: []
       }
+    ]);
+  });
+});
+
+describe('profanity analysis helpers', () => {
+  it('detects punctuation-heavy and mixed-case subtitle edge cases', () => {
+    expect(extractMatchedProfanityTerms('Oh, my God!')).toEqual(
+      expect.arrayContaining(['oh my god'])
+    );
+    expect(extractMatchedProfanityTerms('DEAR... LORD?!')).toEqual(
+      expect.arrayContaining(['dear lord'])
+    );
+    expect(extractMatchedProfanityTerms('mother-fucker')).toEqual(
+      expect.arrayContaining(['mother fucker'])
+    );
+  });
+
+  it('detects supplemental profanity terms from the bad word dictionary', () => {
+    expect(extractMatchedProfanityTerms('That fuckin scene had a blow-job gag.')).toEqual(
+      expect.arrayContaining(['blow job', 'fuckin'])
+    );
+  });
+
+  it('detects spaced-out dictionary variants after normalization', () => {
+    expect(extractMatchedProfanityTerms('Why would you say f u c k e r on air?')).toEqual(
+      expect.arrayContaining(['f u c k e r'])
+    );
+  });
+
+  it('creates profanity suggestions from normalized cue text', () => {
+    const suggestions = buildProfanitySuggestions(
+      [
+        { start: 10, end: 11, text: '[MUSIC] This is bullshit.' },
+        { start: 12, end: 13, text: 'Nothing to flag here.' }
+      ],
+      'embedded'
+    );
+
+    expect(suggestions).toEqual([
+      expect.objectContaining({
+        start: 10,
+        end: 11,
+        source: 'embedded',
+        matchedTerms: ['shit'],
+        snippet: '[MUSIC] This is bullshit.'
+      })
+    ]);
+  });
+
+  it('merges overlapping profanity suggestions after padding', () => {
+    const merged = mergeProfanitySuggestions([
+      {
+        id: 'one',
+        start: 5,
+        end: 5.4,
+        snippet: 'damn',
+        source: 'embedded',
+        matchedTerms: ['damn']
+      },
+      {
+        id: 'two',
+        start: 5.45,
+        end: 5.8,
+        snippet: 'shit',
+        source: 'provided',
+        matchedTerms: ['shit']
+      }
+    ]);
+
+    expect(merged).toEqual([
+      expect.objectContaining({
+        id: 'suggestion-1',
+        source: 'embedded',
+        sources: ['embedded', 'provided'],
+        matchedTerms: ['damn', 'shit']
+      })
     ]);
   });
 });

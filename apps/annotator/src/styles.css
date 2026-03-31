@@ -692,12 +692,21 @@ button {
 }
 
 .media-action-row {
+  display: flex;
+  gap: 0.55rem;
   flex-wrap: wrap;
 }
 
 .file-path-field {
   display: grid;
   gap: 0.35rem;
+}
+
+.file-path-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: stretch;
 }
 
 .field-label-with-tooltip {
@@ -781,6 +790,11 @@ button {
   box-shadow: inset 0 0 0 1px rgba(111, 131, 255, 0.16);
 }
 
+.output-path-browse-button {
+  min-width: 5.5rem;
+  justify-content: center;
+}
+
 .process-button {
   position: relative;
   overflow: hidden;
@@ -816,19 +830,129 @@ button {
   cursor: progress;
 }
 
-.coming-soon-section {
-  align-content: start;
+.profanity-analysis-section,
+.profanity-option-list {
+  display: grid;
+  gap: 0.65rem;
 }
 
-.coming-soon-button {
-  min-height: 2.2rem;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-secondary);
+.profanity-modal-panel .profanity-analysis-section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.profanity-modal-launch-button {
+  width: 100%;
+  margin-top: 0.85rem;
+}
+
+.profanity-modal-close-button {
+  justify-self: end;
+}
+
+.profanity-option-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: center;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.profanity-option-row input {
+  margin: 0;
+}
+
+.profanity-option-row-disabled {
+  opacity: 0.55;
+}
+
+.profanity-capability-notice {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(207, 126, 82, 0.45);
+  background: rgba(207, 126, 82, 0.1);
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.profanity-capability-notice p {
+  margin: 0;
+}
+
+.profanity-suggestion-list {
+  max-height: 10rem;
+}
+
+.profanity-suggestion-card {
+  padding: 0.48rem;
+  gap: 0.38rem;
+}
+
+.profanity-suggestion-surface {
+  width: 100%;
+  padding: 0;
   text-align: left;
-  cursor: not-allowed;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  gap: 0.28rem;
+}
+
+.profanity-suggestion-card .segment-card-top {
+  gap: 0.32rem;
+}
+
+.profanity-suggestion-card .segment-type-label {
+  padding: 0.05rem 0.16rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+}
+
+.profanity-suggestion-card .segment-time-row {
+  gap: 0.2rem;
+  font-size: 0.77rem;
+}
+
+.profanity-suggestion-card .segment-duration {
+  font-size: 0.69rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profanity-suggestion-snippet {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(3, 6, 10, 0.72);
+}
+
+.profanity-modal-backdrop {
+  backdrop-filter: blur(3px);
+}
+
+.profanity-modal-panel {
+  width: min(42rem, 100%);
+  max-height: min(90vh, 48rem);
+  padding: 1.25rem;
+  border-radius: 0.45rem;
 }
 
 .video-stage {
@@ -1066,9 +1190,6 @@ button {
   gap: 0.55rem;
   justify-content: space-between;
   padding: 0.4rem 0.5rem;
-  border: 1px solid rgba(143, 155, 179, 0.14);
-  border-radius: 0;
-  background: rgba(7, 10, 16, 0.86);
   pointer-events: auto;
 }
 

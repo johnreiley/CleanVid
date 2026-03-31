@@ -5,6 +5,9 @@ import {
   normalizeFilters,
   parseFilterFile,
   serializeFilterFile,
+  type ProfanityAnalysisProgressEvent,
+  type ProfanityAnalysisResult,
+  type ProfanitySuggestion,
   type FilterSegment,
   type FilterType,
   type TimelineSegment
@@ -29,6 +32,36 @@ interface ProcessResponse {
   filtersPath?: string;
   message: string;
 }
+
+interface SelectOutputPathResponse {
+  cancelled: boolean;
+  outputPath?: string;
+}
+
+interface SelectSubtitlePathResponse {
+  cancelled: boolean;
+  subtitlePath?: string;
+}
+
+interface AnalyzeProfanityResultStreamEvent {
+  type: 'result';
+  result: ProfanityAnalysisResult;
+}
+
+interface AnalyzeProfanityProgressStreamEvent {
+  type: 'progress';
+  progress: ProfanityAnalysisProgressEvent;
+}
+
+interface AnalyzeProfanityErrorStreamEvent {
+  type: 'error';
+  message: string;
+}
+
+type AnalyzeProfanityStreamEvent =
+  | AnalyzeProfanityProgressStreamEvent
+  | AnalyzeProfanityResultStreamEvent
+  | AnalyzeProfanityErrorStreamEvent;
 
 interface ProcessProgressPayload {
   phase: 'read-filters' | 'probe-media' | 'plan-timeline' | 'build-graph' | 'encode' | 'done';
@@ -108,7 +141,11 @@ export function useAnnotatorState() {
   const videoDuration = ref(0);
   const isPlaying = ref(false);
   const isOpeningVideo = ref(false);
+  const isSelectingOutputPath = ref(false);
+  const isSelectingSubtitlePath = ref(false);
+  const isAnalyzingProfanity = ref(false);
   const isProcessing = ref(false);
+  const analyzeProfanityProgressPercent = ref(0);
   const processProgressPercent = ref(0);
   const previewPlaybackEnabled = ref(true);
   const previewActiveType = ref<FilterType | null>(null);
@@ -117,6 +154,8 @@ export function useAnnotatorState() {
   const pendingType = ref<FilterType | null>(null);
   const segments = ref<EditableSegment[]>([]);
   const selectedSegmentId = ref<string | null>(null);
+  const profanitySuggestions = ref<ProfanitySuggestion[]>([]);
+  const profanitySubtitlePath = ref('');
   const statusMessage = ref('Open a video to begin annotating.');
   const errorMessage = ref('');
   const persistedFiltersSignature = ref('[]');
@@ -240,6 +279,9 @@ export function useAnnotatorState() {
 
   const canMark = computed(() => videoElement.value !== null && effectiveDuration.value > 0);
   const canExport = computed(() => effectiveDuration.value > 0 && segmentIssues.value.length === 0);
+  const canAnalyzeProfanity = computed(
+    () => inputPath.value !== '' && !isOpeningVideo.value && !isAnalyzingProfanity.value && !isProcessing.value
+  );
   const canProcessVideo = computed(
     () =>
       inputPath.value !== '' &&
@@ -264,6 +306,12 @@ export function useAnnotatorState() {
   );
   const markerCountLabel = computed(
     () => `${sortedSegments.value.length} marker${sortedSegments.value.length === 1 ? '' : 's'}`
+  );
+  const profanitySuggestionCountLabel = computed(
+    () =>
+      `${profanitySuggestions.value.length} suggestion${
+        profanitySuggestions.value.length === 1 ? '' : 's'
+      }`
   );
 
   function clearFeedback() {
@@ -369,6 +417,96 @@ export function useAnnotatorState() {
     throw new Error('Processing stream ended unexpectedly.');
   }
 
+  async function requestAnalyzeProfanityWithProgress(
+    body: Record<string, unknown>
+  ): Promise<ProfanityAnalysisResult> {
+    const response = await fetch('/api/analyze-profanity', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/x-ndjson',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const contentType = response.headers.get('content-type') ?? '';
+
+    if (!contentType.includes('application/x-ndjson') || !response.body) {
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'The request failed.');
+      }
+
+      return payload as ProfanityAnalysisResult;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let result: ProfanityAnalysisResult | null = null;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+
+      let newlineIndex = buffer.indexOf('\n');
+
+      while (newlineIndex !== -1) {
+        const line = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+
+        if (line !== '') {
+          const event = JSON.parse(line) as AnalyzeProfanityStreamEvent;
+
+          if (event.type === 'progress') {
+            analyzeProfanityProgressPercent.value = Math.max(
+              analyzeProfanityProgressPercent.value,
+              event.progress.percent ?? 0
+            );
+            statusMessage.value = event.progress.message;
+          } else if (event.type === 'result') {
+            analyzeProfanityProgressPercent.value = 100;
+            result = event.result;
+          } else {
+            throw new Error(event.message);
+          }
+        }
+
+        newlineIndex = buffer.indexOf('\n');
+      }
+
+      if (done) {
+        break;
+      }
+    }
+
+    const trailingLine = buffer.trim();
+
+    if (trailingLine !== '') {
+      const event = JSON.parse(trailingLine) as AnalyzeProfanityStreamEvent;
+
+      if (event.type === 'progress') {
+        analyzeProfanityProgressPercent.value = Math.max(
+          analyzeProfanityProgressPercent.value,
+          event.progress.percent ?? 0
+        );
+        statusMessage.value = event.progress.message;
+      } else if (event.type === 'result') {
+        analyzeProfanityProgressPercent.value = 100;
+        result = event.result;
+      } else {
+        throw new Error(event.message);
+      }
+    }
+
+    if (result) {
+      return result;
+    }
+
+    throw new Error('Analysis stream ended unexpectedly.');
+  }
+
   function setError(message: string) {
     errorMessage.value = message;
   }
@@ -413,11 +551,18 @@ export function useAnnotatorState() {
     clearPreviewMute();
   }
 
+  function clearProfanitySuggestions() {
+    profanitySuggestions.value = [];
+    analyzeProfanityProgressPercent.value = 0;
+  }
+
   function clearFiltersForNextVideo() {
     segments.value = [];
     selectedSegmentId.value = null;
     importedMovieDuration.value = 0;
     markFiltersPersisted([]);
+    clearProfanitySuggestions();
+    profanitySubtitlePath.value = '';
   }
 
   function applyPreviewPlayback() {
@@ -726,6 +871,136 @@ export function useAnnotatorState() {
     outputPath.value = value;
   }
 
+  async function selectProfanitySubtitlePath() {
+    clearFeedback();
+
+    if (isOpeningVideo.value || isProcessing.value || inputPath.value === '') {
+      return;
+    }
+
+    isSelectingSubtitlePath.value = true;
+
+    try {
+      const response = await requestJson<SelectSubtitlePathResponse>('/api/select-subtitle-path', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.cancelled) {
+        return;
+      }
+
+      profanitySubtitlePath.value = response.subtitlePath ?? '';
+
+      if (profanitySubtitlePath.value !== '') {
+        statusMessage.value = `Selected subtitle file ${profanitySubtitlePath.value}.`;
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to select a subtitle file.');
+    } finally {
+      isSelectingSubtitlePath.value = false;
+    }
+  }
+
+  function clearProfanitySubtitlePath() {
+    profanitySubtitlePath.value = '';
+    statusMessage.value = 'Cleared the selected subtitle file.';
+  }
+
+  async function analyzeProfanity() {
+    clearFeedback();
+
+    if (!canAnalyzeProfanity.value) {
+      if (inputPath.value === '') {
+        setError('Open a local source file before analyzing profanity.');
+      }
+
+      return;
+    }
+
+    isAnalyzingProfanity.value = true;
+    clearProfanitySuggestions();
+    statusMessage.value = `Analyzing ${inputName.value || 'opened video'} for profanity...`;
+
+    try {
+      const result = await requestAnalyzeProfanityWithProgress({
+        inputPath: inputPath.value,
+        movieTitle: movieTitle.value,
+        subtitlePath: profanitySubtitlePath.value.trim()
+      });
+
+      profanitySuggestions.value = result.suggestions;
+      statusMessage.value = result.message;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to analyze profanity.');
+    } finally {
+      isAnalyzingProfanity.value = false;
+      analyzeProfanityProgressPercent.value = 0;
+    }
+  }
+
+  function discardProfanitySuggestions() {
+    clearProfanitySuggestions();
+    statusMessage.value = 'Discarded profanity suggestions.';
+  }
+
+  function applyProfanitySuggestions() {
+    clearFeedback();
+
+    if (profanitySuggestions.value.length === 0) {
+      return;
+    }
+
+    const nextSegments = profanitySuggestions.value.map((suggestion) => ({
+      id: createSegmentId(),
+      type: 'mute' as const,
+      start: clampToDuration(suggestion.start),
+      end: clampToDuration(suggestion.end)
+    }));
+
+    segments.value = sortSegments([...segments.value, ...nextSegments]);
+    selectedSegmentId.value = nextSegments[0]?.id ?? null;
+    clearProfanitySuggestions();
+    statusMessage.value = `Applied ${nextSegments.length} profanity suggestion${
+      nextSegments.length === 1 ? '' : 's'
+    } as mute filters.`;
+  }
+
+  async function selectOutputPath() {
+    clearFeedback();
+
+    if (isOpeningVideo.value || isProcessing.value || inputPath.value === '') {
+      return;
+    }
+
+    isSelectingOutputPath.value = true;
+
+    try {
+      const response = await requestJson<SelectOutputPathResponse>('/api/select-output-path', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          outputPath: outputPath.value.trim()
+        })
+      });
+
+      if (response.cancelled || !response.outputPath) {
+        return;
+      }
+
+      outputPath.value = response.outputPath;
+      statusMessage.value = `Selected output path ${response.outputPath}.`;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to select an output path.');
+    } finally {
+      isSelectingOutputPath.value = false;
+    }
+  }
+
   async function processLinkedVideo() {
     clearFeedback();
 
@@ -924,7 +1199,11 @@ export function useAnnotatorState() {
     effectiveDuration,
     isPlaying,
     isOpeningVideo,
+    isSelectingOutputPath,
+    isSelectingSubtitlePath,
+    isAnalyzingProfanity,
     isProcessing,
+    analyzeProfanityProgressPercent,
     processProgressPercent,
     previewPlaybackEnabled,
     previewActiveType,
@@ -933,13 +1212,17 @@ export function useAnnotatorState() {
     pendingType,
     statusMessage,
     errorMessage,
+    profanitySuggestions,
+    profanitySubtitlePath,
     sortedSegments,
     segmentIssues,
+    canAnalyzeProfanity,
     canProcessVideo,
     selectedSegmentId,
     activeTypeLabel,
     pendingTypeLabel,
     markerCountLabel,
+    profanitySuggestionCountLabel,
     registerVideoElement,
     handleLoadedMetadata,
     handleTimeUpdate,
@@ -956,7 +1239,13 @@ export function useAnnotatorState() {
     togglePreviewPlayback,
     openVideo,
     loadFilterFile,
+    selectProfanitySubtitlePath,
+    clearProfanitySubtitlePath,
+    analyzeProfanity,
+    discardProfanitySuggestions,
+    applyProfanitySuggestions,
     updateOutputPath,
+    selectOutputPath,
     processLinkedVideo,
     exportFilters,
     hasUnexportedFilters,

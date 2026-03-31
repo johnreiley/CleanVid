@@ -14,13 +14,16 @@ import {
   FilterValidationError,
   normalizeFilters,
   serializeFilterFile,
-  type FilterSegment
+  type FilterSegment,
+  type ProfanityAnalysisProgressEvent,
+  type ProfanityAnalysisResult
 } from '../../packages/shared/src/index';
 import {
   processMedia,
   type ProcessMediaOptions,
   type ProcessMediaProgressEvent
 } from '../cli/src/processor';
+import { analyzeProfanity } from './src/profanity-analysis';
 import {
   preparePreviewPlayback,
   type PlaybackSource,
@@ -30,6 +33,10 @@ import {
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const execFile = promisify(execFileCallback);
 const VIDEO_DIALOG_FILTER =
+  'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
+const SUBTITLE_DIALOG_FILTER =
+  'Subtitle Files|*.srt;*.vtt;*.ass;*.ssa|All Files|*.*';
+const OUTPUT_DIALOG_FILTER =
   'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
 
 export interface OpenVideoResult {
@@ -48,11 +55,29 @@ export interface ProcessRequestBody {
   movieTitle?: string;
 }
 
+export interface AnalyzeProfanityRequestBody {
+  inputPath: string;
+  movieTitle?: string;
+  subtitlePath?: string;
+}
+
+export interface SelectOutputPathResult {
+  cancelled: boolean;
+  outputPath?: string;
+}
+
+export interface SelectSubtitlePathResult {
+  cancelled: boolean;
+  subtitlePath?: string;
+}
+
 export interface ProcessResult {
   outputPath: string;
   filtersPath: string;
   message: string;
 }
+
+export interface AnalyzeProfanityResult extends ProfanityAnalysisResult {}
 
 export interface ProcessStreamProgressEvent {
   type: 'progress';
@@ -74,6 +99,26 @@ export type ProcessStreamEvent =
   | ProcessStreamResultEvent
   | ProcessStreamErrorEvent;
 
+export interface AnalyzeProfanityStreamProgressEvent {
+  type: 'progress';
+  progress: ProfanityAnalysisProgressEvent;
+}
+
+export interface AnalyzeProfanityStreamResultEvent {
+  type: 'result';
+  result: AnalyzeProfanityResult;
+}
+
+export interface AnalyzeProfanityStreamErrorEvent {
+  type: 'error';
+  message: string;
+}
+
+export type AnalyzeProfanityStreamEvent =
+  | AnalyzeProfanityStreamProgressEvent
+  | AnalyzeProfanityStreamResultEvent
+  | AnalyzeProfanityStreamErrorEvent;
+
 interface TempFilterFile {
   filtersPath: string;
   cleanup: () => Promise<void>;
@@ -86,10 +131,23 @@ interface ProcessRequestDependencies {
   writeExportedFilterFile: (outputPath: string, content: string) => Promise<string>;
 }
 
+interface AnalyzeProfanityRequestDependencies {
+  analyzeProfanityImpl: typeof analyzeProfanity;
+  ensureInputExists: (inputPath: string) => Promise<void>;
+}
+
 interface OpenVideoDependencies {
   selectFilePath: () => Promise<string | null>;
   preparePlaybackFile: (inputPath: string) => Promise<PreviewPreparationResult>;
   registerPlaybackPath: (filePath: string) => string;
+}
+
+interface SelectOutputPathDependencies {
+  selectOutputPath: (suggestedPath: string) => Promise<string | null>;
+}
+
+interface SelectSubtitlePathDependencies {
+  selectSubtitlePath: () => Promise<string | null>;
 }
 
 interface PlaybackRegistry {
@@ -109,6 +167,10 @@ class HttpError extends Error {
 
 function encodePowerShellCommand(script: string): string {
   return Buffer.from(script, 'utf16le').toString('base64');
+}
+
+function escapePowerShellSingleQuotedString(value: string): string {
+  return value.replace(/'/g, "''");
 }
 
 export function deriveDefaultOutputPath(inputPath: string): string {
@@ -163,11 +225,30 @@ function getDefaultProcessRequestDependencies(): ProcessRequestDependencies {
   };
 }
 
+function getDefaultAnalyzeProfanityRequestDependencies(): AnalyzeProfanityRequestDependencies {
+  return {
+    analyzeProfanityImpl: analyzeProfanity,
+    ensureInputExists
+  };
+}
+
 function getDefaultOpenVideoDependencies(): OpenVideoDependencies {
   return {
     selectFilePath: openNativeVideoFileDialog,
     preparePlaybackFile: preparePreviewPlayback,
     registerPlaybackPath: defaultPlaybackRegistry.registerPlaybackPath
+  };
+}
+
+function getDefaultSelectOutputPathDependencies(): SelectOutputPathDependencies {
+  return {
+    selectOutputPath: openNativeOutputFileDialog
+  };
+}
+
+function getDefaultSelectSubtitlePathDependencies(): SelectSubtitlePathDependencies {
+  return {
+    selectSubtitlePath: openNativeSubtitleFileDialog
   };
 }
 
@@ -222,6 +303,90 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
   return selectedPath === '' ? null : selectedPath;
 }
 
+export async function openNativeOutputFileDialog(suggestedPath = ''): Promise<string | null> {
+  if (process.platform !== 'win32') {
+    throw new HttpError(501, 'Native output selection is only supported on Windows in this build.');
+  }
+
+  const resolvedSuggestedPath = suggestedPath.trim() === '' ? '' : path.resolve(suggestedPath);
+  const parsedSuggestedPath = resolvedSuggestedPath === '' ? null : path.parse(resolvedSuggestedPath);
+  const initialDirectory = parsedSuggestedPath?.dir
+    ? escapePowerShellSingleQuotedString(parsedSuggestedPath.dir)
+    : '';
+  const fileName = parsedSuggestedPath?.base
+    ? escapePowerShellSingleQuotedString(parsedSuggestedPath.base)
+    : '';
+  const defaultExtension = parsedSuggestedPath?.ext
+    ? escapePowerShellSingleQuotedString(parsedSuggestedPath.ext.replace(/^\./, ''))
+    : '';
+
+  const script = `
+Add-Type -AssemblyName System.Windows.Forms
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$dialog = New-Object System.Windows.Forms.SaveFileDialog
+$dialog.Title = 'Choose output video file'
+$dialog.Filter = '${OUTPUT_DIALOG_FILTER}'
+$dialog.OverwritePrompt = $true
+$dialog.AddExtension = $true
+if ('${initialDirectory}' -ne '') {
+  $dialog.InitialDirectory = '${initialDirectory}'
+}
+if ('${fileName}' -ne '') {
+  $dialog.FileName = '${fileName}'
+}
+if ('${defaultExtension}' -ne '') {
+  $dialog.DefaultExt = '${defaultExtension}'
+}
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
+  Write-Output $dialog.FileName
+}
+`;
+
+  const { stdout } = await execFile(
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+    ['-NoProfile', '-STA', '-EncodedCommand', encodePowerShellCommand(script)],
+    {
+      windowsHide: false,
+      maxBuffer: 1024 * 1024
+    }
+  );
+
+  const selectedPath = stdout.trim();
+  return selectedPath === '' ? null : path.resolve(selectedPath);
+}
+
+export async function openNativeSubtitleFileDialog(): Promise<string | null> {
+  if (process.platform !== 'win32') {
+    throw new HttpError(501, 'Native subtitle selection is only supported on Windows in this build.');
+  }
+
+  const script = `
+Add-Type -AssemblyName System.Windows.Forms
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$dialog = New-Object System.Windows.Forms.OpenFileDialog
+$dialog.Title = 'Select subtitle file'
+$dialog.Filter = '${SUBTITLE_DIALOG_FILTER}'
+$dialog.Multiselect = $false
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
+  Write-Output $dialog.FileName
+}
+`;
+
+  const { stdout } = await execFile(
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+    ['-NoProfile', '-STA', '-EncodedCommand', encodePowerShellCommand(script)],
+    {
+      windowsHide: false,
+      maxBuffer: 1024 * 1024
+    }
+  );
+
+  const selectedPath = stdout.trim();
+  return selectedPath === '' ? null : path.resolve(selectedPath);
+}
+
 export async function handleOpenVideoRequest(
   dependencies: OpenVideoDependencies = getDefaultOpenVideoDependencies()
 ): Promise<OpenVideoResult> {
@@ -240,6 +405,97 @@ export async function handleOpenVideoRequest(
     outputPath: deriveDefaultOutputPath(preparedPlayback.inputPath),
     playbackUrl: dependencies.registerPlaybackPath(preparedPlayback.playbackPath),
     playbackSource: preparedPlayback.playbackSource
+  };
+}
+
+function parseAnalyzeProfanityRequestBody(body: unknown): {
+  inputPath: string;
+  movieTitle: string;
+  subtitlePath: string;
+} {
+  if (typeof body !== 'object' || body === null) {
+    throw new HttpError(400, 'Request body must be a JSON object.');
+  }
+
+  const record = body as Record<string, unknown>;
+  const inputPath = typeof record.inputPath === 'string' ? record.inputPath.trim() : '';
+  const movieTitle = typeof record.movieTitle === 'string' ? record.movieTitle.trim() : '';
+  const subtitlePath = typeof record.subtitlePath === 'string' ? record.subtitlePath.trim() : '';
+
+  if (inputPath === '') {
+    throw new HttpError(400, 'inputPath is required.');
+  }
+
+  return {
+    inputPath,
+    movieTitle,
+    subtitlePath
+  };
+}
+
+export async function handleAnalyzeProfanityRequest(
+  body: unknown,
+  dependencies: AnalyzeProfanityRequestDependencies = getDefaultAnalyzeProfanityRequestDependencies(),
+  onProgress?: (event: ProfanityAnalysisProgressEvent) => void
+): Promise<AnalyzeProfanityResult> {
+  const request = parseAnalyzeProfanityRequestBody(body);
+  const resolvedInputPath = path.resolve(request.inputPath);
+
+  await dependencies.ensureInputExists(resolvedInputPath);
+  const resolvedSubtitlePath =
+    request.subtitlePath === '' ? '' : path.resolve(request.subtitlePath);
+
+  if (resolvedSubtitlePath !== '') {
+    await dependencies.ensureInputExists(resolvedSubtitlePath);
+  }
+
+  return dependencies.analyzeProfanityImpl({
+    inputPath: resolvedInputPath,
+    movieTitle: request.movieTitle,
+    subtitlePath: resolvedSubtitlePath || undefined,
+    onProgress
+  });
+}
+
+function parseSelectOutputPathRequestBody(body: unknown): { suggestedPath: string } {
+  if (typeof body !== 'object' || body === null) {
+    return { suggestedPath: '' };
+  }
+
+  const record = body as Record<string, unknown>;
+  const suggestedPath = typeof record.outputPath === 'string' ? record.outputPath.trim() : '';
+  return { suggestedPath };
+}
+
+export async function handleSelectOutputPathRequest(
+  body: unknown,
+  dependencies: SelectOutputPathDependencies = getDefaultSelectOutputPathDependencies()
+): Promise<SelectOutputPathResult> {
+  const request = parseSelectOutputPathRequestBody(body);
+  const selectedPath = await dependencies.selectOutputPath(request.suggestedPath);
+
+  if (!selectedPath) {
+    return { cancelled: true };
+  }
+
+  return {
+    cancelled: false,
+    outputPath: path.resolve(selectedPath)
+  };
+}
+
+export async function handleSelectSubtitlePathRequest(
+  dependencies: SelectSubtitlePathDependencies = getDefaultSelectSubtitlePathDependencies()
+): Promise<SelectSubtitlePathResult> {
+  const selectedPath = await dependencies.selectSubtitlePath();
+
+  if (!selectedPath) {
+    return { cancelled: true };
+  }
+
+  return {
+    cancelled: false,
+    subtitlePath: path.resolve(selectedPath)
   };
 }
 
@@ -504,6 +760,10 @@ function sendProcessStreamEvent(response: ServerResponse, event: ProcessStreamEv
   response.write(`${JSON.stringify(event)}\n`);
 }
 
+function sendAnalyzeProfanityStreamEvent(response: ServerResponse, event: AnalyzeProfanityStreamEvent) {
+  response.write(`${JSON.stringify(event)}\n`);
+}
+
 async function pipeFileToResponse(
   response: ServerResponse,
   filePath: string,
@@ -597,6 +857,74 @@ async function handleApiRequest(request: IncomingMessage, response: ServerRespon
     }
 
     const result = await handleProcessRequest(body);
+    sendJson(response, 200, result);
+    return true;
+  }
+
+  if (url.pathname === '/api/select-output-path') {
+    if (request.method !== 'POST') {
+      sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+
+    const body = await readJsonBody(request);
+    const result = await handleSelectOutputPathRequest(body);
+    sendJson(response, 200, result);
+    return true;
+  }
+
+  if (url.pathname === '/api/select-subtitle-path') {
+    if (request.method !== 'POST') {
+      sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+
+    const result = await handleSelectSubtitlePathRequest();
+    sendJson(response, 200, result);
+    return true;
+  }
+
+  if (url.pathname === '/api/analyze-profanity') {
+    if (request.method !== 'POST') {
+      sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+
+    const body = await readJsonBody(request);
+
+    if ((request.headers.accept ?? '').includes('application/x-ndjson')) {
+      response.statusCode = 200;
+      response.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+      response.setHeader('Cache-Control', 'no-store');
+
+      try {
+        const result = await handleAnalyzeProfanityRequest(
+          body,
+          getDefaultAnalyzeProfanityRequestDependencies(),
+          (event) => {
+            sendAnalyzeProfanityStreamEvent(response, {
+              type: 'progress',
+              progress: event
+            });
+          }
+        );
+
+        sendAnalyzeProfanityStreamEvent(response, {
+          type: 'result',
+          result
+        });
+      } catch (error) {
+        sendAnalyzeProfanityStreamEvent(response, {
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Unexpected server error.'
+        });
+      }
+
+      response.end();
+      return true;
+    }
+
+    const result = await handleAnalyzeProfanityRequest(body);
     sendJson(response, 200, result);
     return true;
   }

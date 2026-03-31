@@ -17,6 +17,7 @@ CleanVid currently supports:
 - importing and exporting filter JSON
 - previewing mute/skip behavior during playback without rendering a file first
 - toggling preview playback on and off
+- analyzing profanity into draft mute suggestions before applying them to the timeline
 - exporting a cleaned video directly from the annotator with live progress updates
 - running the same processing pipeline from the CLI
 
@@ -73,8 +74,10 @@ packages/
 2. Open the local Vite URL in your browser.
 3. Click the empty stage or `Open Video` to choose a source file.
 4. Annotate `mute` and `skip` ranges.
-5. Fine-tune timestamps or jump around from the timeline and segment list.
-6. Export filters, or switch to Export mode to render the cleaned video.
+5. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles.
+6. Review, seek through, and apply the suggestions you want.
+7. Fine-tune timestamps or jump around from the timeline and segment list.
+8. Export filters, or switch to Export mode to render the cleaned video.
 
 The annotator currently opens:
 - `.mp4`
@@ -96,6 +99,27 @@ Keyboard shortcuts:
 - `Space`: play/pause
 - `Left` / `Right`: seek by 5 seconds
 - `Shift` + `Left` / `Right`: seek by 0.1 seconds
+
+## Profanity Analysis
+
+The Annotate tab includes an `Auto-Detect Profanity` button that opens a subtitle-based analysis modal. The flow creates draft `mute` suggestions instead of changing the timeline automatically.
+
+How it works:
+- CleanVid checks embedded text subtitle tracks first
+- if the video has no usable subtitles, you can choose your own `.srt`, `.vtt`, `.ass`, or `.ssa` file in the modal
+- detections are padded, merged, and shown as draft suggestions you can review before applying
+
+Suggestion review behavior:
+- draft suggestions stay separate from your filter timeline until you click `Apply all as mute filters`
+- each suggestion shows its source: embedded subtitles or a subtitle file you provided
+- clicking a suggestion seeks playback to its start time
+- `Discard suggestions` clears the draft analysis results without changing your current filters
+
+Current analysis scope:
+- English-first profanity matching
+- image-based subtitle tracks are ignored in v1
+- if the video has no subtitles, the app prompts you to provide one yourself instead of using automatic remote or transcription fallbacks
+- the modal suggests searching `https://www.opensubtitles.com/` if you need to find a subtitle file yourself
 
 ## Export From The Annotator
 
@@ -174,10 +198,10 @@ Rules:
 ## Current Scope Limits
 
 Not implemented yet:
-- subtitle processing
 - multi-audio-track handling
 - drag-to-resize segment editing
-- automatic bad-language detection
+- non-English profanity detection
+- OCR/image-subtitle profanity analysis
 - Plex metadata sync
 - GPU tuning controls
 
@@ -193,4 +217,4 @@ npm run build
 These cover:
 - shared schema validation and timeline behavior
 - CLI graph generation, progress parsing, and FFmpeg integration
-- annotator open/import/export flows, preview playback, keyboard shortcuts, and export progress
+- annotator open/import/export flows, preview playback, profanity analysis, keyboard shortcuts, and export progress
