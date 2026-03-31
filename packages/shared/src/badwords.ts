@@ -1,4 +1,4 @@
-{
+const badWords: Record<string, number> = {
   "*dyke":1,
   "*fuck*":1,
   "*shit*":1,
@@ -436,4 +436,6 @@
   "xxx":1,
   "yed":1,
   "zabourah":1
-}
+};
+
+export default badWords;

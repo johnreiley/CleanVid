@@ -1,4 +1,4 @@
-import badWords from './badwords.json' with { type: 'json' };
+import badWords from './badwords.js';
 
 export type ProfanitySuggestionSource = 'embedded' | 'provided';
 
