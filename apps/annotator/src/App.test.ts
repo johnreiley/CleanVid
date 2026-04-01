@@ -1406,7 +1406,7 @@ Broken label
     await nextTick();
 
     expect(wrapper.find('[data-testid="skp-import-modal"]').exists()).toBe(true);
-    expect(wrapper.get('[data-testid="mode-panel-annotate"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="mode-panel-annotate"]')).toBeTruthy();
     expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
     expect(wrapper.get('[data-testid="skp-import-summary"]').text()).toContain('Imported 1 SKP entry');
     expect(wrapper.get('[data-testid="skp-import-summary"]').text()).toContain('replacing the current filter timeline');

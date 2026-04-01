@@ -17,7 +17,7 @@ export interface SkpDraftSegment {
   type: FilterType;
   start: number;
   end: number;
-  category: SkpCategory | null;
+  category: SkpCategory;
   severity: SkpSeverity;
   description: string;
 }
@@ -78,7 +78,7 @@ function isTimeRangeLine(line: string): boolean {
   return TIME_RANGE_PATTERN.test(line.trim());
 }
 
-function normalizeSkpCategory(description: string): SkpCategory | null {
+function normalizeSkpCategory(description: string): SkpCategory {
   const normalized = description.toLowerCase();
 
   if (/\b(audio|sound|lyrics?|song|music|moaning|scream(?:ing)?|sfx)\b/.test(normalized)) {
