@@ -445,11 +445,21 @@ function buildPreviewVideoArgs(plan: PreviewEncodePlan): string[] {
         '-preset',
         'veryfast',
         '-global_quality',
-        '28',
+        '32',
         '-look_ahead',
         '0',
         '-pix_fmt',
-        'nv12'
+        'nv12',
+        '-g',
+        '24',
+        '-vf',
+        'scale=640:-2,fps=12',
+        '-b:a',
+        '96k',
+        '-ac',
+        '1',
+        '-movflags',
+        '+faststart',
       ];
     case 'libx264':
       return plan.weakMachine
