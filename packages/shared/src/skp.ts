@@ -105,7 +105,7 @@ function normalizeSkpCategory(description: string): SkpCategory {
     return 'drugs';
   }
 
-  if (/\b(profanity|language|swearing|swear(?:ing)?|curse(?:d|s)?|cursing)\b/.test(normalized)) {
+  if (/\b(profanity|profane|language|swearing|swear(?:ing)?|curse(?:d|s)?|cursing)\b/.test(normalized)) {
     return 'profanity';
   }
 
