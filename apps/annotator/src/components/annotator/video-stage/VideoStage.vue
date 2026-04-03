@@ -42,8 +42,9 @@ const props = defineProps<{
 const isTimelineDragging = ref(false);
 const isProgrammaticTimelineScroll = ref(false);
 const isUserTimelineScrolling = ref(false);
-const timelineCaretAutoFollowEnabled = ref(true);
-const timelineCaretAutoFollowPausedByManualScrollSide = ref<'left' | 'right' | null>(null);
+const timelineCaretAutoFollowMode = ref<'enabled' | 'paused-catchup' | 'paused-right-hidden'>(
+  'enabled'
+);
 const timelineViewport = ref<HTMLElement | null>(null);
 const timelineTrack = ref<HTMLElement | null>(null);
 const timelinePointerId = ref<number | null>(null);
@@ -155,8 +156,7 @@ function seekTimeline(clientX: number) {
   const nextTime = props.effectiveDuration * ratio;
 
   if (Math.abs(nextTime - props.currentTime) > 0.001) {
-    timelineCaretAutoFollowEnabled.value = true;
-    timelineCaretAutoFollowPausedByManualScrollSide.value = null;
+    timelineCaretAutoFollowMode.value = 'enabled';
   }
 
   emit('seekTo', nextTime);
@@ -225,8 +225,7 @@ function handleTimelineClick(event: MouseEvent) {
 
 function handleTimelineSegmentClick(segment: EditableSegment) {
   if (Math.abs(segment.start - props.currentTime) > 0.001) {
-    timelineCaretAutoFollowEnabled.value = true;
-    timelineCaretAutoFollowPausedByManualScrollSide.value = null;
+    timelineCaretAutoFollowMode.value = 'enabled';
   }
 
   emit('selectSegment', segment.id);
@@ -277,9 +276,18 @@ function handleTimelineViewportScroll() {
 
   const hiddenSide = getTimelineCaretHiddenSide(props.currentTime);
 
-  if (hiddenSide !== null) {
-    timelineCaretAutoFollowEnabled.value = false;
-    timelineCaretAutoFollowPausedByManualScrollSide.value = hiddenSide;
+  if (hiddenSide === 'right') {
+    timelineCaretAutoFollowMode.value = 'paused-right-hidden';
+    return;
+  }
+
+  if (hiddenSide === 'left') {
+    timelineCaretAutoFollowMode.value = 'paused-catchup';
+    return;
+  }
+
+  if (timelineCaretAutoFollowMode.value === 'paused-right-hidden') {
+    timelineCaretAutoFollowMode.value = 'paused-catchup';
   }
 }
 
@@ -330,7 +338,7 @@ function getTimelineCaretHiddenSide(timeSeconds: number): 'left' | 'right' | nul
 function maybeResumeTimelineCaretAutoFollow(timeSeconds: number) {
   if (
     !timelineViewport.value ||
-    timelineCaretAutoFollowPausedByManualScrollSide.value !== 'left' ||
+    timelineCaretAutoFollowMode.value !== 'paused-catchup' ||
     isUserTimelineScrolling.value ||
     props.effectiveDuration <= 0 ||
     props.timelineZoom <= 1
@@ -350,8 +358,7 @@ function maybeResumeTimelineCaretAutoFollow(timeSeconds: number) {
     return;
   }
 
-  timelineCaretAutoFollowPausedByManualScrollSide.value = null;
-  timelineCaretAutoFollowEnabled.value = true;
+  timelineCaretAutoFollowMode.value = 'enabled';
   keepTimelineCaretInView(timeSeconds);
 }
 
@@ -380,7 +387,7 @@ function keepTimelineCaretInView(timeSeconds: number) {
     return;
   }
 
-  if (isTimelineDragging.value || !timelineCaretAutoFollowEnabled.value) {
+  if (isTimelineDragging.value || timelineCaretAutoFollowMode.value !== 'enabled') {
     return;
   }
 
