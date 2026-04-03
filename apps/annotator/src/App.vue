@@ -161,6 +161,7 @@ onBeforeUnmount(() => {
           :preview-playback-enabled="annotator.previewPlaybackEnabled"
           :register-video-element="annotator.registerVideoElement"
           :sorted-segments="annotator.sortedSegments"
+          :timeline-zoom="annotator.timelineZoom"
           :video-url="annotator.videoUrl"
           @open-video="annotator.openVideo"
           @loaded-metadata="annotator.handleLoadedMetadata"

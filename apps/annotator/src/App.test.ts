@@ -94,6 +94,54 @@ function createPointerEvent(type: string, clientX: number, pointerId = 1) {
   return event;
 }
 
+function setTimelineLayout(
+  viewport: HTMLElement,
+  track: HTMLElement,
+  {
+    left = 0,
+    viewportWidth,
+    trackWidth,
+    scrollLeft = 0
+  }: { left?: number; viewportWidth: number; trackWidth: number; scrollLeft?: number }
+) {
+  viewport.getBoundingClientRect = vi.fn(() => ({
+    x: left,
+    y: 0,
+    left,
+    top: 0,
+    right: left + viewportWidth,
+    bottom: 40,
+    width: viewportWidth,
+    height: 40,
+    toJSON: () => ({})
+  }));
+  track.getBoundingClientRect = vi.fn(() => ({
+    x: left - scrollLeft,
+    y: 0,
+    left: left - scrollLeft,
+    top: 0,
+    right: left - scrollLeft + trackWidth,
+    bottom: 40,
+    width: trackWidth,
+    height: 40,
+    toJSON: () => ({})
+  }));
+
+  Object.defineProperty(viewport, 'clientWidth', {
+    configurable: true,
+    value: viewportWidth
+  });
+  Object.defineProperty(viewport, 'scrollLeft', {
+    configurable: true,
+    writable: true,
+    value: scrollLeft
+  });
+  Object.defineProperty(track, 'scrollWidth', {
+    configurable: true,
+    value: trackWidth
+  });
+}
+
 function createBeforeUnloadEvent() {
   const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent & {
     returnValue: string;
@@ -1243,18 +1291,12 @@ describe('annotator app', () => {
     await nextTick();
     await wrapper.get('[data-testid="toggle-skip"]').trigger('click');
 
+    const timelineViewport = wrapper.get('[data-testid="timeline-track-viewport"]').element as HTMLDivElement;
     const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
-    timeline.getBoundingClientRect = vi.fn(() => ({
-      x: 0,
-      y: 0,
-      left: 0,
-      top: 0,
-      right: 200,
-      bottom: 40,
-      width: 200,
-      height: 40,
-      toJSON: () => ({})
-    }));
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 200
+    });
 
     timeline.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 40 }));
     await nextTick();
@@ -1533,18 +1575,12 @@ Profanity mute 3
     await wrapper.get('.segment-card-surface').trigger('click');
     expect(video.currentTime).toBe(20);
 
+    const timelineViewport = wrapper.get('[data-testid="timeline-track-viewport"]').element as HTMLDivElement;
     const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
-    timeline.getBoundingClientRect = vi.fn(() => ({
-      x: 0,
-      y: 0,
-      left: 0,
-      top: 0,
-      right: 200,
-      bottom: 40,
-      width: 200,
-      height: 40,
-      toJSON: () => ({})
-    }));
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 200
+    });
 
     timeline.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100 }));
     await wrapper.vm.$nextTick();
@@ -1559,6 +1595,122 @@ Profanity mute 3
 
     await wrapper.get('[aria-label="Play video"]').trigger('click');
     expect(playMock).toHaveBeenCalled();
+  });
+
+  it('zooms the timeline with ctrl shortcuts, recenters on the playhead, and seeks within the zoomed viewport', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 60;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+
+    const timelineViewport = wrapper.get('[data-testid="timeline-track-viewport"]').element as HTMLDivElement;
+    const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 200
+    });
+
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 1x');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '=', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 1000,
+      scrollLeft: timelineViewport.scrollLeft
+    });
+
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 5x');
+    expect(timelineViewport.scrollLeft).toBe(400);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '+', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 10x');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '+', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 15x');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '+', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 20x');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '+', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 20x');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '-', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 15x');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '0', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 200,
+      scrollLeft: timelineViewport.scrollLeft
+    });
+
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 1x');
+    expect(timelineViewport.scrollLeft).toBe(0);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '-', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 1x');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '=', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 1000,
+      scrollLeft: 300
+    });
+
+    timeline.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100 }));
+    await nextTick();
+    expect(video.currentTime).toBe(48);
+
+    timeline.dispatchEvent(createPointerEvent('pointerdown', 50));
+    timeline.dispatchEvent(createPointerEvent('pointermove', 150));
+    timeline.dispatchEvent(createPointerEvent('pointerup', 150));
+    await nextTick();
+    expect(video.currentTime).toBe(54);
+  });
+
+  it('ignores timeline zoom shortcuts while editing content', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 20;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 30;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    const editable = wrapper.get('[data-testid="segment-start-edit"]').element as HTMLElement;
+    editable.dispatchEvent(new KeyboardEvent('keydown', { key: '=', ctrlKey: true, bubbles: true }));
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 1x');
   });
 
   it('scrolls to and highlights the matching segment when a timeline segment is clicked', async () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, type ComponentPublicInstance } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from 'vue';
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment } from '../../../annotator-types';
 import PlaybackTransport from './PlaybackTransport.vue';
@@ -32,10 +32,12 @@ const props = defineProps<{
   previewPlaybackEnabled: boolean;
   registerVideoElement: (element: Element | ComponentPublicInstance | null) => void;
   sortedSegments: EditableSegment[];
+  timelineZoom: number;
   videoUrl: string | null;
 }>();
 
 const isTimelineDragging = ref(false);
+const timelineViewport = ref<HTMLElement | null>(null);
 const timelineTrack = ref<HTMLElement | null>(null);
 const timelinePointerId = ref<number | null>(null);
 const timelineMovedDuringDrag = ref(false);
@@ -90,18 +92,48 @@ function registerTrackElement(element: Element | ComponentPublicInstance | null)
   timelineTrack.value = null;
 }
 
+function registerViewportElement(element: Element | ComponentPublicInstance | null) {
+  if (element instanceof HTMLElement) {
+    timelineViewport.value = element;
+    return;
+  }
+
+  if (element && '$el' in element && element.$el instanceof HTMLElement) {
+    timelineViewport.value = element.$el;
+    return;
+  }
+
+  timelineViewport.value = null;
+}
+
+function getTimelineTrackWidth() {
+  const viewportWidth = timelineViewport.value?.clientWidth ?? 0;
+  if (viewportWidth > 0) {
+    return viewportWidth * props.timelineZoom;
+  }
+
+  if (!timelineTrack.value) {
+    return 0;
+  }
+
+  return Math.max(timelineTrack.value.scrollWidth, timelineTrack.value.getBoundingClientRect().width);
+}
+
 function getTimelineRatio(clientX: number) {
-  if (!timelineTrack.value || props.effectiveDuration <= 0) {
+  if (!timelineViewport.value || !timelineTrack.value || props.effectiveDuration <= 0) {
     return null;
   }
 
-  const rect = timelineTrack.value.getBoundingClientRect();
+  const rect = timelineViewport.value.getBoundingClientRect();
+  const trackWidth = getTimelineTrackWidth();
 
-  if (rect.width <= 0) {
+  if (rect.width <= 0 || trackWidth <= 0) {
     return null;
   }
 
-  return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const offset = clientX - rect.left + timelineViewport.value.scrollLeft;
+
+  return Math.max(0, Math.min(1, offset / trackWidth));
 }
 
 function seekTimeline(clientX: number) {
@@ -180,6 +212,34 @@ function handleTimelineSegmentClick(segment: EditableSegment) {
   emit('seekTo', segment.start);
 }
 
+function centerTimelineOnTime(timeSeconds: number) {
+  if (!timelineViewport.value || props.effectiveDuration <= 0) {
+    return;
+  }
+
+  const viewportWidth = timelineViewport.value.clientWidth;
+  const trackWidth = getTimelineTrackWidth();
+
+  if (viewportWidth <= 0 || trackWidth <= viewportWidth) {
+    timelineViewport.value.scrollLeft = 0;
+    return;
+  }
+
+  const ratio = Math.max(0, Math.min(1, timeSeconds / props.effectiveDuration));
+  const centeredOffset = trackWidth * ratio - viewportWidth / 2;
+  const maxScrollLeft = Math.max(0, trackWidth - viewportWidth);
+
+  timelineViewport.value.scrollLeft = Math.max(0, Math.min(maxScrollLeft, centeredOffset));
+}
+
+watch(
+  () => props.timelineZoom,
+  async () => {
+    await nextTick();
+    centerTimelineOnTime(props.currentTime);
+  }
+);
+
 onBeforeUnmount(() => {
   releaseTimelineDrag();
 });
@@ -217,7 +277,9 @@ onBeforeUnmount(() => {
         :pending-start-percent="pendingStartPercent"
         :progress-percent="progressPercent"
         :register-track-element="registerTrackElement"
+        :register-viewport-element="registerViewportElement"
         :sorted-segments="sortedSegments"
+        :timeline-zoom="timelineZoom"
       />
 
       <PlaybackTransport

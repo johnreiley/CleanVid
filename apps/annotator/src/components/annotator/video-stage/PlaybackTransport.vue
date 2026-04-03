@@ -67,6 +67,10 @@ defineProps<{
         <span class="shortcut-pill">&larr;/&rarr;</span>
         <span class="shortcut-copy">Seek</span>
       </div>
+      <div class="shortcut-cluster">
+        <span class="shortcut-pill">CTRL +/-/0</span>
+        <span class="shortcut-copy">Zoom</span>
+      </div>
     </div>
   </div>
 </template>

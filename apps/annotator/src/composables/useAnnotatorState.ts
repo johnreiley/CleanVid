@@ -19,6 +19,7 @@ import { formatTimestamp } from '../time';
 
 const SEEK_STEP_SECONDS = 5;
 const FINE_SEEK_STEP_SECONDS = 0.1;
+const TIMELINE_ZOOM_LEVELS = [1, 5, 10, 15, 20] as const;
 
 interface OpenVideoResponse {
   cancelled: boolean;
@@ -178,6 +179,7 @@ export function useAnnotatorState() {
   const processProgressPercent = ref(0);
   const previewPlaybackEnabled = ref(true);
   const previewActiveType = ref<FilterType | null>(null);
+  const timelineZoom = ref<(typeof TIMELINE_ZOOM_LEVELS)[number]>(TIMELINE_ZOOM_LEVELS[0]);
   const activeType = ref<FilterType>('mute');
   const pendingStart = ref<number | null>(null);
   const pendingType = ref<FilterType | null>(null);
@@ -367,6 +369,23 @@ export function useAnnotatorState() {
 
   function clearFeedback() {
     errorMessage.value = '';
+  }
+
+  function zoomTimelineIn() {
+    const currentIndex = TIMELINE_ZOOM_LEVELS.indexOf(timelineZoom.value);
+    const nextIndex =
+      currentIndex === -1 ? 0 : Math.min(currentIndex + 1, TIMELINE_ZOOM_LEVELS.length - 1);
+    timelineZoom.value = TIMELINE_ZOOM_LEVELS[nextIndex];
+  }
+
+  function zoomTimelineOut() {
+    const currentIndex = TIMELINE_ZOOM_LEVELS.indexOf(timelineZoom.value);
+    const nextIndex = currentIndex === -1 ? 0 : Math.max(currentIndex - 1, 0);
+    timelineZoom.value = TIMELINE_ZOOM_LEVELS[nextIndex];
+  }
+
+  function resetTimelineZoom() {
+    timelineZoom.value = TIMELINE_ZOOM_LEVELS[0];
   }
 
   function getDisplayProcessPercent(progress: ProcessProgressPayload): number {
@@ -1345,8 +1364,45 @@ export function useAnnotatorState() {
     );
   }
 
+  function isZoomShortcut(event: KeyboardEvent): boolean {
+    return event.ctrlKey && !event.metaKey && !event.altKey;
+  }
+
+  function isZoomInShortcut(event: KeyboardEvent): boolean {
+    return isZoomShortcut(event) && (event.key === '+' || event.key === '=' || event.code === 'NumpadAdd');
+  }
+
+  function isZoomOutShortcut(event: KeyboardEvent): boolean {
+    return (
+      isZoomShortcut(event) &&
+      (event.key === '-' || event.key === '_' || event.code === 'NumpadSubtract')
+    );
+  }
+
+  function isZoomResetShortcut(event: KeyboardEvent): boolean {
+    return isZoomShortcut(event) && (event.key === '0' || event.code === 'Digit0' || event.code === 'Numpad0');
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (isEditableTarget(event.target)) {
+      return;
+    }
+
+    if (isZoomInShortcut(event)) {
+      event.preventDefault();
+      zoomTimelineIn();
+      return;
+    }
+
+    if (isZoomOutShortcut(event)) {
+      event.preventDefault();
+      zoomTimelineOut();
+      return;
+    }
+
+    if (isZoomResetShortcut(event)) {
+      event.preventDefault();
+      resetTimelineZoom();
       return;
     }
 
@@ -1410,6 +1466,7 @@ export function useAnnotatorState() {
     processProgressPercent,
     previewPlaybackEnabled,
     previewActiveType,
+    timelineZoom,
     activeType,
     pendingStart,
     pendingType,
@@ -1436,6 +1493,9 @@ export function useAnnotatorState() {
     handleTimeUpdate,
     handlePlayStateChange,
     togglePlayback,
+    zoomTimelineIn,
+    zoomTimelineOut,
+    resetTimelineZoom,
     seekBy,
     seekTo,
     seekToRatio,
