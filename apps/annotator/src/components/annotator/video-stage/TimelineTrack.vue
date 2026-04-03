@@ -13,6 +13,7 @@ defineProps<{
   handleTrackPointerDown: (event: PointerEvent) => void;
   handleTrackPointerMove: (event: PointerEvent) => void;
   handleTrackPointerUp: (event: PointerEvent) => void;
+  handleViewportScroll: () => void;
   isTimelineDragging: boolean;
   pendingStartPercent: number | null;
   progressPercent: number;
@@ -29,6 +30,7 @@ defineProps<{
       :ref="registerViewportElement"
       class="timeline-track-viewport"
       data-testid="timeline-track-viewport"
+      @scroll="handleViewportScroll"
     >
       <button
         :ref="registerTrackElement"

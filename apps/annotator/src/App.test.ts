@@ -1713,6 +1713,141 @@ Profanity mute 3
     expect(wrapper.get('[data-testid="timeline-zoom-readout"]').text()).toBe('Zoom 1x');
   });
 
+  it('auto-scrolls the zoomed timeline to keep the caret in view when playback moves left of the viewport', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 60;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+
+    const timelineViewport = wrapper.get('[data-testid="timeline-track-viewport"]').element as HTMLDivElement;
+    const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 200
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '=', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 1000,
+      scrollLeft: 300
+    });
+
+    video.currentTime = 10;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+
+    expect(timelineViewport.scrollLeft).toBeCloseTo(59.33, 2);
+  });
+
+  it('pauses caret auto-follow after manual scrolling and resumes it when playback carries the caret to the right edge', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 60;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+
+    const timelineViewport = wrapper.get('[data-testid="timeline-track-viewport"]').element as HTMLDivElement;
+    const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 200
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '=', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 1000,
+      scrollLeft: timelineViewport.scrollLeft
+    });
+    await flushPromises();
+
+    await wrapper.get('[aria-label="Play video"]').trigger('click');
+    await nextTick();
+
+    vi.useFakeTimers();
+
+    try {
+      timelineViewport.scrollLeft = 550;
+      timelineViewport.dispatchEvent(new Event('scroll'));
+
+      await vi.advanceTimersByTimeAsync(200);
+
+      video.currentTime = 80;
+      video.dispatchEvent(new Event('timeupdate'));
+      await nextTick();
+
+      expect(timelineViewport.scrollLeft).toBe(550);
+
+      video.currentTime = 88;
+      video.dispatchEvent(new Event('timeupdate'));
+      await nextTick();
+
+      expect(timelineViewport.scrollLeft).toBeCloseTo(557.33, 2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps caret auto-follow disabled when manual scrolling moves the viewport left and pushes the caret out on the right', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 60;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+
+    const timelineViewport = wrapper.get('[data-testid="timeline-track-viewport"]').element as HTMLDivElement;
+    const timeline = wrapper.get('[data-testid="timeline-track"]').element as HTMLButtonElement;
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 200
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '=', ctrlKey: true }));
+    await nextTick();
+    await nextTick();
+
+    setTimelineLayout(timelineViewport, timeline, {
+      viewportWidth: 200,
+      trackWidth: 1000,
+      scrollLeft: timelineViewport.scrollLeft
+    });
+    await flushPromises();
+
+    await wrapper.get('[aria-label="Play video"]').trigger('click');
+    await nextTick();
+
+    vi.useFakeTimers();
+
+    try {
+      timelineViewport.scrollLeft = 200;
+      timelineViewport.dispatchEvent(new Event('scroll'));
+
+      await vi.advanceTimersByTimeAsync(200);
+
+      video.currentTime = 88;
+      video.dispatchEvent(new Event('timeupdate'));
+      await nextTick();
+
+      expect(timelineViewport.scrollLeft).toBe(200);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('scrolls to and highlights the matching segment when a timeline segment is clicked', async () => {
     const wrapper = mount(App);
     const video = await openVideo(wrapper);

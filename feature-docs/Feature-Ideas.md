@@ -12,3 +12,5 @@
 - Enhanced timeline
 
 - Remove certain profanity suggestions before applying all as mute filters
+
+- Show profanity flag on the segment timeline card when imported via subtitles (similar to when importing from skp file)
