@@ -1899,11 +1899,11 @@ Profanity mute 3
       await nextTick();
       expect(timelineViewport.scrollLeft).toBe(650);
 
-      video.currentTime = 98;
+      video.currentTime = 100;
       video.dispatchEvent(new Event('timeupdate'));
       await nextTick();
 
-      expect(timelineViewport.scrollLeft).toBeCloseTo(640.67, 2);
+      expect(timelineViewport.scrollLeft).toBeCloseTo(657.33, 2);
     } finally {
       vi.useRealTimers();
     }
