@@ -8,6 +8,7 @@ import {
   mergeProfanitySuggestions,
   normalizeFilters,
   parseFilterFile,
+  parseSkpFile,
   serializeFilterFile
 } from './index.js';
 
@@ -200,5 +201,180 @@ describe('profanity analysis helpers', () => {
         matchedTerms: ['damn', 'shit']
       })
     ]);
+  });
+});
+
+describe('skp parsing', () => {
+  it('parses basic mute and skip entries with severity and category mapping', () => {
+    const parsed = parseSkpFile(`
+00:01:23.456 - 00:01:28.900
+Profanity mute 3
+
+00:02:00.000 - 00:02:04.250
+Violence skip 2
+`);
+
+    expect(parsed.skippedEntryCount).toBe(0);
+    expect(parsed.segments).toEqual([
+      {
+        id: 'skp-1',
+        start: 83.456,
+        end: 88.9,
+        type: 'mute',
+        category: 'profanity',
+        severity: 3,
+        description: 'Profanity'
+      },
+      {
+        id: 'skp-2',
+        start: 120,
+        end: 124.25,
+        type: 'skip',
+        category: 'violence',
+        severity: 2,
+        description: 'Violence'
+      }
+    ]);
+  });
+
+  it('maps imported filter types from label text instead of trusting the raw skp action token', () => {
+    const parsed = parseSkpFile(`
+00:00:10.000 - 00:00:12.000
+Audio distortion skip 2
+
+00:00:14.000 - 00:00:16.000
+Drugs mute 2
+
+00:00:18.000 - 00:00:20.000
+Strange clown imagery mute 1
+`);
+
+    expect(parsed.segments).toEqual([
+      expect.objectContaining({
+        description: 'Audio distortion',
+        category: 'audio',
+        type: 'mute'
+      }),
+      expect.objectContaining({
+        description: 'Drugs',
+        category: 'drugs',
+        type: 'skip'
+      }),
+      expect.objectContaining({
+        description: 'Strange clown imagery',
+        category: 'other',
+        type: 'skip'
+      })
+    ]);
+  });
+
+  it('parses arrow-separated skp entries with category severity and parenthetical descriptions', () => {
+    const parsed = parseSkpFile(`
+0:23:13.63 --> 0:23:44.84
+sex 2 (intercourse)
+
+0:24:36.08 --> 0:24:40.58
+nudity 2 (topless woman)
+
+1:14:48.72 --> 1:15:13.72
+nudity 2 (2 naked people talking)
+
+1:15:41.6 --> 1:16:19.65
+sex 2 (intercourse)
+`);
+
+    expect(parsed.skippedEntryCount).toBe(0);
+    expect(parsed.segments).toEqual([
+      expect.objectContaining({
+        start: 1393.63,
+        end: 1424.84,
+        category: 'sex',
+        type: 'skip',
+        severity: 2,
+        description: 'intercourse'
+      }),
+      expect.objectContaining({
+        start: 1476.08,
+        end: 1480.58,
+        category: 'nude',
+        type: 'skip',
+        severity: 2,
+        description: 'topless woman'
+      }),
+      expect.objectContaining({
+        start: 4488.72,
+        end: 4513.72,
+        category: 'nude',
+        type: 'skip',
+        severity: 2,
+        description: '2 naked people talking'
+      }),
+      expect.objectContaining({
+        start: 4541.6,
+        end: 4579.65,
+        category: 'sex',
+        type: 'skip',
+        severity: 2,
+        description: 'intercourse'
+      })
+    ]);
+  });
+
+  it('ignores disabled entries and normalizes nudity labels', () => {
+    const parsed = parseSkpFile(`
+//00:03:00.000 - 00:03:05.000
+//Violence skip 3
+
+00:04:00.000 - 00:04:02.500
+Brief nudity skip 1
+`);
+
+    expect(parsed.segments).toHaveLength(1);
+    expect(parsed.segments[0]).toEqual(
+      expect.objectContaining({
+        category: 'nude',
+        description: 'Brief nudity'
+      })
+    );
+  });
+
+  it('tolerates unsupported extra lines between entries', () => {
+    const parsed = parseSkpFile(`
+00:01:00.000 - 00:01:03.000
+Gore skip 3
+blur:10,20,30,40
+screenshot:data
+
+00:01:05.000 - 00:01:06.000
+Drugs mute 2
+`);
+
+    expect(parsed.segments.map((segment) => segment.description)).toEqual(['Gore', 'Drugs']);
+  });
+
+  it('keeps valid entries and reports malformed ones', () => {
+    const parsed = parseSkpFile(`
+00:01:00.000 - 00:01:03.000
+Violence skip 3
+
+00:01:10.000 - 00:01:12.000
+MissingSeverity mute
+
+00:01:20.000 - 00:01:21.000
+Language mute 1
+`);
+
+    expect(parsed.segments).toHaveLength(2);
+    expect(parsed.skippedEntryCount).toBe(1);
+    expect(parsed.warnings[0]).toContain('line 5');
+  });
+
+  it('rejects files with no valid entries', () => {
+    expect(() =>
+      parseSkpFile(`
+00:01:00.000 - 00:01:03.000
+Broken label
+`)
+    ).toThrowError(FilterValidationError);
   });
 });

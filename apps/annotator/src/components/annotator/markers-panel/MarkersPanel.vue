@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
-import type { ProfanitySuggestion } from '@cleanvid/shared';
+import type { ProfanitySuggestion, SkpDraftSegment } from '@cleanvid/shared';
 import {
   computed,
   nextTick,
@@ -16,6 +16,7 @@ import ProfanityAnalysisSection from './ProfanityAnalysisSection.vue';
 import ProcessingOptionsSection from './ProcessingOptionsSection.vue';
 import SegmentsSection from './SegmentsSection.vue';
 import SessionActions from './SessionActions.vue';
+import SkpImportReviewSection from './SkpImportReviewSection.vue';
 import SidebarModeTabs from './SidebarModeTabs.vue';
 import StatusToast from './StatusToast.vue';
 
@@ -28,7 +29,9 @@ const emit = defineEmits<{
   filtersSelected: [file: File];
   analyzeProfanity: [];
   applyProfanitySuggestions: [];
+  applySkpImport: [];
   clearProfanitySubtitlePath: [];
+  discardSkpImport: [];
   discardProfanitySuggestions: [];
   openVideo: [];
   selectOutputPath: [];
@@ -59,6 +62,11 @@ const props = defineProps<{
   profanitySuggestions: ProfanitySuggestion[];
   profanityAnalysisProgressPercent: number;
   profanitySubtitlePath: string;
+  skpDraftCountLabel: string;
+  skpDraftSegments: SkpDraftSegment[];
+  skpImportSummaryText: string;
+  skpImportWarnings: string[];
+  skpReviewRequestKey: number;
   outputPath: string;
   processProgressPercent: number;
   pendingStart: number | null;
@@ -82,6 +90,7 @@ const processButtonLabel = computed(() =>
 );
 const hasLoadedVideo = computed(() => props.inputName !== '');
 const isProfanityModalOpen = ref(false);
+const isSkpImportModalOpen = ref(false);
 
 function clearToastTimer() {
   if (toastTimer !== null) {
@@ -121,8 +130,21 @@ function openProfanityModal() {
   isProfanityModalOpen.value = true;
 }
 
+function openSkpImportModal() {
+  if (props.skpDraftSegments.length === 0) {
+    return;
+  }
+
+  isSkpImportModalOpen.value = true;
+  closeProfanityModal();
+}
+
 function closeProfanityModal() {
   isProfanityModalOpen.value = false;
+}
+
+function closeSkpImportModal() {
+  isSkpImportModalOpen.value = false;
 }
 
 function handleProfanitySuggestionsApply() {
@@ -135,8 +157,27 @@ function handleProfanitySuggestionsDiscard() {
   closeProfanityModal();
 }
 
+function handleSkpImportApply() {
+  emit('applySkpImport');
+  closeSkpImportModal();
+}
+
+function handleSkpImportDiscard() {
+  emit('discardSkpImport');
+  closeSkpImportModal();
+}
+
 function handleWindowKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isProfanityModalOpen.value) {
+  if (event.key !== 'Escape') {
+    return;
+  }
+
+  if (isSkpImportModalOpen.value) {
+    closeSkpImportModal();
+    return;
+  }
+
+  if (isProfanityModalOpen.value) {
     closeProfanityModal();
   }
 }
@@ -175,6 +216,17 @@ watch(
   () => [props.currentMode, hasLoadedVideo.value] as const,
   ([currentMode, loaded]) => {
     if (currentMode !== 'annotate' || !loaded) {
+      closeProfanityModal();
+      closeSkpImportModal();
+    }
+  }
+);
+
+watch(
+  () => props.skpReviewRequestKey,
+  () => {
+    if (props.skpDraftSegments.length > 0) {
+      isSkpImportModalOpen.value = true;
       closeProfanityModal();
     }
   }
@@ -251,6 +303,16 @@ onMounted(() => {
         >
           Auto-Detect Profanity
         </button>
+
+        <button
+          v-if="skpDraftSegments.length > 0"
+          type="button"
+          class="subtle-action"
+          data-testid="open-skp-import-modal-button"
+          @click="openSkpImportModal"
+        >
+          Review Imported SKP
+        </button>
       </section>
 
       <SegmentsSection
@@ -305,6 +367,27 @@ onMounted(() => {
         @discard-profanity-suggestions="handleProfanitySuggestionsDiscard"
         @seek="emit('seek', $event)"
         @select-subtitle-path="emit('selectProfanitySubtitlePath')"
+      />
+    </div>
+  </div>
+
+  <div
+    v-if="isSkpImportModalOpen"
+    class="modal-backdrop profanity-modal-backdrop"
+    data-testid="skp-import-modal"
+    @click.self="closeSkpImportModal"
+  >
+    <div class="panel profanity-modal-panel" role="dialog" aria-modal="true" aria-label="Review SKP Import">
+      <SkpImportReviewSection
+        :draft-count-label="skpDraftCountLabel"
+        :segments="skpDraftSegments"
+        :show-close-button="true"
+        :summary-text="skpImportSummaryText"
+        :warnings="skpImportWarnings"
+        @apply="handleSkpImportApply"
+        @close="closeSkpImportModal"
+        @discard="handleSkpImportDiscard"
+        @seek="emit('seek', $event)"
       />
     </div>
   </div>

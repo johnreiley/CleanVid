@@ -21,6 +21,14 @@ function formatSegmentType(type: EditableSegment['type']): string {
   return type === 'mute' ? 'MUTE' : 'SKIP';
 }
 
+function formatSegmentCategory(segment: EditableSegment): string {
+  if (!segment.category) {
+    return 'Uncategorized';
+  }
+
+  return segment.category.charAt(0).toUpperCase() + segment.category.slice(1);
+}
+
 function formatDuration(segment: EditableSegment): string {
   return `${Math.max(0, segment.end - segment.start).toFixed(1)}s`;
 }
@@ -139,6 +147,12 @@ function handleSegmentCard() {
 
       <div class="segment-card-meta">
         <span class="segment-duration">{{ formatDuration(segment) }}</span>
+      </div>
+
+      <div v-if="segment.source === 'skp'" class="segment-card-imported-meta" data-testid="segment-skp-meta">
+        <span v-if="segment.description" class="segment-imported-description">{{ segment.description }}</span>
+        <span class="segment-imported-chip">{{ formatSegmentCategory(segment) }}</span>
+        <span v-if="segment.severity" class="segment-imported-chip">Severity {{ segment.severity }}</span>
       </div>
     </div>
   </li>
