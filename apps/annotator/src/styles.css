@@ -1122,7 +1122,7 @@ button {
 .timeline-track-viewport {
   width: 100%;
   border-radius: 0.15rem;
-  overflow-x: auto;
+  overflow-x: scroll;
   overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: rgba(143, 155, 179, 0.35) rgba(255, 255, 255, 0.04);
