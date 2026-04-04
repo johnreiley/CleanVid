@@ -148,6 +148,7 @@ onBeforeUnmount(() => {
         @discard-profanity-suggestions="annotator.discardProfanitySuggestions"
         @filters-selected="annotator.loadFilterFile"
         @open-video="annotator.openVideo"
+        @remove-profanity-suggestion="annotator.removeProfanitySuggestion"
         @select-output-path="annotator.selectOutputPath"
         @select-profanity-subtitle-path="annotator.selectProfanitySubtitlePath"
         @process-linked-video="annotator.processLinkedVideo"

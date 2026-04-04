@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ProfanitySuggestion } from '@cleanvid/shared';
+import PhTrash from '@phosphor-icons-vue-icons/PhTrash.vue.mjs';
 
 const emit = defineEmits<{
   analyzeProfanity: [];
@@ -7,6 +8,7 @@ const emit = defineEmits<{
   clearSubtitlePath: [];
   close: [];
   discardProfanitySuggestions: [];
+  removeProfanitySuggestion: [id: string];
   seek: [start: number];
   selectSubtitlePath: [];
 }>();
@@ -135,33 +137,46 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
         :key="suggestion.id"
         class="segment-card profanity-suggestion-card"
       >
-        <button
-          type="button"
-          class="segment-card-surface profanity-suggestion-surface"
-          data-testid="profanity-suggestion-seek"
-          @click="emit('seek', suggestion.start)"
-        >
-          <div class="segment-card-top">
-            <div class="segment-card-type">
-              <span class="segment-type-label segment-type-label-mute">{{ formatSourceLabel(suggestion) }}</span>
-            </div>
-          </div>
-          <div class="segment-time-row">
-            <span>{{ formatTimestamp(suggestion.start) }}</span>
-            <span class="segment-range-separator">-&gt;</span>
-            <span>{{ formatTimestamp(suggestion.end) }}</span>
-          </div>
-          <div
-            class="profanity-suggestion-snippet"
-            data-testid="profanity-suggestion-snippet"
-            :title="suggestion.snippet"
+        <div class="segment-card-surface profanity-suggestion-surface">
+          <button
+            type="button"
+            class="profanity-suggestion-content"
+            data-testid="profanity-suggestion-seek"
+            @click="emit('seek', suggestion.start)"
           >
-            {{ suggestion.snippet }}
-          </div>
-          <div class="segment-duration" :title="suggestion.matchedTerms.join(', ')">
-            {{ suggestion.matchedTerms.join(', ') }}
-          </div>
-        </button>
+            <div class="segment-card-top">
+              <div class="segment-card-type">
+                <span class="segment-type-label segment-type-label-mute">{{ formatSourceLabel(suggestion) }}</span>
+              </div>
+            </div>
+            <div class="segment-time-row">
+              <span>{{ formatTimestamp(suggestion.start) }}</span>
+              <span class="segment-range-separator">-&gt;</span>
+              <span>{{ formatTimestamp(suggestion.end) }}</span>
+            </div>
+            <div
+              class="profanity-suggestion-snippet"
+              data-testid="profanity-suggestion-snippet"
+              :title="suggestion.snippet"
+            >
+              {{ suggestion.snippet }}
+            </div>
+            <div class="segment-duration" :title="suggestion.matchedTerms.join(', ')">
+              {{ suggestion.matchedTerms.join(', ') }}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="profanity-suggestion-remove-button segment-delete-button"
+            data-testid="remove-profanity-suggestion-button"
+            aria-label="Remove draft suggestion"
+            title="Remove draft suggestion"
+            @click="emit('removeProfanitySuggestion', suggestion.id)"
+          >
+            <PhTrash :size="16" />
+          </button>
+        </div>
       </li>
     </ul>
 

@@ -956,13 +956,27 @@ button {
 }
 
 .profanity-suggestion-surface {
+  display: flex;
+  align-items: start;
   width: 100%;
+  gap: 0.28rem;
+}
+
+.profanity-suggestion-content {
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 0;
   text-align: left;
   border: 0;
   background: transparent;
   color: inherit;
+  display: grid;
   gap: 0.28rem;
+}
+
+.profanity-suggestion-remove-button {
+  margin-left: auto;
+  flex: 0 0 auto;
 }
 
 .profanity-suggestion-card .segment-card-top {

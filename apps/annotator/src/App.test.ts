@@ -966,6 +966,80 @@ describe('annotator app', () => {
     expect(wrapper.findAll('.segment-card')).toHaveLength(0);
   });
 
+  it('can remove individual draft profanity suggestions before applying subtitle imports', async () => {
+    const wrapper = mount(App);
+    await openVideo(wrapper, {
+      cancelled: false,
+      inputPath: 'C:\\Movies\\movie.mp4',
+      name: 'movie.mp4',
+      outputPath: 'C:\\Movies\\movie.cleaned.mp4',
+      playbackUrl: '/api/media/token-1',
+      playbackSource: 'original'
+    });
+
+    fetchMock.mockClear();
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: false,
+        subtitlePath: 'C:\\Subtitles\\movie.srt'
+      })
+    );
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        suggestions: [
+          {
+            id: 'suggestion-1',
+            start: 12,
+            end: 13,
+            snippet: 'oh shit',
+            source: 'provided',
+            matchedTerms: ['shit']
+          },
+          {
+            id: 'suggestion-2',
+            start: 22,
+            end: 23,
+            snippet: 'what the fuck',
+            source: 'provided',
+            matchedTerms: ['fuck']
+          }
+        ],
+        usedSources: ['provided'],
+        subtitleCueCount: 2,
+        message: 'Detected 2 draft mute suggestions.'
+      })
+    );
+
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+    await wrapper.get('[data-testid="select-subtitle-path-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+    await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toContain('2 suggestions');
+
+    await wrapper.findAll('[data-testid="remove-profanity-suggestion-button"]')[0]?.trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="profanity-modal"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toContain('1 suggestion');
+    expect(wrapper.findAll('[data-testid="profanity-suggestion-snippet"]')).toHaveLength(1);
+    expect(wrapper.get('[data-testid="profanity-suggestion-snippet"]').text()).toContain('what the fuck');
+    expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Removed draft profanity suggestion.');
+
+    await wrapper.get('[data-testid="apply-profanity-suggestions-button"]').trigger('click');
+    await nextTick();
+    await switchMode(wrapper, 'annotate');
+
+    expect(wrapper.find('[data-testid="profanity-modal"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]')).toBe('00:22.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-end-edit"]')).toBe('00:23.000');
+  });
+
   it('shows export progress in the button, then completes processing with the expected payload', async () => {
     const wrapper = mount(App);
 

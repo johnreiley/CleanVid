@@ -1196,6 +1196,19 @@ export function useAnnotatorState() {
     statusMessage.value = 'Discarded profanity suggestions.';
   }
 
+  function removeProfanitySuggestion(id: string) {
+    clearFeedback();
+
+    const remainingSuggestions = profanitySuggestions.value.filter((suggestion) => suggestion.id !== id);
+
+    if (remainingSuggestions.length === profanitySuggestions.value.length) {
+      return;
+    }
+
+    profanitySuggestions.value = remainingSuggestions;
+    statusMessage.value = 'Removed draft profanity suggestion.';
+  }
+
   function applyProfanitySuggestions() {
     clearFeedback();
 
@@ -1544,6 +1557,7 @@ export function useAnnotatorState() {
     clearProfanitySubtitlePath,
     analyzeProfanity,
     discardProfanitySuggestions,
+    removeProfanitySuggestion,
     applyProfanitySuggestions,
     applySkpImport,
     discardSkpImport,

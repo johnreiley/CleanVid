@@ -35,6 +35,7 @@ const emit = defineEmits<{
   clearProfanitySubtitlePath: [];
   discardSkpImport: [];
   discardProfanitySuggestions: [];
+  removeProfanitySuggestion: [id: string];
   openVideo: [];
   clearSvgImportError: [];
   selectOutputPath: [];
@@ -442,6 +443,7 @@ onMounted(() => {
         @clear-subtitle-path="emit('clearProfanitySubtitlePath')"
         @close="closeProfanityModal"
         @discard-profanity-suggestions="handleProfanitySuggestionsDiscard"
+        @remove-profanity-suggestion="emit('removeProfanitySuggestion', $event)"
         @seek="emit('seek', $event)"
         @select-subtitle-path="emit('selectProfanitySubtitlePath')"
       />
