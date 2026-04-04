@@ -1,3 +1,5 @@
+/* #region Shared Surfaces */
+
 .panel,
 .top-bar {
   border: var(--panel-border);
@@ -11,6 +13,10 @@
     linear-gradient(180deg, rgba(15, 19, 26, 0.84), rgba(10, 13, 19, 0.96)),
     var(--surface);
 }
+
+/* #endregion Shared Surfaces */
+
+/* #region Top Bar */
 
 .top-bar {
   padding: var(--space-xl) var(--space-4xl);
@@ -78,6 +84,10 @@
 .feedback-card {
   color: var(--text-secondary);
 }
+
+/* #endregion Top Bar */
+
+/* #region Shared Controls */
 
 .top-bar-meta {
   min-width: 0;
@@ -167,6 +177,10 @@
   gap: var(--space-md);
 }
 
+/* #endregion Shared Controls */
+
+/* #region Shared Section Headings */
+
 .sidebar-section,
 .file-actions,
 .segments-shell {
@@ -246,6 +260,24 @@
   font-size: 0.93rem;
 }
 
+.section-toggle-button {
+  min-height: var(--control-height-sm);
+  padding: var(--space-xs) var(--space-lg);
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-soft);
+  border: var(--panel-border);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+}
+
+.section-toggle-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--border-brand-quiet);
+}
+
 .section-heading-actions {
   justify-content: flex-end;
 }
@@ -255,6 +287,16 @@
   font-size: 0.74rem;
   white-space: nowrap;
 }
+
+.collapsible-section-content {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-lg);
+}
+
+/* #endregion Shared Section Headings */
+
+/* #region Sidebar Panels */
 
 .loaded-media-row,
 .export-metric-row {
@@ -285,6 +327,10 @@
   font-size: 0.76rem;
   font-weight: 600;
 }
+
+/* #endregion Sidebar Panels */
+
+/* #region Mark Actions */
 
 .quick-actions {
   display: grid;
@@ -360,6 +406,10 @@
   font-size: 0.72rem;
 }
 
+/* #endregion Mark Actions */
+
+/* #region Feedback Toast */
+
 .feedback-card,
 .segments-shell,
 .viewport-card,
@@ -434,6 +484,10 @@
 .feedback-card-quiet {
   color: var(--text-soft);
 }
+
+/* #endregion Feedback Toast */
+
+/* #region Segment List */
 
 .segments-shell {
   min-height: 0;
@@ -617,6 +671,10 @@
   background: var(--surface-control-hover);
 }
 
+/* #endregion Segment List */
+
+/* #region Export Forms */
+
 .file-actions {
   padding: var(--space-3xl);
 }
@@ -763,6 +821,10 @@
   cursor: progress;
 }
 
+/* #endregion Export Forms */
+
+/* #region Import and Analysis */
+
 .profanity-modal-panel .profanity-analysis-section {
   padding: 0;
   border: 0;
@@ -873,6 +935,10 @@
   -webkit-box-orient: vertical;
 }
 
+/* #endregion Import and Analysis */
+
+/* #region Modal Shells */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -893,6 +959,10 @@
   padding: 1.25rem;
   border-radius: var(--radius-lg);
 }
+
+/* #endregion Modal Shells */
+
+/* #region Video Viewport */
 
 .viewport-card {
   min-height: 0;
@@ -987,6 +1057,10 @@
   font-size: 0.98rem;
   font-weight: 700;
 }
+
+/* #endregion Video Viewport */
+
+/* #region Timeline Rail */
 
 .timeline-rail {
   padding: var(--space-2xl) var(--space-3xl) var(--space-3xl);
@@ -1085,6 +1159,10 @@
   color: var(--text-secondary);
 }
 
+/* #endregion Timeline Rail */
+
+/* #region Playback Transport */
+
 .transport-bar {
   width: 100%;
   gap: var(--space-xl);
@@ -1182,26 +1260,4 @@
   font-size: 0.72rem;
 }
 
-.section-toggle-button {
-  min-height: var(--control-height-sm);
-  padding: var(--space-xs) var(--space-lg);
-  border-radius: var(--radius-md);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-soft);
-  border: var(--panel-border);
-  color: var(--text-primary);
-  font-size: 0.78rem;
-}
-
-.section-toggle-button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 1px var(--border-brand-quiet);
-}
-
-.collapsible-section-content {
-  min-width: 0;
-  display: grid;
-  gap: var(--space-lg);
-}
+/* #endregion Playback Transport */
