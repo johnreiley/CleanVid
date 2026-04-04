@@ -9,6 +9,7 @@ import {
   normalizeFilters,
   parseFilterFile,
   parseSkpFile,
+  parseSvgRectImport,
   serializeFilterFile
 } from './index.js';
 
@@ -375,6 +376,79 @@ Language mute 1
 00:01:00.000 - 00:01:03.000
 Broken label
 `)
+    ).toThrowError(FilterValidationError);
+  });
+});
+
+describe('svg rect import parsing', () => {
+  it('parses rect segments relative to the loaded movie duration', () => {
+    const parsed = parseSvgRectImport(
+      `<svg><rect class="backdrop"></rect><g><rect x="10%" width="5%" class="cuts"></rect><rect x="25%" width="2.5%" class="cuts"></rect></g></svg>`,
+      {
+        duration: 200,
+        type: 'mute'
+      }
+    );
+
+    expect(parsed).toEqual([
+      { type: 'mute', start: 20, end: 30 },
+      { type: 'mute', start: 50, end: 55 }
+    ]);
+  });
+
+  it('ignores non-cut rects and merges overlapping or duplicate imported ranges', () => {
+    const parsed = parseSvgRectImport(
+      `<svg><rect class="backdrop" x="0%" width="100%"></rect><rect class="cuts secondary" x="10%" width="5%"></rect><rect class="cuts" x="12%" width="3%"></rect><rect class="cuts" x="12%" width="3%"></rect></svg>`,
+      {
+        duration: 100,
+        type: 'skip'
+      }
+    );
+
+    expect(parsed).toEqual([{ type: 'skip', start: 10, end: 15 }]);
+  });
+
+  it('supports decimal percentages and clamps segments to the media duration', () => {
+    const parsed = parseSvgRectImport(
+      `<svg><rect class="cuts" x="99.5%" width="4.25%"></rect></svg>`,
+      {
+        duration: 80,
+        type: 'mute'
+      }
+    );
+
+    expect(parsed).toEqual([{ type: 'mute', start: 79.6, end: 80 }]);
+  });
+
+  it('rejects empty input invalid svg and unusable cuts', () => {
+    expect(() =>
+      parseSvgRectImport('', {
+        duration: 100,
+        type: 'mute'
+      })
+    ).toThrowError(FilterValidationError);
+
+    expect(() =>
+      parseSvgRectImport('<svg><rect class="cuts"', {
+        duration: 100,
+        type: 'mute'
+      })
+    ).toThrowError(FilterValidationError);
+
+    expect(() =>
+      parseSvgRectImport('<svg><rect class="backdrop" x="10%" width="5%"></rect></svg>', {
+        duration: 100,
+        type: 'mute'
+      })
+    ).toThrowError(FilterValidationError);
+  });
+
+  it('rejects zero-duration imports', () => {
+    expect(() =>
+      parseSvgRectImport('<svg><rect class="cuts" x="10%" width="5%"></rect></svg>', {
+        duration: 0,
+        type: 'mute'
+      })
     ).toThrowError(FilterValidationError);
   });
 });

@@ -17,10 +17,12 @@ import ProcessingOptionsSection from './ProcessingOptionsSection.vue';
 import SegmentsSection from './SegmentsSection.vue';
 import SessionActions from './SessionActions.vue';
 import SkpImportReviewSection from './SkpImportReviewSection.vue';
+import SvgImportSection from './SvgImportSection.vue';
 import SidebarModeTabs from './SidebarModeTabs.vue';
 import StatusToast from './StatusToast.vue';
 
 type AnnotatorUiMode = 'media' | 'annotate' | 'export';
+type SvgImportMode = 'replace' | 'append';
 
 const emit = defineEmits<{
   activeTypeChange: [value: FilterType];
@@ -33,21 +35,28 @@ const emit = defineEmits<{
   clearProfanitySubtitlePath: [];
   discardSkpImport: [];
   discardProfanitySuggestions: [];
+  removeProfanitySuggestion: [id: string];
   openVideo: [];
+  clearSvgImportError: [];
   selectOutputPath: [];
   selectProfanitySubtitlePath: [];
   processLinkedVideo: [];
   seek: [start: number];
   selectSegment: [id: string | null];
+  submitSvgImport: [];
   toggleMark: [value: FilterType];
   updateOutputPath: [value: string];
   updateSegment: [payload: { id: string; field: 'start' | 'end'; value: string }];
+  updateSvgImportMode: [value: SvgImportMode];
+  updateSvgImportText: [value: string];
+  updateSvgImportType: [value: FilterType];
 }>();
 
 const props = defineProps<{
   activeType: FilterType;
   canAnalyzeProfanity: boolean;
   canProcessVideo: boolean;
+  canImportSvg: boolean;
   currentMode: AnnotatorUiMode;
   errorMessage: string;
   inputName: string;
@@ -76,6 +85,11 @@ const props = defineProps<{
   selectedSegmentId: string | null;
   sortedSegments: EditableSegment[];
   statusMessage: string;
+  svgImportError: string;
+  svgImportMode: SvgImportMode;
+  svgImportSuccessKey: number;
+  svgImportText: string;
+  svgImportType: FilterType;
 }>();
 
 const segmentCards = new Map<string, HTMLElement>();
@@ -91,6 +105,7 @@ const processButtonLabel = computed(() =>
 const hasLoadedVideo = computed(() => props.inputName !== '');
 const isProfanityModalOpen = ref(false);
 const isSkpImportModalOpen = ref(false);
+const isSvgImportModalOpen = ref(false);
 
 function clearToastTimer() {
   if (toastTimer !== null) {
@@ -130,6 +145,15 @@ function openProfanityModal() {
   isProfanityModalOpen.value = true;
 }
 
+function openSvgImportModal() {
+  if (!props.canImportSvg) {
+    return;
+  }
+
+  emit('clearSvgImportError');
+  isSvgImportModalOpen.value = true;
+}
+
 function openSkpImportModal() {
   if (props.skpDraftSegments.length === 0) {
     return;
@@ -141,6 +165,11 @@ function openSkpImportModal() {
 
 function closeProfanityModal() {
   isProfanityModalOpen.value = false;
+}
+
+function closeSvgImportModal() {
+  isSvgImportModalOpen.value = false;
+  emit('clearSvgImportError');
 }
 
 function closeSkpImportModal() {
@@ -174,6 +203,11 @@ function handleWindowKeydown(event: KeyboardEvent) {
 
   if (isSkpImportModalOpen.value) {
     closeSkpImportModal();
+    return;
+  }
+
+  if (isSvgImportModalOpen.value) {
+    closeSvgImportModal();
     return;
   }
 
@@ -215,9 +249,20 @@ watch(
 watch(
   () => [props.currentMode, hasLoadedVideo.value] as const,
   ([currentMode, loaded]) => {
-    if (currentMode !== 'annotate' || !loaded) {
+    if (!loaded) {
       closeProfanityModal();
       closeSkpImportModal();
+      closeSvgImportModal();
+      return;
+    }
+
+    if (currentMode !== 'annotate') {
+      closeProfanityModal();
+      closeSkpImportModal();
+    }
+
+    if (currentMode !== 'media') {
+      closeSvgImportModal();
     }
   }
 );
@@ -228,6 +273,15 @@ watch(
     if (props.skpDraftSegments.length > 0) {
       isSkpImportModalOpen.value = true;
       closeProfanityModal();
+    }
+  }
+);
+
+watch(
+  () => props.svgImportSuccessKey,
+  (svgImportSuccessKey, previousKey) => {
+    if (svgImportSuccessKey > 0 && svgImportSuccessKey !== previousKey) {
+      closeSvgImportModal();
     }
   }
 );
@@ -267,10 +321,12 @@ onMounted(() => {
     <div v-if="currentMode === 'media'" class="sidebar-mode-panel" data-testid="mode-panel-media">
       <SessionActions
         :can-import-filters="hasLoadedVideo"
+        :can-import-svg="canImportSvg"
         :is-opening-video="isOpeningVideo"
         :open-video-progress-percent="openVideoProgressPercent"
         @filters-selected="emit('filtersSelected', $event)"
         @open-video="emit('openVideo')"
+        @open-svg-import="openSvgImportModal"
       />
 
       <div v-if="hasLoadedVideo" class="loaded-media-row" data-testid="loaded-video-name">
@@ -345,6 +401,28 @@ onMounted(() => {
   </aside>
 
   <div
+    v-if="isSvgImportModalOpen"
+    class="modal-backdrop profanity-modal-backdrop"
+    data-testid="svg-import-modal"
+    @click.self="closeSvgImportModal"
+  >
+    <div class="panel profanity-modal-panel" role="dialog" aria-modal="true" aria-label="Import SVG filters">
+      <SvgImportSection
+        :error-message="svgImportError"
+        :import-mode="svgImportMode"
+        :import-type="svgImportType"
+        :show-close-button="true"
+        :svg-text="svgImportText"
+        @close="closeSvgImportModal"
+        @submit="emit('submitSvgImport')"
+        @update-mode="emit('updateSvgImportMode', $event)"
+        @update-text="emit('updateSvgImportText', $event)"
+        @update-type="emit('updateSvgImportType', $event)"
+      />
+    </div>
+  </div>
+
+  <div
     v-if="isProfanityModalOpen"
     class="modal-backdrop profanity-modal-backdrop"
     data-testid="profanity-modal"
@@ -365,6 +443,7 @@ onMounted(() => {
         @clear-subtitle-path="emit('clearProfanitySubtitlePath')"
         @close="closeProfanityModal"
         @discard-profanity-suggestions="handleProfanitySuggestionsDiscard"
+        @remove-profanity-suggestion="emit('removeProfanitySuggestion', $event)"
         @seek="emit('seek', $event)"
         @select-subtitle-path="emit('selectProfanitySubtitlePath')"
       />

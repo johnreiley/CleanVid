@@ -84,7 +84,7 @@ function handleViewportClick() {
 
         <div
           v-if="previewActiveType !== null"
-          :class="['viewport-hud', 'viewport-hud-preview', `viewport-hud-preview-${previewActiveType}`]"
+          :class="['viewport-hud', `viewport-hud-preview-${previewActiveType}`]"
           data-testid="preview-hud"
         >
           <span :class="['hud-dot', `hud-dot-${previewActiveType}`]" />
@@ -124,7 +124,7 @@ function handleViewportClick() {
 
     <div v-if="!videoUrl" class="video-placeholder" data-testid="video-placeholder">
       <div class="placeholder-mark">
-        <PhFilmSlate class="placeholder-mark-icon" :size="48" />
+        <PhFilmSlate :size="48" />
       </div>
       <p class="video-placeholder-title">Open a video</p>
       <p class="video-placeholder-copy">Select a file to annotate and process</p>

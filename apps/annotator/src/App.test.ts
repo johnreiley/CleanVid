@@ -227,6 +227,12 @@ function setFileText(file: File, value: string) {
   });
 }
 
+async function openSvgImportModal(wrapper: ReturnType<typeof mount>) {
+  await switchMode(wrapper, 'media');
+  await wrapper.get('[data-testid="open-svg-import-modal-button"]').trigger('click');
+  await nextTick();
+}
+
 beforeEach(() => {
   let blobCounter = 0;
   lastExportBlob = null;
@@ -324,12 +330,18 @@ describe('annotator app', () => {
 
     expect(wrapper.find('[data-testid="loaded-video-name"]').exists()).toBe(false);
     expect((wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement).disabled).toBe(true);
+    expect(
+      (wrapper.get('[data-testid="open-svg-import-modal-button"]').element as HTMLButtonElement).disabled
+    ).toBe(true);
 
     await openVideo(wrapper);
     await switchMode(wrapper, 'media');
 
     expect(wrapper.get('[data-testid="loaded-video-name"]').text()).toContain('movie.mp4');
     expect((wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement).disabled).toBe(false);
+    expect(
+      (wrapper.get('[data-testid="open-svg-import-modal-button"]').element as HTMLButtonElement).disabled
+    ).toBe(false);
 
     await switchMode(wrapper, 'annotate');
     expect(wrapper.get('[data-testid="mode-panel-annotate"]').text()).toContain('Actions');
@@ -954,6 +966,80 @@ describe('annotator app', () => {
     expect(wrapper.findAll('.segment-card')).toHaveLength(0);
   });
 
+  it('can remove individual draft profanity suggestions before applying subtitle imports', async () => {
+    const wrapper = mount(App);
+    await openVideo(wrapper, {
+      cancelled: false,
+      inputPath: 'C:\\Movies\\movie.mp4',
+      name: 'movie.mp4',
+      outputPath: 'C:\\Movies\\movie.cleaned.mp4',
+      playbackUrl: '/api/media/token-1',
+      playbackSource: 'original'
+    });
+
+    fetchMock.mockClear();
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        cancelled: false,
+        subtitlePath: 'C:\\Subtitles\\movie.srt'
+      })
+    );
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({
+        suggestions: [
+          {
+            id: 'suggestion-1',
+            start: 12,
+            end: 13,
+            snippet: 'oh shit',
+            source: 'provided',
+            matchedTerms: ['shit']
+          },
+          {
+            id: 'suggestion-2',
+            start: 22,
+            end: 23,
+            snippet: 'what the fuck',
+            source: 'provided',
+            matchedTerms: ['fuck']
+          }
+        ],
+        usedSources: ['provided'],
+        subtitleCueCount: 2,
+        message: 'Detected 2 draft mute suggestions.'
+      })
+    );
+
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+    await wrapper.get('[data-testid="select-subtitle-path-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+    await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toContain('2 suggestions');
+
+    await wrapper.findAll('[data-testid="remove-profanity-suggestion-button"]')[0]?.trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="profanity-modal"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toContain('1 suggestion');
+    expect(wrapper.findAll('[data-testid="profanity-suggestion-snippet"]')).toHaveLength(1);
+    expect(wrapper.get('[data-testid="profanity-suggestion-snippet"]').text()).toContain('what the fuck');
+    expect(wrapper.get('[data-testid="status-message"]').text()).toContain('Removed draft profanity suggestion.');
+
+    await wrapper.get('[data-testid="apply-profanity-suggestions-button"]').trigger('click');
+    await nextTick();
+    await switchMode(wrapper, 'annotate');
+
+    expect(wrapper.find('[data-testid="profanity-modal"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]')).toBe('00:22.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-end-edit"]')).toBe('00:23.000');
+  });
+
   it('shows export progress in the button, then completes processing with the expected payload', async () => {
     const wrapper = mount(App);
 
@@ -1367,6 +1453,119 @@ describe('annotator app', () => {
     await wrapper.get('[data-testid="export-button"]').trigger('click');
     expect(lastExportBlob).toBeDefined();
     await expect(readBlobText(lastExportBlob as Blob)).resolves.toContain('"id": "seg-1"');
+  });
+
+  it('opens and closes the svg import modal from the media panel', async () => {
+    const wrapper = mount(App);
+
+    await openVideo(wrapper);
+    await openSvgImportModal(wrapper);
+
+    expect(wrapper.find('[data-testid="svg-import-modal"]').exists()).toBe(true);
+
+    await wrapper.get('[data-testid="close-svg-import-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="svg-import-modal"]').exists()).toBe(false);
+  });
+
+  it('imports svg rect segments as replacement skip filters', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 4;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 6;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
+
+    await openSvgImportModal(wrapper);
+    await wrapper.get('[data-testid="svg-import-type-select"]').setValue('skip');
+    await wrapper.get('[data-testid="svg-import-mode-select"]').setValue('replace');
+    await wrapper
+      .get('[data-testid="svg-import-textarea"]')
+      .setValue(
+        '<svg><rect class="backdrop"></rect><rect class="cuts" x="10%" width="5%"></rect><rect class="cuts" x="12%" width="4%"></rect><rect class="cuts" x="50%" width="10%"></rect></svg>'
+      );
+
+    await wrapper.get('[data-testid="apply-svg-import-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="svg-import-modal"]').exists()).toBe(false);
+    await switchMode(wrapper, 'annotate');
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(2);
+    expect(wrapper.text()).toContain('Imported 2 skip SVG filters and replaced the current timeline.');
+    expect(wrapper.text()).toContain('SKIP');
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]', 0)).toBe('00:12.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-end-edit"]', 0)).toBe('00:19.200');
+  });
+
+  it('appends svg rect segments without replacing the current timeline', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 5;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 8;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+    await nextTick();
+
+    await openSvgImportModal(wrapper);
+    await wrapper.get('[data-testid="svg-import-type-select"]').setValue('mute');
+    await wrapper.get('[data-testid="svg-import-mode-select"]').setValue('append');
+    await wrapper
+      .get('[data-testid="svg-import-textarea"]')
+      .setValue('<svg><rect class="cuts" x="20%" width="5%"></rect></svg>');
+
+    await wrapper.get('[data-testid="apply-svg-import-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="svg-import-modal"]').exists()).toBe(false);
+    await switchMode(wrapper, 'annotate');
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(2);
+    expect(wrapper.text()).toContain('Appended 1 mute SVG filter to the current timeline.');
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]', 0)).toBe('00:05.000');
+    expect(getEditableText(wrapper, '[data-testid="segment-start-edit"]', 1)).toBe('00:24.000');
+  });
+
+  it('shows inline validation for invalid svg imports and keeps the timeline unchanged', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 9;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 11;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+    await nextTick();
+
+    await openSvgImportModal(wrapper);
+    await wrapper.get('[data-testid="svg-import-textarea"]').setValue('not actually svg');
+    await wrapper.get('[data-testid="apply-svg-import-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="svg-import-modal"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="svg-import-error"]').text()).toContain('valid SVG');
+    await wrapper.get('[data-testid="cancel-svg-import-button"]').trigger('click');
+    await nextTick();
+    await switchMode(wrapper, 'annotate');
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(1);
   });
 
   it('stages skp imports for review and discards them without changing the timeline', async () => {
