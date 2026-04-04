@@ -7,6 +7,7 @@ import VideoStage from './components/annotator/video-stage/VideoStage.vue';
 import { useAnnotatorState } from './composables/useAnnotatorState';
 
 type AnnotatorUiMode = 'media' | 'annotate' | 'export';
+type SvgImportMode = 'replace' | 'append';
 
 const annotator = proxyRefs(useAnnotatorState());
 const segmentScrollKey = ref(0);
@@ -27,6 +28,10 @@ function handleSegmentUpdate(payload: { id: string; field: 'start' | 'end'; valu
 
 function handleOutputPathUpdate(value: string) {
   annotator.updateOutputPath(value);
+}
+
+function handleSvgImportModeChange(value: SvgImportMode) {
+  annotator.updateSvgImportMode(value);
 }
 
 function handleModeChange(value: AnnotatorUiMode) {
@@ -97,6 +102,7 @@ onBeforeUnmount(() => {
       <MarkersPanel
         :active-type="annotator.activeType"
         :can-analyze-profanity="annotator.canAnalyzeProfanity"
+        :can-import-svg="annotator.effectiveDuration > 0"
         :can-process-video="annotator.canProcessVideo"
         :current-mode="uiMode"
         :error-message="annotator.errorMessage"
@@ -126,10 +132,16 @@ onBeforeUnmount(() => {
         :selected-segment-id="annotator.selectedSegmentId"
         :sorted-segments="annotator.sortedSegments"
         :status-message="annotator.statusMessage"
+        :svg-import-error="annotator.svgImportError"
+        :svg-import-mode="annotator.svgImportMode"
+        :svg-import-success-key="annotator.svgImportSuccessKey"
+        :svg-import-text="annotator.svgImportText"
+        :svg-import-type="annotator.svgImportType"
         @active-type-change="handleActiveTypeChange"
         @analyze-profanity="annotator.analyzeProfanity"
         @apply-profanity-suggestions="annotator.applyProfanitySuggestions"
         @apply-skp-import="annotator.applySkpImport"
+        @clear-svg-import-error="annotator.clearSvgImportError"
         @clear-profanity-subtitle-path="annotator.clearProfanitySubtitlePath"
         @change-mode="handleModeChange"
         @discard-skp-import="annotator.discardSkpImport"
@@ -139,11 +151,15 @@ onBeforeUnmount(() => {
         @select-output-path="annotator.selectOutputPath"
         @select-profanity-subtitle-path="annotator.selectProfanitySubtitlePath"
         @process-linked-video="annotator.processLinkedVideo"
+        @submit-svg-import="annotator.importSvgFilters"
         @toggle-mark="annotator.toggleMark"
         @seek="annotator.seekTo"
         @select-segment="annotator.selectSegment"
         @update-output-path="handleOutputPathUpdate"
         @update-segment="handleSegmentUpdate"
+        @update-svg-import-mode="handleSvgImportModeChange"
+        @update-svg-import-text="annotator.updateSvgImportText"
+        @update-svg-import-type="annotator.updateSvgImportType"
         @delete-segment="annotator.deleteSegment"
       />
 

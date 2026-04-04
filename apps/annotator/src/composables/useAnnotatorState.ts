@@ -5,6 +5,7 @@ import {
   normalizeFilters,
   parseFilterFile,
   parseSkpFile,
+  parseSvgRectImport,
   serializeFilterFile,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult,
@@ -19,6 +20,7 @@ import { formatTimestamp } from '../time';
 
 const SEEK_STEP_SECONDS = 5;
 const FINE_SEEK_STEP_SECONDS = 0.1;
+type SvgImportMode = 'replace' | 'append';
 
 interface OpenVideoResponse {
   cancelled: boolean;
@@ -187,6 +189,11 @@ export function useAnnotatorState() {
   const skpDraftSegments = ref<SkpDraftSegment[]>([]);
   const skpImportWarnings = ref<string[]>([]);
   const skpReviewRequestKey = ref(0);
+  const svgImportText = ref('');
+  const svgImportType = ref<FilterType>('mute');
+  const svgImportMode = ref<SvgImportMode>('replace');
+  const svgImportError = ref('');
+  const svgImportSuccessKey = ref(0);
   const profanitySubtitlePath = ref('');
   const statusMessage = ref('Open a video to begin annotating.');
   const errorMessage = ref('');
@@ -367,6 +374,32 @@ export function useAnnotatorState() {
 
   function clearFeedback() {
     errorMessage.value = '';
+  }
+
+  function clearSvgImportError() {
+    svgImportError.value = '';
+  }
+
+  function updateSvgImportText(value: string) {
+    svgImportText.value = value;
+    clearSvgImportError();
+  }
+
+  function updateSvgImportType(value: FilterType) {
+    svgImportType.value = value;
+    clearSvgImportError();
+  }
+
+  function updateSvgImportMode(value: SvgImportMode) {
+    svgImportMode.value = value;
+    clearSvgImportError();
+  }
+
+  function resetSvgImportForm() {
+    svgImportText.value = '';
+    svgImportType.value = 'mute';
+    svgImportMode.value = 'replace';
+    clearSvgImportError();
   }
 
   function getDisplayProcessPercent(progress: ProcessProgressPayload): number {
@@ -697,6 +730,7 @@ export function useAnnotatorState() {
     markFiltersPersisted([]);
     clearProfanitySuggestions();
     clearSkpDraftSegments();
+    resetSvgImportForm();
     profanitySubtitlePath.value = '';
   }
 
@@ -961,6 +995,59 @@ export function useAnnotatorState() {
       }
 
       setError('Unable to import the SKP file.');
+    }
+  }
+
+  function importSvgFilters() {
+    clearFeedback();
+    clearSvgImportError();
+
+    try {
+      const nextSegments = parseSvgRectImport(svgImportText.value, {
+        duration: effectiveDuration.value,
+        type: svgImportType.value
+      }).map((segment) => ({
+        id: createSegmentId(),
+        type: segment.type,
+        start: clampToDuration(segment.start),
+        end: clampToDuration(segment.end)
+      }));
+
+      clearSkpDraftSegments();
+      pendingStart.value = null;
+      pendingType.value = null;
+
+      if (svgImportMode.value === 'replace') {
+        segments.value = sortSegments(nextSegments);
+        selectedSegmentId.value = null;
+      } else {
+        segments.value = sortSegments([...segments.value, ...nextSegments]);
+        selectedSegmentId.value = nextSegments[0]?.id ?? null;
+      }
+
+      const importedCount = nextSegments.length;
+      const importedType = svgImportType.value;
+      const importMode = svgImportMode.value;
+
+      resetSvgImportForm();
+      svgImportSuccessKey.value += 1;
+      statusMessage.value =
+        importMode === 'replace'
+          ? `Imported ${importedCount} ${importedType} SVG filter${
+              importedCount === 1 ? '' : 's'
+            } and replaced the current timeline.`
+          : `Appended ${importedCount} ${importedType} SVG filter${
+              importedCount === 1 ? '' : 's'
+            } to the current timeline.`;
+      return true;
+    } catch (error) {
+      if (error instanceof FilterValidationError || error instanceof Error) {
+        svgImportError.value = error.message;
+        return false;
+      }
+
+      svgImportError.value = 'Unable to import the pasted SVG.';
+      return false;
     }
   }
 
@@ -1420,6 +1507,11 @@ export function useAnnotatorState() {
     skpImportWarnings,
     skpImportSummaryText,
     skpReviewRequestKey,
+    svgImportText,
+    svgImportType,
+    svgImportMode,
+    svgImportError,
+    svgImportSuccessKey,
     profanitySubtitlePath,
     sortedSegments,
     segmentIssues,
@@ -1447,6 +1539,7 @@ export function useAnnotatorState() {
     togglePreviewPlayback,
     openVideo,
     loadFilterFile,
+    clearSvgImportError,
     selectProfanitySubtitlePath,
     clearProfanitySubtitlePath,
     analyzeProfanity,
@@ -1454,6 +1547,10 @@ export function useAnnotatorState() {
     applyProfanitySuggestions,
     applySkpImport,
     discardSkpImport,
+    updateSvgImportText,
+    updateSvgImportType,
+    updateSvgImportMode,
+    importSvgFilters,
     updateOutputPath,
     selectOutputPath,
     processLinkedVideo,

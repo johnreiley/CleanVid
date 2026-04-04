@@ -857,7 +857,8 @@ button {
 
 .profanity-analysis-section,
 .profanity-option-list,
-.skp-import-section {
+.skp-import-section,
+.svg-import-section {
   display: grid;
   gap: 0.65rem;
 }
@@ -907,6 +908,42 @@ button {
 
 .profanity-capability-notice p {
   margin: 0;
+}
+
+.profanity-capability-notice code {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+}
+
+.svg-import-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.svg-import-select {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.52rem 0.6rem;
+  border-radius: 0;
+  border: 1px solid var(--border);
+  background: rgba(10, 13, 18, 0.96);
+  color: var(--text-primary);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.svg-import-select:focus,
+.svg-import-textarea:focus {
+  outline: none;
+  border-color: rgba(111, 131, 255, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(111, 131, 255, 0.16);
+}
+
+.svg-import-textarea {
+  min-height: 14rem;
+  resize: vertical;
 }
 
 .profanity-suggestion-list {

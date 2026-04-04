@@ -4,10 +4,12 @@ import { computed } from 'vue';
 const emit = defineEmits<{
   filtersSelected: [file: File];
   openVideo: [];
+  openSvgImport: [];
 }>();
 
 const props = defineProps<{
   canImportFilters: boolean;
+  canImportSvg: boolean;
   isOpeningVideo: boolean;
   openVideoProgressPercent: number;
 }>();
@@ -71,6 +73,16 @@ function emitSelectedFile(event: Event) {
           @change="emitSelectedFile"
         />
       </label>
+
+      <button
+        type="button"
+        :class="['subtle-action', { 'subtle-action-disabled': !props.canImportSvg }]"
+        data-testid="open-svg-import-modal-button"
+        :disabled="!props.canImportSvg"
+        @click="emit('openSvgImport')"
+      >
+        Import SVG
+      </button>
     </div>
   </section>
 </template>
