@@ -4,8 +4,8 @@ CleanVid is a local-first video cleanup tool for building a family-friendly cut 
 
 Today the repo includes:
 - a Vue 3 annotator with a small local backend
-- a shared JSON filter format and timeline planner
-- a Node/TypeScript CLI that renders the cleaned output with FFmpeg
+- a shared JSON filter format, import parsers, and timeline planner
+- a Node/TypeScript CLI that renders the cleaned output with FFmpeg and prepares browser-safe previews when needed
 
 ## Current Functionality
 
@@ -15,6 +15,8 @@ CleanVid currently supports:
 - editing segment start and end times inline
 - selecting timeline regions to jump to matching segments
 - importing and exporting filter JSON
+- staging `.skp` imports for review before replacing the current timeline
+- importing SVG timeline rects as `mute` or `skip` filters
 - previewing mute/skip behavior during playback without rendering a file first
 - toggling preview playback on and off
 - analyzing profanity into draft mute suggestions before applying them to the timeline
@@ -30,7 +32,7 @@ Install these first:
 - `ffprobe` on your `PATH`
 
 Annotator note:
-- the built-in native file picker is Windows-only in the current build
+- the built-in native dialogs for opening videos, choosing subtitle files, and browsing for an output path are Windows-only in the current build
 
 ## Install
 
@@ -44,6 +46,14 @@ Run the annotator:
 
 ```bash
 npm run dev:annotator
+```
+
+Build individual workspace packages:
+
+```bash
+npm run build:shared
+npm run build:cli
+npm run build:annotator
 ```
 
 Run tests:
@@ -62,10 +72,10 @@ npm run build
 
 ```text
 apps/
-  annotator/   Vue 3 + Vite annotator with local API endpoints
-  cli/         Node CLI processor and preview-prep helpers
+  annotator/   Vue 3 + Vite annotator with local API endpoints and Windows-native picker dialogs
+  cli/         Node CLI processor plus preview preparation and cache helpers
 packages/
-  shared/      filter schema, validation, normalization, and timeline planning
+  shared/      filter schema, validation, SKP/SVG import parsers, profanity helpers, and timeline planning
 ```
 
 ## Annotator Workflow
@@ -73,11 +83,12 @@ packages/
 1. Start the annotator with `npm run dev:annotator`.
 2. Open the local Vite URL in your browser.
 3. Click the empty stage or `Open Video` to choose a source file.
-4. Annotate `mute` and `skip` ranges.
-5. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles.
-6. Review, seek through, and apply the suggestions you want.
-7. Fine-tune timestamps or jump around from the timeline and segment list.
-8. Export filters, or switch to Export mode to render the cleaned video.
+4. In the Media tab, optionally import existing filters from `.json` or `.skp`, or paste an SVG timeline for conversion into filters.
+5. Annotate `mute` and `skip` ranges.
+6. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles.
+7. Review, seek through, and apply the suggestions you want.
+8. Fine-tune timestamps or jump around from the timeline and segment list.
+9. Export filters, or switch to Export mode to render the cleaned video.
 
 The annotator currently opens:
 - `.mp4`
@@ -89,6 +100,11 @@ The annotator currently opens:
 Playback behavior:
 - `.mp4`, `.m4v`, `.mov`, and `.webm` play directly
 - `.mkv` creates a cached browser-safe preview automatically
+- cached previews are stored under your OS temp directory in `cleanvid-preview-cache`
+- cached previews are reused when possible and pruned on a best-effort basis after about 7 days
+- MKV preview prep tries a fast remux first when the streams are already browser-safe, then falls back to encoding if needed
+- preview encoding probes `h264_nvenc`, `h264_amf`, and `h264_qsv` before falling back to `libx264`
+- lower-core machines, or systems without a usable hardware preview encoder, fall back to a lighter preview profile automatically
 - processing still runs against the original source file, not the preview file
 - preview playback simulates `skip` by jumping forward and `mute` by muting audio only while playing
 - `skip` takes precedence over `mute`
@@ -99,6 +115,26 @@ Keyboard shortcuts:
 - `Space`: play/pause
 - `Left` / `Right`: seek by 5 seconds
 - `Shift` + `Left` / `Right`: seek by 0.1 seconds
+
+## Importing Existing Cut Lists
+
+Filter JSON:
+- `Import Filters` accepts standard CleanVid `*.json` files after a video is loaded
+- imported JSON updates the current timeline and restores the saved title/duration metadata when present
+
+SKP import:
+- `Import Filters` also accepts `*.skp`
+- SKP files are parsed into draft segments first, with malformed entries listed as warnings instead of silently failing
+- applying a reviewed SKP import replaces the current timeline
+- imported SKP entries keep category, severity, and description metadata visible in the annotator UI
+- exported CleanVid JSON stays in the normal filter-file shape and does not write SKP-only metadata back out
+
+SVG import:
+- `Import SVG` converts pasted `<rect class="cuts">` segments into CleanVid filters
+- rect `x` and `width` percentages are mapped against the currently loaded movie duration
+- you can import the rects as either `mute` or `skip`
+- SVG imports can either replace the current timeline or append to it
+- SVG import requires a loaded video duration greater than zero
 
 ## Profanity Analysis
 
@@ -130,13 +166,14 @@ Export details:
 - you can override the output path before exporting
 - exported filters are also written beside the rendered file as `*.filters.json`
 - export progress streams back into the UI while FFmpeg runs
+- the output browse button uses the Windows-native save dialog in the current build
 
 ## CLI Usage
 
-Build first:
+Build the CLI first:
 
 ```bash
-npm run build
+npm run build:cli
 ```
 
 Then run:
@@ -194,6 +231,7 @@ Rules:
 - processor-side timeline building clamps ranges to the actual media duration
 - segments clamped completely outside the media duration are dropped
 - `skip` overrides `mute` in overlapping ranges
+- only filter file version `1` is currently supported
 
 ## Current Scope Limits
 
