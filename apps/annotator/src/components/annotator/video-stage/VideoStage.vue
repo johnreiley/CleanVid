@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, type ComponentPublicInstance } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from 'vue';
 import type { FilterType } from '@cleanvid/shared';
 import type { EditableSegment } from '../../../annotator-types';
 import PlaybackTransport from './PlaybackTransport.vue';
 import TimelineTrack from './TimelineTrack.vue';
 import VideoViewport from './VideoViewport.vue';
+
+const TIMELINE_CARET_VIEW_PADDING = 24;
+const MANUAL_TIMELINE_SCROLL_IDLE_MS = 140;
 
 const emit = defineEmits<{
   loadedMetadata: [video: HTMLVideoElement];
@@ -32,13 +35,22 @@ const props = defineProps<{
   previewPlaybackEnabled: boolean;
   registerVideoElement: (element: Element | ComponentPublicInstance | null) => void;
   sortedSegments: EditableSegment[];
+  timelineZoom: number;
   videoUrl: string | null;
 }>();
 
 const isTimelineDragging = ref(false);
+const isProgrammaticTimelineScroll = ref(false);
+const isUserTimelineScrolling = ref(false);
+const timelineCaretAutoFollowMode = ref<'enabled' | 'paused-catchup' | 'paused-right-hidden'>(
+  'enabled'
+);
+const timelineViewport = ref<HTMLElement | null>(null);
 const timelineTrack = ref<HTMLElement | null>(null);
 const timelinePointerId = ref<number | null>(null);
 const timelineMovedDuringDrag = ref(false);
+let programmaticTimelineScrollResetId: number | null = null;
+let manualTimelineScrollIdleResetId: number | null = null;
 
 const progressPercent = computed(() => {
   if (props.effectiveDuration <= 0) {
@@ -90,18 +102,48 @@ function registerTrackElement(element: Element | ComponentPublicInstance | null)
   timelineTrack.value = null;
 }
 
+function registerViewportElement(element: Element | ComponentPublicInstance | null) {
+  if (element instanceof HTMLElement) {
+    timelineViewport.value = element;
+    return;
+  }
+
+  if (element && '$el' in element && element.$el instanceof HTMLElement) {
+    timelineViewport.value = element.$el;
+    return;
+  }
+
+  timelineViewport.value = null;
+}
+
+function getTimelineTrackWidth() {
+  const viewportWidth = timelineViewport.value?.clientWidth ?? 0;
+  if (viewportWidth > 0) {
+    return viewportWidth * props.timelineZoom;
+  }
+
+  if (!timelineTrack.value) {
+    return 0;
+  }
+
+  return Math.max(timelineTrack.value.scrollWidth, timelineTrack.value.getBoundingClientRect().width);
+}
+
 function getTimelineRatio(clientX: number) {
-  if (!timelineTrack.value || props.effectiveDuration <= 0) {
+  if (!timelineViewport.value || !timelineTrack.value || props.effectiveDuration <= 0) {
     return null;
   }
 
-  const rect = timelineTrack.value.getBoundingClientRect();
+  const rect = timelineViewport.value.getBoundingClientRect();
+  const trackWidth = getTimelineTrackWidth();
 
-  if (rect.width <= 0) {
+  if (rect.width <= 0 || trackWidth <= 0) {
     return null;
   }
 
-  return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  const offset = clientX - rect.left + timelineViewport.value.scrollLeft;
+
+  return Math.max(0, Math.min(1, offset / trackWidth));
 }
 
 function seekTimeline(clientX: number) {
@@ -111,7 +153,13 @@ function seekTimeline(clientX: number) {
     return;
   }
 
-  emit('seekTo', props.effectiveDuration * ratio);
+  const nextTime = props.effectiveDuration * ratio;
+
+  if (Math.abs(nextTime - props.currentTime) > 0.001) {
+    timelineCaretAutoFollowMode.value = 'enabled';
+  }
+
+  emit('seekTo', nextTime);
 }
 
 function releaseTimelineDrag(pointerId?: number) {
@@ -176,11 +224,237 @@ function handleTimelineClick(event: MouseEvent) {
 }
 
 function handleTimelineSegmentClick(segment: EditableSegment) {
+  if (Math.abs(segment.start - props.currentTime) > 0.001) {
+    timelineCaretAutoFollowMode.value = 'enabled';
+  }
+
   emit('selectSegment', segment.id);
   emit('seekTo', segment.start);
 }
 
+function scheduleProgrammaticTimelineScrollReset() {
+  if (programmaticTimelineScrollResetId !== null) {
+    window.clearTimeout(programmaticTimelineScrollResetId);
+  }
+
+  programmaticTimelineScrollResetId = window.setTimeout(() => {
+    isProgrammaticTimelineScroll.value = false;
+    programmaticTimelineScrollResetId = null;
+  }, 0);
+}
+
+function setTimelineViewportScrollLeft(scrollLeft: number) {
+  if (!timelineViewport.value) {
+    return;
+  }
+
+  isProgrammaticTimelineScroll.value = true;
+  timelineViewport.value.scrollLeft = scrollLeft;
+  scheduleProgrammaticTimelineScrollReset();
+}
+
+function handleTimelineViewportScroll() {
+  if (isProgrammaticTimelineScroll.value) {
+    return;
+  }
+
+  if (!props.isPlaying || props.timelineZoom <= 1) {
+    return;
+  }
+
+  isUserTimelineScrolling.value = true;
+
+  if (manualTimelineScrollIdleResetId !== null) {
+    window.clearTimeout(manualTimelineScrollIdleResetId);
+  }
+
+  manualTimelineScrollIdleResetId = window.setTimeout(() => {
+    isUserTimelineScrolling.value = false;
+    manualTimelineScrollIdleResetId = null;
+    maybeResumeTimelineCaretAutoFollow(props.currentTime);
+  }, MANUAL_TIMELINE_SCROLL_IDLE_MS);
+
+  const hiddenSide = getTimelineCaretHiddenSide(props.currentTime);
+
+  if (hiddenSide === 'right') {
+    timelineCaretAutoFollowMode.value = 'paused-right-hidden';
+    return;
+  }
+
+  if (hiddenSide === 'left') {
+    timelineCaretAutoFollowMode.value = 'paused-catchup';
+    return;
+  }
+
+  if (timelineCaretAutoFollowMode.value === 'paused-right-hidden') {
+    timelineCaretAutoFollowMode.value = 'paused-catchup';
+  }
+}
+
+function getTimelineCaretOffset(timeSeconds: number) {
+  const trackWidth = getTimelineTrackWidth();
+
+  return Math.max(0, Math.min(trackWidth, (timeSeconds / props.effectiveDuration) * trackWidth));
+}
+
+function getTimelineViewportBounds() {
+  if (!timelineViewport.value) {
+    return null;
+  }
+
+  const viewportWidth = timelineViewport.value.clientWidth;
+
+  return {
+    leftBound: timelineViewport.value.scrollLeft + TIMELINE_CARET_VIEW_PADDING,
+    rightBound: timelineViewport.value.scrollLeft + viewportWidth - TIMELINE_CARET_VIEW_PADDING,
+    viewportWidth
+  };
+}
+
+function getTimelineCaretHiddenSide(timeSeconds: number): 'left' | 'right' | null {
+  if (!timelineViewport.value || props.effectiveDuration <= 0 || props.timelineZoom <= 1) {
+    return null;
+  }
+
+  const bounds = getTimelineViewportBounds();
+
+  if (!bounds) {
+    return null;
+  }
+
+  const caretOffset = getTimelineCaretOffset(timeSeconds);
+
+  if (caretOffset < bounds.leftBound) {
+    return 'left';
+  }
+
+  if (caretOffset > bounds.rightBound) {
+    return 'right';
+  }
+
+  return null;
+}
+
+function maybeResumeTimelineCaretAutoFollow(timeSeconds: number) {
+  if (
+    !timelineViewport.value ||
+    timelineCaretAutoFollowMode.value !== 'paused-catchup' ||
+    isUserTimelineScrolling.value ||
+    props.effectiveDuration <= 0 ||
+    props.timelineZoom <= 1
+  ) {
+    return;
+  }
+
+  const bounds = getTimelineViewportBounds();
+
+  if (!bounds) {
+    return;
+  }
+
+  const caretOffset = getTimelineCaretOffset(timeSeconds);
+
+  if (caretOffset < bounds.rightBound) {
+    return;
+  }
+
+  timelineCaretAutoFollowMode.value = 'enabled';
+  keepTimelineCaretInView(timeSeconds);
+}
+
+function centerTimelineOnTime(timeSeconds: number) {
+  if (!timelineViewport.value || props.effectiveDuration <= 0) {
+    return;
+  }
+
+  const viewportWidth = timelineViewport.value.clientWidth;
+  const trackWidth = getTimelineTrackWidth();
+
+  if (viewportWidth <= 0 || trackWidth <= viewportWidth) {
+    setTimelineViewportScrollLeft(0);
+    return;
+  }
+
+  const ratio = Math.max(0, Math.min(1, timeSeconds / props.effectiveDuration));
+  const centeredOffset = trackWidth * ratio - viewportWidth / 2;
+  const maxScrollLeft = Math.max(0, trackWidth - viewportWidth);
+
+  setTimelineViewportScrollLeft(Math.max(0, Math.min(maxScrollLeft, centeredOffset)));
+}
+
+function keepTimelineCaretInView(timeSeconds: number) {
+  if (!timelineViewport.value || props.effectiveDuration <= 0 || props.timelineZoom <= 1) {
+    return;
+  }
+
+  if (isTimelineDragging.value || timelineCaretAutoFollowMode.value !== 'enabled') {
+    return;
+  }
+
+  const viewportWidth = timelineViewport.value.clientWidth;
+  const trackWidth = getTimelineTrackWidth();
+
+  if (viewportWidth <= 0 || trackWidth <= viewportWidth) {
+    setTimelineViewportScrollLeft(0);
+    return;
+  }
+
+  const maxScrollLeft = Math.max(0, trackWidth - viewportWidth);
+  const caretOffset = getTimelineCaretOffset(timeSeconds);
+  const bounds = getTimelineViewportBounds();
+
+  if (!bounds) {
+    return;
+  }
+
+  const { leftBound, rightBound } = bounds;
+
+  if (caretOffset < leftBound) {
+    setTimelineViewportScrollLeft(
+      Math.max(0, Math.min(maxScrollLeft, caretOffset - TIMELINE_CARET_VIEW_PADDING))
+    );
+    return;
+  }
+
+  if (caretOffset > rightBound) {
+    setTimelineViewportScrollLeft(
+      Math.max(
+        0,
+        Math.min(maxScrollLeft, caretOffset - viewportWidth + TIMELINE_CARET_VIEW_PADDING)
+      )
+    );
+  }
+}
+
+watch(
+  () => props.timelineZoom,
+  async () => {
+    await nextTick();
+    centerTimelineOnTime(props.currentTime);
+  }
+);
+
+watch(
+  () => props.currentTime,
+  (currentTime, previousTime) => {
+    if (currentTime === previousTime) {
+      return;
+    }
+
+    maybeResumeTimelineCaretAutoFollow(currentTime);
+    keepTimelineCaretInView(currentTime);
+  }
+);
+
 onBeforeUnmount(() => {
+  if (programmaticTimelineScrollResetId !== null) {
+    window.clearTimeout(programmaticTimelineScrollResetId);
+  }
+
+  if (manualTimelineScrollIdleResetId !== null) {
+    window.clearTimeout(manualTimelineScrollIdleResetId);
+  }
+
   releaseTimelineDrag();
 });
 </script>
@@ -216,8 +490,11 @@ onBeforeUnmount(() => {
         :is-timeline-dragging="isTimelineDragging"
         :pending-start-percent="pendingStartPercent"
         :progress-percent="progressPercent"
+        :handle-viewport-scroll="handleTimelineViewportScroll"
         :register-track-element="registerTrackElement"
+        :register-viewport-element="registerViewportElement"
         :sorted-segments="sortedSegments"
+        :timeline-zoom="timelineZoom"
       />
 
       <PlaybackTransport

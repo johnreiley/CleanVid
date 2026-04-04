@@ -5,8 +5,12 @@
 
 - Open the output folder once the video is exported
 
-- Add a button for selecting the output location so the user doesn't have to type it
-
 - Playback speed control
 
 - Waveform visualization on the timeline
+
+- Enhanced timeline
+
+- Remove certain profanity suggestions before applying all as mute filters
+
+- Show profanity flag on the segment timeline card when imported via subtitles (similar to when importing from skp file)

@@ -1119,10 +1119,20 @@ button {
   gap: 0.45rem;
 }
 
+.timeline-track-viewport {
+  width: 100%;
+  border-radius: 0.15rem;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(143, 155, 179, 0.35) rgba(255, 255, 255, 0.04);
+}
+
 .timeline-track {
   position: relative;
-  width: 100%;
-  height: 1.25rem;
+  min-width: 100%;
+  height: 3.25rem;
+  display: block;
   padding: 0;
   border-radius: 0;
   background: linear-gradient(90deg, rgba(28, 33, 42, 0.96), rgba(36, 41, 50, 0.96));
@@ -1148,8 +1158,12 @@ button {
 .timeline-segment {
   top: -0.05rem;
   bottom: -0.05rem;
-  border-radius: 0;
+  border-radius: 0.15rem;
   z-index: 1;
+}
+
+.timeline-segment:hover {
+  padding: 2px;
 }
 
 .timeline-segment-mute {
@@ -1205,10 +1219,16 @@ button {
 }
 
 .timeline-labels {
+  gap: 0.75rem;
   justify-content: space-between;
+  flex-wrap: wrap;
   font-family: var(--mono);
   font-size: 0.74rem;
   color: var(--text-secondary);
+}
+
+.timeline-zoom-readout {
+  margin-left: auto;
 }
 
 .transport-bar {

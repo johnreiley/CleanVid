@@ -99,6 +99,9 @@ Keyboard shortcuts:
 - `Space`: play/pause
 - `Left` / `Right`: seek by 5 seconds
 - `Shift` + `Left` / `Right`: seek by 0.1 seconds
+- `Ctrl` + `+`: zoom the timeline in
+- `Ctrl` + `-`: zoom the timeline out
+- `Ctrl` + `0`: reset timeline zoom to `1x`
 
 ## Profanity Analysis
 
