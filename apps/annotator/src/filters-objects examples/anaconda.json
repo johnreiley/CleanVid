@@ -1,0 +1,3655 @@
+[
+  {
+    "id": 1,
+    "key": "language",
+    "display_title": "Language",
+    "default_type": "audio",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_language-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_language-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 18,
+        "key": "profanity",
+        "display_title": "Profanity",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_language-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_language-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 53,
+            "key": "ass",
+            "display_title": "*ss",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330707,
+                "ref_id": "12556490",
+                "tag_set_id": 75623,
+                "category_id": 53,
+                "description": "*ssh*l*",
+                "type": "audio",
+                "start_approx": 1836,
+                "end_approx": 1836,
+                "locked": false
+              },
+              {
+                "id": 5330724,
+                "ref_id": "12556509",
+                "tag_set_id": 75623,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 2952,
+                "end_approx": 2952,
+                "locked": false
+              },
+              {
+                "id": 5330862,
+                "ref_id": "12557030",
+                "tag_set_id": 75623,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 3276,
+                "end_approx": 3276,
+                "locked": false
+              },
+              {
+                "id": 5330748,
+                "ref_id": "12556534",
+                "tag_set_id": 75623,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 4020,
+                "end_approx": 4020,
+                "locked": false
+              },
+              {
+                "id": 5330751,
+                "ref_id": "12556537",
+                "tag_set_id": 75623,
+                "category_id": 53,
+                "description": "*ssh*l*",
+                "type": "audio",
+                "start_approx": 4044,
+                "end_approx": 4044,
+                "locked": false
+              },
+              {
+                "id": 5330792,
+                "ref_id": "12556580",
+                "tag_set_id": 75623,
+                "category_id": 53,
+                "description": "*ssh*l*",
+                "type": "audio",
+                "start_approx": 5034,
+                "end_approx": 5040,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 55,
+            "key": "bitch",
+            "display_title": "b*tch",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330753,
+                "ref_id": "12556539",
+                "tag_set_id": 75623,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 4116,
+                "end_approx": 4116,
+                "locked": false
+              },
+              {
+                "id": 5330791,
+                "ref_id": "12556579",
+                "tag_set_id": 75623,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 5028,
+                "end_approx": 5028,
+                "locked": false
+              },
+              {
+                "id": 5330803,
+                "ref_id": "12556594",
+                "tag_set_id": 75623,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 5136,
+                "end_approx": 5136,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 60,
+            "key": "damn",
+            "display_title": "d*mn",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330688,
+                "ref_id": "12556471",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "D*mn",
+                "type": "audio",
+                "start_approx": 654,
+                "end_approx": 660,
+                "locked": false
+              },
+              {
+                "id": 5330698,
+                "ref_id": "12556481",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "g*dd*mn",
+                "type": "audio",
+                "start_approx": 1158,
+                "end_approx": 1158,
+                "locked": false
+              },
+              {
+                "id": 5330706,
+                "ref_id": "12556489",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "g*dd*mn",
+                "type": "audio",
+                "start_approx": 1752,
+                "end_approx": 1752,
+                "locked": false
+              },
+              {
+                "id": 5330712,
+                "ref_id": "12556496",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "G*dd*mn",
+                "type": "audio",
+                "start_approx": 2208,
+                "end_approx": 2208,
+                "locked": false
+              },
+              {
+                "id": 5330722,
+                "ref_id": "12556507",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "D*mn",
+                "type": "audio",
+                "start_approx": 2934,
+                "end_approx": 2934,
+                "locked": false
+              },
+              {
+                "id": 5330731,
+                "ref_id": "12556516",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 3264,
+                "end_approx": 3264,
+                "locked": false
+              },
+              {
+                "id": 5330736,
+                "ref_id": "12556521",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "g*dd*mn",
+                "type": "audio",
+                "start_approx": 3618,
+                "end_approx": 3618,
+                "locked": false
+              },
+              {
+                "id": 5330737,
+                "ref_id": "12556522",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "g*dd*mn",
+                "type": "audio",
+                "start_approx": 3624,
+                "end_approx": 3624,
+                "locked": false
+              },
+              {
+                "id": 5330739,
+                "ref_id": "12556524",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "g*dd*mn",
+                "type": "audio",
+                "start_approx": 3642,
+                "end_approx": 3642,
+                "locked": false
+              },
+              {
+                "id": 5330747,
+                "ref_id": "12556533",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 4008,
+                "end_approx": 4008,
+                "locked": false
+              },
+              {
+                "id": 5330783,
+                "ref_id": "12556571",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "D*mn",
+                "type": "audio",
+                "start_approx": 4644,
+                "end_approx": 4644,
+                "locked": false
+              },
+              {
+                "id": 5330790,
+                "ref_id": "12556578",
+                "tag_set_id": 75623,
+                "category_id": 60,
+                "description": "D*mn",
+                "type": "audio",
+                "start_approx": 4866,
+                "end_approx": 4866,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 61,
+            "key": "fuck",
+            "display_title": "f-word",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330815,
+                "ref_id": "12556849",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 642,
+                "end_approx": 642,
+                "locked": false
+              },
+              {
+                "id": 5330816,
+                "ref_id": "12556852",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 642,
+                "end_approx": 642,
+                "locked": false
+              },
+              {
+                "id": 5330817,
+                "ref_id": "12556854",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 648,
+                "end_approx": 648,
+                "locked": false
+              },
+              {
+                "id": 5330818,
+                "ref_id": "12556855",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 654,
+                "end_approx": 654,
+                "locked": false
+              },
+              {
+                "id": 5330819,
+                "ref_id": "12556857",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 654,
+                "end_approx": 654,
+                "locked": false
+              },
+              {
+                "id": 5330955,
+                "ref_id": "12557401",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 654,
+                "end_approx": 654,
+                "locked": false
+              },
+              {
+                "id": 5330956,
+                "ref_id": "12557402",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 666,
+                "end_approx": 672,
+                "locked": false
+              },
+              {
+                "id": 5330957,
+                "ref_id": "12557403",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 672,
+                "end_approx": 672,
+                "locked": false
+              },
+              {
+                "id": 5330729,
+                "ref_id": "12556514",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "F*ck",
+                "type": "audio",
+                "start_approx": 3102,
+                "end_approx": 3102,
+                "locked": false
+              },
+              {
+                "id": 5330961,
+                "ref_id": "12557407",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 3102,
+                "end_approx": 3108,
+                "locked": false
+              },
+              {
+                "id": 5330770,
+                "ref_id": "12556557",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f*ck",
+                "type": "audio",
+                "start_approx": 4596,
+                "end_approx": 4596,
+                "locked": false
+              },
+              {
+                "id": 5330802,
+                "ref_id": "12556593",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "F*ck",
+                "type": "audio",
+                "start_approx": 5124,
+                "end_approx": 5124,
+                "locked": false
+              },
+              {
+                "id": 5330921,
+                "ref_id": "12557173",
+                "tag_set_id": 75623,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 5142,
+                "end_approx": 5148,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 62,
+            "key": "hell",
+            "display_title": "h*ll",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330689,
+                "ref_id": "12556472",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "th* h*ll",
+                "type": "audio",
+                "start_approx": 690,
+                "end_approx": 690,
+                "locked": false
+              },
+              {
+                "id": 5330702,
+                "ref_id": "12556485",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 1464,
+                "end_approx": 1464,
+                "locked": false
+              },
+              {
+                "id": 5330705,
+                "ref_id": "12556488",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "th* h*ll",
+                "type": "audio",
+                "start_approx": 1722,
+                "end_approx": 1722,
+                "locked": false
+              },
+              {
+                "id": 5330717,
+                "ref_id": "12556501",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "th* h*ll",
+                "type": "audio",
+                "start_approx": 2772,
+                "end_approx": 2772,
+                "locked": false
+              },
+              {
+                "id": 5330733,
+                "ref_id": "12556518",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "th* h*ll",
+                "type": "audio",
+                "start_approx": 3444,
+                "end_approx": 3444,
+                "locked": false
+              },
+              {
+                "id": 5330779,
+                "ref_id": "12556567",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "th* h*ll",
+                "type": "audio",
+                "start_approx": 4626,
+                "end_approx": 4626,
+                "locked": false
+              },
+              {
+                "id": 5330786,
+                "ref_id": "12556574",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "th* h*ll",
+                "type": "audio",
+                "start_approx": 4680,
+                "end_approx": 4680,
+                "locked": false
+              },
+              {
+                "id": 5330797,
+                "ref_id": "12556588",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "Th* h*ll",
+                "type": "audio",
+                "start_approx": 5064,
+                "end_approx": 5064,
+                "locked": false
+              },
+              {
+                "id": 5330944,
+                "ref_id": "12557200",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 5544,
+                "end_approx": 5544,
+                "locked": false
+              },
+              {
+                "id": 5330946,
+                "ref_id": "12557202",
+                "tag_set_id": 75623,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 5550,
+                "end_approx": 5550,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 63,
+            "key": "shit",
+            "display_title": "sh*t",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330809,
+                "ref_id": "12556823",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 144,
+                "end_approx": 144,
+                "locked": false
+              },
+              {
+                "id": 5330686,
+                "ref_id": "12556469",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 618,
+                "end_approx": 618,
+                "locked": false
+              },
+              {
+                "id": 5330821,
+                "ref_id": "12556859",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 684,
+                "end_approx": 684,
+                "locked": false
+              },
+              {
+                "id": 5330691,
+                "ref_id": "12556474",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 864,
+                "end_approx": 864,
+                "locked": false
+              },
+              {
+                "id": 5330692,
+                "ref_id": "12556475",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 876,
+                "end_approx": 876,
+                "locked": false
+              },
+              {
+                "id": 5330694,
+                "ref_id": "12556477",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 876,
+                "end_approx": 882,
+                "locked": false
+              },
+              {
+                "id": 5330695,
+                "ref_id": "12556478",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 918,
+                "end_approx": 918,
+                "locked": false
+              },
+              {
+                "id": 5330696,
+                "ref_id": "12556479",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 1014,
+                "end_approx": 1014,
+                "locked": false
+              },
+              {
+                "id": 5330700,
+                "ref_id": "12556483",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 1338,
+                "end_approx": 1338,
+                "locked": false
+              },
+              {
+                "id": 5330703,
+                "ref_id": "12556486",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "b*tsh*t",
+                "type": "audio",
+                "start_approx": 1548,
+                "end_approx": 1548,
+                "locked": false
+              },
+              {
+                "id": 5330709,
+                "ref_id": "12556492",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 1980,
+                "end_approx": 1980,
+                "locked": false
+              },
+              {
+                "id": 5330835,
+                "ref_id": "12556971",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 2214,
+                "end_approx": 2214,
+                "locked": false
+              },
+              {
+                "id": 5330713,
+                "ref_id": "12556497",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audiovisual",
+                "start_approx": 2256,
+                "end_approx": 2262,
+                "locked": false
+              },
+              {
+                "id": 5330726,
+                "ref_id": "12556511",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3066,
+                "end_approx": 3066,
+                "locked": false
+              },
+              {
+                "id": 5330728,
+                "ref_id": "12556513",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3102,
+                "end_approx": 3102,
+                "locked": false
+              },
+              {
+                "id": 5330866,
+                "ref_id": "12557034",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3522,
+                "end_approx": 3522,
+                "locked": false
+              },
+              {
+                "id": 5330738,
+                "ref_id": "12556523",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3624,
+                "end_approx": 3630,
+                "locked": false
+              },
+              {
+                "id": 5330870,
+                "ref_id": "12557040",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3654,
+                "end_approx": 3654,
+                "locked": false
+              },
+              {
+                "id": 5330871,
+                "ref_id": "12557041",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3654,
+                "end_approx": 3654,
+                "locked": false
+              },
+              {
+                "id": 5330740,
+                "ref_id": "12556525",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3792,
+                "end_approx": 3792,
+                "locked": false
+              },
+              {
+                "id": 5330874,
+                "ref_id": "12557074",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3798,
+                "end_approx": 3798,
+                "locked": false
+              },
+              {
+                "id": 5330746,
+                "ref_id": "12556532",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3972,
+                "end_approx": 3978,
+                "locked": false
+              },
+              {
+                "id": 5330752,
+                "ref_id": "12556538",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4110,
+                "end_approx": 4110,
+                "locked": false
+              },
+              {
+                "id": 5330755,
+                "ref_id": "12556541",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4152,
+                "end_approx": 4152,
+                "locked": false
+              },
+              {
+                "id": 5330893,
+                "ref_id": "12557109",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4332,
+                "end_approx": 4338,
+                "locked": false
+              },
+              {
+                "id": 5330768,
+                "ref_id": "12556555",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4584,
+                "end_approx": 4584,
+                "locked": false
+              },
+              {
+                "id": 5330769,
+                "ref_id": "12556556",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*tty",
+                "type": "audio",
+                "start_approx": 4596,
+                "end_approx": 4596,
+                "locked": false
+              },
+              {
+                "id": 5330771,
+                "ref_id": "12556559",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4614,
+                "end_approx": 4614,
+                "locked": false
+              },
+              {
+                "id": 5330912,
+                "ref_id": "12557136",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4614,
+                "end_approx": 4614,
+                "locked": false
+              },
+              {
+                "id": 5330913,
+                "ref_id": "12557137",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4614,
+                "end_approx": 4614,
+                "locked": false
+              },
+              {
+                "id": 5330772,
+                "ref_id": "12556560",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4614,
+                "end_approx": 4614,
+                "locked": false
+              },
+              {
+                "id": 5330964,
+                "ref_id": "12557415",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4614,
+                "end_approx": 4614,
+                "locked": false
+              },
+              {
+                "id": 5330773,
+                "ref_id": "12556561",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4620,
+                "end_approx": 4620,
+                "locked": false
+              },
+              {
+                "id": 5330774,
+                "ref_id": "12556562",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4620,
+                "end_approx": 4620,
+                "locked": false
+              },
+              {
+                "id": 5330775,
+                "ref_id": "12556563",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4620,
+                "end_approx": 4620,
+                "locked": false
+              },
+              {
+                "id": 5330776,
+                "ref_id": "12556564",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4620,
+                "end_approx": 4620,
+                "locked": false
+              },
+              {
+                "id": 5330777,
+                "ref_id": "12556565",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4620,
+                "end_approx": 4620,
+                "locked": false
+              },
+              {
+                "id": 5330778,
+                "ref_id": "12556566",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4620,
+                "end_approx": 4620,
+                "locked": false
+              },
+              {
+                "id": 5330914,
+                "ref_id": "12557139",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4620,
+                "end_approx": 4620,
+                "locked": false
+              },
+              {
+                "id": 5330780,
+                "ref_id": "12556568",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "Sh*t",
+                "type": "audio",
+                "start_approx": 4638,
+                "end_approx": 4638,
+                "locked": false
+              },
+              {
+                "id": 5330784,
+                "ref_id": "12556572",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4662,
+                "end_approx": 4662,
+                "locked": false
+              },
+              {
+                "id": 5330916,
+                "ref_id": "12557143",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4668,
+                "end_approx": 4674,
+                "locked": false
+              },
+              {
+                "id": 5330787,
+                "ref_id": "12556575",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4746,
+                "end_approx": 4752,
+                "locked": false
+              },
+              {
+                "id": 5330918,
+                "ref_id": "12557155",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4788,
+                "end_approx": 4788,
+                "locked": false
+              },
+              {
+                "id": 5330788,
+                "ref_id": "12556576",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4812,
+                "end_approx": 4812,
+                "locked": false
+              },
+              {
+                "id": 5330793,
+                "ref_id": "12556581",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5046,
+                "end_approx": 5046,
+                "locked": false
+              },
+              {
+                "id": 5330794,
+                "ref_id": "12556582",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5052,
+                "end_approx": 5052,
+                "locked": false
+              },
+              {
+                "id": 5330795,
+                "ref_id": "12556583",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5052,
+                "end_approx": 5052,
+                "locked": false
+              },
+              {
+                "id": 5330796,
+                "ref_id": "12556584",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5052,
+                "end_approx": 5058,
+                "locked": false
+              },
+              {
+                "id": 5330799,
+                "ref_id": "12556590",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5082,
+                "end_approx": 5082,
+                "locked": false
+              },
+              {
+                "id": 5330804,
+                "ref_id": "12556595",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5190,
+                "end_approx": 5190,
+                "locked": false
+              },
+              {
+                "id": 5330806,
+                "ref_id": "12556597",
+                "tag_set_id": 75623,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5208,
+                "end_approx": 5208,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 64,
+            "key": "other_profanity",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330704,
+                "ref_id": "12556487",
+                "tag_set_id": 75623,
+                "category_id": 64,
+                "description": "scr*w *s",
+                "type": "audio",
+                "start_approx": 1692,
+                "end_approx": 1692,
+                "locked": false
+              },
+              {
+                "id": 5330732,
+                "ref_id": "12556517",
+                "tag_set_id": 75623,
+                "category_id": 64,
+                "description": "scr*w*d *v*r",
+                "type": "audio",
+                "start_approx": 3432,
+                "end_approx": 3432,
+                "locked": false
+              },
+              {
+                "id": 5330757,
+                "ref_id": "12556543",
+                "tag_set_id": 75623,
+                "category_id": 64,
+                "description": "p*ss",
+                "type": "audio",
+                "start_approx": 4170,
+                "end_approx": 4170,
+                "locked": false
+              },
+              {
+                "id": 5330758,
+                "ref_id": "12556544",
+                "tag_set_id": 75623,
+                "category_id": 64,
+                "description": "p*ss",
+                "type": "audio",
+                "start_approx": 4182,
+                "end_approx": 4182,
+                "locked": false
+              },
+              {
+                "id": 5330759,
+                "ref_id": "12556545",
+                "tag_set_id": 75623,
+                "category_id": 64,
+                "description": "p*ss*s",
+                "type": "audio",
+                "start_approx": 4182,
+                "end_approx": 4182,
+                "locked": false
+              },
+              {
+                "id": 5330760,
+                "ref_id": "12556546",
+                "tag_set_id": 75623,
+                "category_id": 64,
+                "description": "p*ss",
+                "type": "audio",
+                "start_approx": 4218,
+                "end_approx": 4218,
+                "locked": false
+              },
+              {
+                "id": 5330761,
+                "ref_id": "12556547",
+                "tag_set_id": 75623,
+                "category_id": 64,
+                "description": "p*ss",
+                "type": "audio",
+                "start_approx": 4230,
+                "end_approx": 4230,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 20,
+        "key": "blasphemy",
+        "display_title": "Blasphemy",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_halo-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_halo-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 80,
+            "key": "jesus",
+            "display_title": "J*sus",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330680,
+                "ref_id": "12556463",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s,",
+                "type": "audio",
+                "start_approx": 378,
+                "end_approx": 384,
+                "locked": false
+              },
+              {
+                "id": 5330681,
+                "ref_id": "12556464",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s,",
+                "type": "audio",
+                "start_approx": 444,
+                "end_approx": 444,
+                "locked": false
+              },
+              {
+                "id": 5330682,
+                "ref_id": "12556465",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s Chr*st",
+                "type": "audio",
+                "start_approx": 510,
+                "end_approx": 510,
+                "locked": false
+              },
+              {
+                "id": 5330684,
+                "ref_id": "12556467",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s,",
+                "type": "audio",
+                "start_approx": 528,
+                "end_approx": 528,
+                "locked": false
+              },
+              {
+                "id": 5330708,
+                "ref_id": "12556491",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s Chr*st",
+                "type": "audio",
+                "start_approx": 1938,
+                "end_approx": 1944,
+                "locked": false
+              },
+              {
+                "id": 5330710,
+                "ref_id": "12556493",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s!",
+                "type": "audio",
+                "start_approx": 1998,
+                "end_approx": 1998,
+                "locked": false
+              },
+              {
+                "id": 5330711,
+                "ref_id": "12556495",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s...",
+                "type": "audio",
+                "start_approx": 2112,
+                "end_approx": 2112,
+                "locked": false
+              },
+              {
+                "id": 5330714,
+                "ref_id": "12556498",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s.",
+                "type": "audio",
+                "start_approx": 2274,
+                "end_approx": 2274,
+                "locked": false
+              },
+              {
+                "id": 5330718,
+                "ref_id": "12556502",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s Chr*st",
+                "type": "audio",
+                "start_approx": 2802,
+                "end_approx": 2802,
+                "locked": false
+              },
+              {
+                "id": 5330734,
+                "ref_id": "12556519",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s.",
+                "type": "audio",
+                "start_approx": 3498,
+                "end_approx": 3498,
+                "locked": false
+              },
+              {
+                "id": 5330754,
+                "ref_id": "12556540",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s Chr*st!",
+                "type": "audio",
+                "start_approx": 4134,
+                "end_approx": 4134,
+                "locked": false
+              },
+              {
+                "id": 5330762,
+                "ref_id": "12556548",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s Chr*st!",
+                "type": "audio",
+                "start_approx": 4254,
+                "end_approx": 4254,
+                "locked": false
+              },
+              {
+                "id": 5330766,
+                "ref_id": "12556553",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "*h, J*s*s",
+                "type": "audio",
+                "start_approx": 4476,
+                "end_approx": 4476,
+                "locked": false
+              },
+              {
+                "id": 5330782,
+                "ref_id": "12556570",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s!",
+                "type": "audio",
+                "start_approx": 4644,
+                "end_approx": 4644,
+                "locked": false
+              },
+              {
+                "id": 5330789,
+                "ref_id": "12556577",
+                "tag_set_id": 75623,
+                "category_id": 80,
+                "description": "J*s*s.",
+                "type": "audio",
+                "start_approx": 4860,
+                "end_approx": 4866,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 79,
+            "key": "christ",
+            "display_title": "Chr*st",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330812,
+                "ref_id": "12556838",
+                "tag_set_id": 75623,
+                "category_id": 79,
+                "description": "Chr*st",
+                "type": "audio",
+                "start_approx": 510,
+                "end_approx": 510,
+                "locked": false
+              },
+              {
+                "id": 5330832,
+                "ref_id": "12556959",
+                "tag_set_id": 75623,
+                "category_id": 79,
+                "description": "Chr*st",
+                "type": "audio",
+                "start_approx": 1938,
+                "end_approx": 1944,
+                "locked": false
+              },
+              {
+                "id": 5330849,
+                "ref_id": "12557011",
+                "tag_set_id": 75623,
+                "category_id": 79,
+                "description": "Chr*st",
+                "type": "audio",
+                "start_approx": 2802,
+                "end_approx": 2802,
+                "locked": false
+              },
+              {
+                "id": 5330882,
+                "ref_id": "12557095",
+                "tag_set_id": 75623,
+                "category_id": 79,
+                "description": "Chr*st",
+                "type": "audio",
+                "start_approx": 4134,
+                "end_approx": 4134,
+                "locked": false
+              },
+              {
+                "id": 5330888,
+                "ref_id": "12557102",
+                "tag_set_id": 75623,
+                "category_id": 79,
+                "description": "Chr*st",
+                "type": "audio",
+                "start_approx": 4254,
+                "end_approx": 4254,
+                "locked": false
+              },
+              {
+                "id": 5330767,
+                "ref_id": "12556554",
+                "tag_set_id": 75623,
+                "category_id": 79,
+                "description": "Chr*st.",
+                "type": "audio",
+                "start_approx": 4476,
+                "end_approx": 4476,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 81,
+            "key": "god",
+            "display_title": "G*d",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330683,
+                "ref_id": "12556466",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 516,
+                "end_approx": 516,
+                "locked": false
+              },
+              {
+                "id": 5330685,
+                "ref_id": "12556468",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 570,
+                "end_approx": 570,
+                "locked": false
+              },
+              {
+                "id": 5330687,
+                "ref_id": "12556470",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d.",
+                "type": "audio",
+                "start_approx": 630,
+                "end_approx": 636,
+                "locked": false
+              },
+              {
+                "id": 5330690,
+                "ref_id": "12556473",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 690,
+                "end_approx": 696,
+                "locked": false
+              },
+              {
+                "id": 5330693,
+                "ref_id": "12556476",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d,",
+                "type": "audio",
+                "start_approx": 876,
+                "end_approx": 876,
+                "locked": false
+              },
+              {
+                "id": 5330697,
+                "ref_id": "12556480",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 1140,
+                "end_approx": 1140,
+                "locked": false
+              },
+              {
+                "id": 5330823,
+                "ref_id": "12556871",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 1158,
+                "end_approx": 1158,
+                "locked": false
+              },
+              {
+                "id": 5330699,
+                "ref_id": "12556482",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 1308,
+                "end_approx": 1308,
+                "locked": false
+              },
+              {
+                "id": 5330701,
+                "ref_id": "12556484",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "Th*nk G*d",
+                "type": "audio",
+                "start_approx": 1356,
+                "end_approx": 1356,
+                "locked": false
+              },
+              {
+                "id": 5330829,
+                "ref_id": "12556907",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 1752,
+                "end_approx": 1752,
+                "locked": false
+              },
+              {
+                "id": 5330834,
+                "ref_id": "12556966",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2208,
+                "end_approx": 2208,
+                "locked": false
+              },
+              {
+                "id": 5330715,
+                "ref_id": "12556499",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d.",
+                "type": "audio",
+                "start_approx": 2286,
+                "end_approx": 2286,
+                "locked": false
+              },
+              {
+                "id": 5330716,
+                "ref_id": "12556500",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 2532,
+                "end_approx": 2532,
+                "locked": false
+              },
+              {
+                "id": 5330719,
+                "ref_id": "12556503",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 2904,
+                "end_approx": 2904,
+                "locked": false
+              },
+              {
+                "id": 5330852,
+                "ref_id": "12557015",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2904,
+                "end_approx": 2904,
+                "locked": false
+              },
+              {
+                "id": 5330720,
+                "ref_id": "12556505",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 2904,
+                "end_approx": 2904,
+                "locked": false
+              },
+              {
+                "id": 5330721,
+                "ref_id": "12556506",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 2910,
+                "end_approx": 2910,
+                "locked": false
+              },
+              {
+                "id": 5330723,
+                "ref_id": "12556508",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 2934,
+                "end_approx": 2934,
+                "locked": false
+              },
+              {
+                "id": 5330725,
+                "ref_id": "12556510",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 2976,
+                "end_approx": 2976,
+                "locked": false
+              },
+              {
+                "id": 5330727,
+                "ref_id": "12556512",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 3072,
+                "end_approx": 3078,
+                "locked": false
+              },
+              {
+                "id": 5330857,
+                "ref_id": "12557024",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3126,
+                "end_approx": 3126,
+                "locked": false
+              },
+              {
+                "id": 5330730,
+                "ref_id": "12556515",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 3156,
+                "end_approx": 3156,
+                "locked": false
+              },
+              {
+                "id": 5330735,
+                "ref_id": "12556520",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "My G*d",
+                "type": "audio",
+                "start_approx": 3528,
+                "end_approx": 3528,
+                "locked": false
+              },
+              {
+                "id": 5330867,
+                "ref_id": "12557036",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3618,
+                "end_approx": 3618,
+                "locked": false
+              },
+              {
+                "id": 5330868,
+                "ref_id": "12557038",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3624,
+                "end_approx": 3624,
+                "locked": false
+              },
+              {
+                "id": 5330869,
+                "ref_id": "12557039",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3642,
+                "end_approx": 3642,
+                "locked": false
+              },
+              {
+                "id": 5330872,
+                "ref_id": "12557069",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3786,
+                "end_approx": 3792,
+                "locked": false
+              },
+              {
+                "id": 5330741,
+                "ref_id": "12556527",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 3792,
+                "end_approx": 3792,
+                "locked": false
+              },
+              {
+                "id": 5330875,
+                "ref_id": "12557075",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3798,
+                "end_approx": 3798,
+                "locked": false
+              },
+              {
+                "id": 5330742,
+                "ref_id": "12556528",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 3798,
+                "end_approx": 3798,
+                "locked": false
+              },
+              {
+                "id": 5330743,
+                "ref_id": "12556529",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 3798,
+                "end_approx": 3804,
+                "locked": false
+              },
+              {
+                "id": 5330744,
+                "ref_id": "12556530",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 3804,
+                "end_approx": 3804,
+                "locked": false
+              },
+              {
+                "id": 5330745,
+                "ref_id": "12556531",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 3804,
+                "end_approx": 3804,
+                "locked": false
+              },
+              {
+                "id": 5330749,
+                "ref_id": "12556535",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "th*nk G*d",
+                "type": "audio",
+                "start_approx": 4026,
+                "end_approx": 4026,
+                "locked": false
+              },
+              {
+                "id": 5330750,
+                "ref_id": "12556536",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 4038,
+                "end_approx": 4038,
+                "locked": false
+              },
+              {
+                "id": 5330962,
+                "ref_id": "12557411",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4146,
+                "end_approx": 4152,
+                "locked": false
+              },
+              {
+                "id": 5330756,
+                "ref_id": "12556542",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 4152,
+                "end_approx": 4158,
+                "locked": false
+              },
+              {
+                "id": 5330889,
+                "ref_id": "12557103",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4272,
+                "end_approx": 4278,
+                "locked": false
+              },
+              {
+                "id": 5330763,
+                "ref_id": "12556549",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 4332,
+                "end_approx": 4332,
+                "locked": false
+              },
+              {
+                "id": 5330892,
+                "ref_id": "12557107",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4332,
+                "end_approx": 4332,
+                "locked": false
+              },
+              {
+                "id": 5330764,
+                "ref_id": "12556551",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 4332,
+                "end_approx": 4332,
+                "locked": false
+              },
+              {
+                "id": 5330894,
+                "ref_id": "12557110",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4338,
+                "end_approx": 4338,
+                "locked": false
+              },
+              {
+                "id": 5330897,
+                "ref_id": "12557113",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4470,
+                "end_approx": 4470,
+                "locked": false
+              },
+              {
+                "id": 5330765,
+                "ref_id": "12556552",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 4470,
+                "end_approx": 4470,
+                "locked": false
+              },
+              {
+                "id": 5330963,
+                "ref_id": "12557413",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4524,
+                "end_approx": 4524,
+                "locked": false
+              },
+              {
+                "id": 5330781,
+                "ref_id": "12556569",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d,",
+                "type": "audio",
+                "start_approx": 4644,
+                "end_approx": 4644,
+                "locked": false
+              },
+              {
+                "id": 5330915,
+                "ref_id": "12557142",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4644,
+                "end_approx": 4644,
+                "locked": false
+              },
+              {
+                "id": 5330785,
+                "ref_id": "12556573",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 4680,
+                "end_approx": 4680,
+                "locked": false
+              },
+              {
+                "id": 5330798,
+                "ref_id": "12556589",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 5082,
+                "end_approx": 5082,
+                "locked": false
+              },
+              {
+                "id": 5330800,
+                "ref_id": "12556591",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 5100,
+                "end_approx": 5100,
+                "locked": false
+              },
+              {
+                "id": 5330801,
+                "ref_id": "12556592",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, G*d",
+                "type": "audio",
+                "start_approx": 5118,
+                "end_approx": 5124,
+                "locked": false
+              },
+              {
+                "id": 5330923,
+                "ref_id": "12557175",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 5190,
+                "end_approx": 5196,
+                "locked": false
+              },
+              {
+                "id": 5330805,
+                "ref_id": "12556596",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 5202,
+                "end_approx": 5202,
+                "locked": false
+              },
+              {
+                "id": 5330807,
+                "ref_id": "12556598",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "*h, my G*d",
+                "type": "audio",
+                "start_approx": 5394,
+                "end_approx": 5394,
+                "locked": false
+              },
+              {
+                "id": 5330936,
+                "ref_id": "12557191",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 5400,
+                "end_approx": 5406,
+                "locked": false
+              },
+              {
+                "id": 5330950,
+                "ref_id": "12557207",
+                "tag_set_id": 75623,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audiovisual",
+                "start_approx": 5598,
+                "end_approx": 5598,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 82,
+            "key": "lord",
+            "display_title": "L*rd",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330884,
+                "ref_id": "12557098",
+                "tag_set_id": 75623,
+                "category_id": 82,
+                "description": "L*rd",
+                "type": "audio",
+                "start_approx": 4140,
+                "end_approx": 4140,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 21,
+        "key": "language_childish",
+        "display_title": "Childish Language",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_poop-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_poop-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 89,
+            "key": "other_childish",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 21,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330880,
+                "ref_id": "12557091",
+                "tag_set_id": 75623,
+                "category_id": 89,
+                "description": "b*lls",
+                "type": "audio",
+                "start_approx": 4122,
+                "end_approx": 4122,
+                "locked": false
+              },
+              {
+                "id": 5330890,
+                "ref_id": "12557104",
+                "tag_set_id": 75623,
+                "category_id": 89,
+                "description": "b*lls",
+                "type": "audio",
+                "start_approx": 4326,
+                "end_approx": 4326,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 22,
+        "key": "language_sexual",
+        "display_title": "Sexual Reference",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_exclamation-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_exclamation-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 150,
+            "key": "other_sexual",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 22,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 5330814,
+                "ref_id": "12556843",
+                "tag_set_id": 75623,
+                "category_id": 150,
+                "description": "A woman says that a man had sex. ",
+                "type": "audio",
+                "start_approx": 558,
+                "end_approx": 558,
+                "locked": false
+              },
+              {
+                "id": 5330833,
+                "ref_id": "12556964",
+                "tag_set_id": 75623,
+                "category_id": 150,
+                "description": "A man refers to an animal as sexy.",
+                "type": "audio",
+                "start_approx": 2082,
+                "end_approx": 2088,
+                "locked": false
+              },
+              {
+                "id": 5330945,
+                "ref_id": "12557201",
+                "tag_set_id": 75623,
+                "category_id": 150,
+                "description": "A man sings a sexual song about a woman.",
+                "type": "audiovisual",
+                "start_approx": 5544,
+                "end_approx": 5550,
+                "locked": false
+              },
+              {
+                "id": 5330947,
+                "ref_id": "12557203",
+                "tag_set_id": 75623,
+                "category_id": 150,
+                "description": "A man sings a sexual song about a woman's behind.",
+                "type": "audiovisual",
+                "start_approx": 5550,
+                "end_approx": 5556,
+                "locked": false
+              },
+              {
+                "id": 5330948,
+                "ref_id": "12557204",
+                "tag_set_id": 75623,
+                "category_id": 150,
+                "description": "A man sings a sexual song about a woman's behind and his genitals.",
+                "type": "audiovisual",
+                "start_approx": 5562,
+                "end_approx": 5568,
+                "locked": false
+              },
+              {
+                "id": 5330949,
+                "ref_id": "12557206",
+                "tag_set_id": 75623,
+                "category_id": 150,
+                "description": "A man sings a sexual song about a woman's behind, his genitals, and having sex.",
+                "type": "audiovisual",
+                "start_approx": 5574,
+                "end_approx": 5598,
+                "locked": false
+              },
+              {
+                "id": 5330951,
+                "ref_id": "12557208",
+                "tag_set_id": 75623,
+                "category_id": 150,
+                "description": "A man sings a sexual song about a woman's behind.",
+                "type": "audiovisual",
+                "start_approx": 5610,
+                "end_approx": 5622,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 2,
+    "key": "sex_nudity_immodesty",
+    "display_title": "Nudity & Immodesty",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_nudity-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_nudity-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 46,
+        "key": "immodesty_female",
+        "display_title": "Female Immodesty",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330958,
+            "ref_id": "12557404",
+            "tag_set_id": 75623,
+            "category_id": 46,
+            "description": "A woman's cleavage is visible.\n",
+            "type": "audiovisual",
+            "start_approx": 1524,
+            "end_approx": 1524,
+            "locked": false
+          },
+          {
+            "id": 5330933,
+            "ref_id": "12557186",
+            "tag_set_id": 75623,
+            "category_id": 46,
+            "description": "A woman's cleavage is visible.",
+            "type": "audiovisual",
+            "start_approx": 5382,
+            "end_approx": 5388,
+            "locked": false
+          },
+          {
+            "id": 5330934,
+            "ref_id": "12557188",
+            "tag_set_id": 75623,
+            "category_id": 46,
+            "description": "A woman's cleavage is visible.",
+            "type": "audiovisual",
+            "start_approx": 5394,
+            "end_approx": 5400,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 45,
+        "key": "immodesty_male",
+        "display_title": "Male Immodesty",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330886,
+            "ref_id": "12557100",
+            "tag_set_id": 75623,
+            "category_id": 45,
+            "description": "A man gestures towards his genitals while he talks about urinating.",
+            "type": "audiovisual",
+            "start_approx": 4182,
+            "end_approx": 4188,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 151,
+        "key": "nudity_statues_and_paintings",
+        "display_title": "Nude Statues & Paintings",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330824,
+            "ref_id": "12556874",
+            "tag_set_id": 75623,
+            "category_id": 151,
+            "description": "An award statue features a nude man. His genital area is visible but not defined. ",
+            "type": "audiovisual",
+            "start_approx": 1224,
+            "end_approx": 1230,
+            "locked": false
+          },
+          {
+            "id": 5330825,
+            "ref_id": "12556875",
+            "tag_set_id": 75623,
+            "category_id": 151,
+            "description": "An award statue features a nude man. His genital area is visible but not defined. ",
+            "type": "audiovisual",
+            "start_approx": 1230,
+            "end_approx": 1236,
+            "locked": false
+          },
+          {
+            "id": 5330826,
+            "ref_id": "12556876",
+            "tag_set_id": 75623,
+            "category_id": 151,
+            "description": "An award statue features a nude man. His genital area is visible but not defined. ",
+            "type": "audiovisual",
+            "start_approx": 1236,
+            "end_approx": 1236,
+            "locked": false
+          },
+          {
+            "id": 5330827,
+            "ref_id": "12556877",
+            "tag_set_id": 75623,
+            "category_id": 151,
+            "description": "An award statue features a nude man. His genital area is visible but not defined. ",
+            "type": "audiovisual",
+            "start_approx": 1242,
+            "end_approx": 1242,
+            "locked": false
+          },
+          {
+            "id": 5330861,
+            "ref_id": "12557028",
+            "tag_set_id": 75623,
+            "category_id": 151,
+            "description": "An award statuette of a nude man is seen. His genital area is visible but not defined.",
+            "type": "audiovisual",
+            "start_approx": 3216,
+            "end_approx": 3228,
+            "locked": false
+          },
+          {
+            "id": 5330932,
+            "ref_id": "12557185",
+            "tag_set_id": 75623,
+            "category_id": 151,
+            "description": "An award statuette features a nude man. His genital area is shown but not defined.",
+            "type": "audiovisual",
+            "start_approx": 5328,
+            "end_approx": 5328,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 9,
+    "key": "kissing",
+    "display_title": "Kissing",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_kissing-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_kissing-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 48,
+        "key": "kissing_normal",
+        "display_title": "Heterosexual Normal",
+        "default_type": "audiovisual",
+        "parent_id": 9,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330937,
+            "ref_id": "12557192",
+            "tag_set_id": 75623,
+            "category_id": 48,
+            "description": "A woman kisses a man.",
+            "type": "audiovisual",
+            "start_approx": 5412,
+            "end_approx": 5418,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 3,
+    "key": "violence_blood_gore",
+    "display_title": "Violence",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_violence-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_violence-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 16,
+        "key": "gore",
+        "display_title": "Gore",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_gore-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_gore-4x.png",
+        "tags": [
+          {
+            "id": 5330836,
+            "ref_id": "12556972",
+            "tag_set_id": 75623,
+            "category_id": 16,
+            "description": "A boat propeller cuts an animal into many pieces and decapitates it. ",
+            "type": "audiovisual",
+            "start_approx": 2238,
+            "end_approx": 2238,
+            "locked": false
+          },
+          {
+            "id": 5330925,
+            "ref_id": "12557177",
+            "tag_set_id": 75623,
+            "category_id": 16,
+            "description": "An explosion tears an animal into several pieces. ",
+            "type": "audiovisual",
+            "start_approx": 5262,
+            "end_approx": 5262,
+            "locked": false
+          },
+          {
+            "id": 5330927,
+            "ref_id": "12557179",
+            "tag_set_id": 75623,
+            "category_id": 16,
+            "description": "Smoldering pieces of a dead animal's body fly through the air and land on men and a woman after an explosion.",
+            "type": "audiovisual",
+            "start_approx": 5268,
+            "end_approx": 5280,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 15,
+        "key": "graphic",
+        "display_title": "Graphic Violence",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_violence-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_violence-4x.png",
+        "tags": [
+          {
+            "id": 5330820,
+            "ref_id": "12556858",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A creature slashes a teenage boy's face with its claws.",
+            "type": "audiovisual",
+            "start_approx": 654,
+            "end_approx": 654,
+            "locked": false
+          },
+          {
+            "id": 5330822,
+            "ref_id": "12556860",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A creature is thrown into the air and engulfed in an explosion.",
+            "type": "audiovisual",
+            "start_approx": 702,
+            "end_approx": 708,
+            "locked": false
+          },
+          {
+            "id": 5330837,
+            "ref_id": "12556973",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "An animal's severed head and several pieces of its body float to the surface of bloody water.",
+            "type": "audiovisual",
+            "start_approx": 2238,
+            "end_approx": 2244,
+            "locked": false
+          },
+          {
+            "id": 5330838,
+            "ref_id": "12556974",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "An open wound can be seen on a dead animal's head. Its eyes are open.",
+            "type": "audiovisual",
+            "start_approx": 2286,
+            "end_approx": 2292,
+            "locked": false
+          },
+          {
+            "id": 5330839,
+            "ref_id": "12556975",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A man sets pieces of a dead animal on fire. Open wounds can be seen on its body.",
+            "type": "audiovisual",
+            "start_approx": 2322,
+            "end_approx": 2328,
+            "locked": false
+          },
+          {
+            "id": 5330851,
+            "ref_id": "12557013",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A dead man is slammed against a windshield as an animal regurgitates his body. Blood can be seen on his face, and his eyes are open.",
+            "type": "audiovisual",
+            "start_approx": 2904,
+            "end_approx": 2904,
+            "locked": false
+          },
+          {
+            "id": 5330876,
+            "ref_id": "12557081",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A man shoots another man in the leg with a gun.",
+            "type": "audiovisual",
+            "start_approx": 4038,
+            "end_approx": 4038,
+            "locked": false
+          },
+          {
+            "id": 5330877,
+            "ref_id": "12557083",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A woman shoots a man in the chest with a gun.",
+            "type": "audiovisual",
+            "start_approx": 4068,
+            "end_approx": 4074,
+            "locked": false
+          },
+          {
+            "id": 5330922,
+            "ref_id": "12557174",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "An animal is hit in the side by an explosion.",
+            "type": "audiovisual",
+            "start_approx": 5154,
+            "end_approx": 5160,
+            "locked": false
+          },
+          {
+            "id": 5330924,
+            "ref_id": "12557176",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "Wounds can be seen on an animal's face and body.",
+            "type": "audiovisual",
+            "start_approx": 5232,
+            "end_approx": 5238,
+            "locked": false
+          },
+          {
+            "id": 5330929,
+            "ref_id": "12557182",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "Smoldering pieces of a dead animal's body can be seen. A man stabs an animal in the head with a figurine. ",
+            "type": "audiovisual",
+            "start_approx": 5292,
+            "end_approx": 5304,
+            "locked": false
+          },
+          {
+            "id": 5330930,
+            "ref_id": "12557183",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A smoldering piece of a dead animal's body can be seen. ",
+            "type": "audiovisual",
+            "start_approx": 5310,
+            "end_approx": 5316,
+            "locked": false
+          },
+          {
+            "id": 5330931,
+            "ref_id": "12557184",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "Smoldering pieces of a dead animal's body can be seen. A man pulls a figurine out of a wound in its head.",
+            "type": "audiovisual",
+            "start_approx": 5322,
+            "end_approx": 5340,
+            "locked": false
+          },
+          {
+            "id": 5330939,
+            "ref_id": "12557195",
+            "tag_set_id": 75623,
+            "category_id": 15,
+            "description": "A bloody hand reaches out through a wound in a woman's abdomen.",
+            "type": "audiovisual",
+            "start_approx": 5448,
+            "end_approx": 5454,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 14,
+        "key": "non_graphic",
+        "display_title": "Non-graphic Violence",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_non_graphic_violence-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_non_graphic_violence-4x.png",
+        "tags": [
+          {
+            "id": 5330810,
+            "ref_id": "12556825",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal hits a boat, knocks a man into the water, wraps itself around his body, and pulls him underwater.",
+            "type": "audiovisual",
+            "start_approx": 162,
+            "end_approx": 174,
+            "locked": false
+          },
+          {
+            "id": 5330830,
+            "ref_id": "12556924",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man hits himself in the knee with nunchucks. ",
+            "type": "audiovisual",
+            "start_approx": 1818,
+            "end_approx": 1818,
+            "locked": false
+          },
+          {
+            "id": 5330959,
+            "ref_id": "12557405",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man throws an animal out of a boat.",
+            "type": "audiovisual",
+            "start_approx": 2232,
+            "end_approx": 2238,
+            "locked": false
+          },
+          {
+            "id": 5330841,
+            "ref_id": "12556977",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man's perspective is shown as an animal bites his head.",
+            "type": "audiovisual",
+            "start_approx": 2418,
+            "end_approx": 2418,
+            "locked": false
+          },
+          {
+            "id": 5330844,
+            "ref_id": "12557002",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man struggles as an animal wraps itself around him and suffocates him.",
+            "type": "audiovisual",
+            "start_approx": 2658,
+            "end_approx": 2670,
+            "locked": false
+          },
+          {
+            "id": 5330858,
+            "ref_id": "12557025",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man is thrown off of his motorcycle.",
+            "type": "audiovisual",
+            "start_approx": 3126,
+            "end_approx": 3132,
+            "locked": false
+          },
+          {
+            "id": 5330859,
+            "ref_id": "12557026",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man crashes his motorcycle and slides across the ground.",
+            "type": "audiovisual",
+            "start_approx": 3132,
+            "end_approx": 3132,
+            "locked": false
+          },
+          {
+            "id": 5330860,
+            "ref_id": "12557027",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A woman hits a man in the back of the head with the butt of a gun.",
+            "type": "audiovisual",
+            "start_approx": 3168,
+            "end_approx": 3168,
+            "locked": false
+          },
+          {
+            "id": 5330863,
+            "ref_id": "12557031",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A woman hits a man in the back of the head with the butt of a gun.",
+            "type": "audiovisual",
+            "start_approx": 3366,
+            "end_approx": 3366,
+            "locked": false
+          },
+          {
+            "id": 5330873,
+            "ref_id": "12557071",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal swallows a woman.",
+            "type": "audiovisual",
+            "start_approx": 3792,
+            "end_approx": 3792,
+            "locked": false
+          },
+          {
+            "id": 5330878,
+            "ref_id": "12557085",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A woman shoves another woman's back with a gun.",
+            "type": "audiovisual",
+            "start_approx": 4104,
+            "end_approx": 4104,
+            "locked": false
+          },
+          {
+            "id": 5330879,
+            "ref_id": "12557086",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A woman headbutts another woman.",
+            "type": "audiovisual",
+            "start_approx": 4104,
+            "end_approx": 4110,
+            "locked": false
+          },
+          {
+            "id": 5330881,
+            "ref_id": "12557094",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal grabs a woman in its mouth and drags her into the water. She struggles as it wraps around her. ",
+            "type": "audiovisual",
+            "start_approx": 4128,
+            "end_approx": 4134,
+            "locked": false
+          },
+          {
+            "id": 5330883,
+            "ref_id": "12557097",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A woman struggles as an animal squeezes her and pulls her underwater.",
+            "type": "audiovisual",
+            "start_approx": 4134,
+            "end_approx": 4140,
+            "locked": false
+          },
+          {
+            "id": 5330885,
+            "ref_id": "12557099",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man kicks an insect.",
+            "type": "audiovisual",
+            "start_approx": 4152,
+            "end_approx": 4152,
+            "locked": false
+          },
+          {
+            "id": 5330891,
+            "ref_id": "12557105",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal puts a man's head and entire torso in its mouth and lifts him into the air.",
+            "type": "audiovisual",
+            "start_approx": 4332,
+            "end_approx": 4338,
+            "locked": false
+          },
+          {
+            "id": 5330911,
+            "ref_id": "12557134",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal grabs another animal's entire body in its mouth.",
+            "type": "audiovisual",
+            "start_approx": 4662,
+            "end_approx": 4662,
+            "locked": false
+          },
+          {
+            "id": 5330917,
+            "ref_id": "12557154",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal is hit in the head by a flare.",
+            "type": "audiovisual",
+            "start_approx": 4788,
+            "end_approx": 4788,
+            "locked": false
+          },
+          {
+            "id": 5330919,
+            "ref_id": "12557156",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal is shot in the head with a flare.",
+            "type": "audiovisual",
+            "start_approx": 4794,
+            "end_approx": 4794,
+            "locked": false
+          },
+          {
+            "id": 5330920,
+            "ref_id": "12557159",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal is shot in the back with a flare and falls from a height.",
+            "type": "audiovisual",
+            "start_approx": 4800,
+            "end_approx": 4806,
+            "locked": false
+          },
+          {
+            "id": 5330926,
+            "ref_id": "12557178",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "Men and women are thrown by the shockwave from an explosion.",
+            "type": "audiovisual",
+            "start_approx": 5262,
+            "end_approx": 5262,
+            "locked": false
+          },
+          {
+            "id": 5330928,
+            "ref_id": "12557180",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A man stabs an animal in the head with a figurine.",
+            "type": "audiovisual",
+            "start_approx": 5286,
+            "end_approx": 5292,
+            "locked": false
+          },
+          {
+            "id": 5330935,
+            "ref_id": "12557189",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "A woman hits a man in the head with the butt of a gun.",
+            "type": "audiovisual",
+            "start_approx": 5400,
+            "end_approx": 5400,
+            "locked": false
+          },
+          {
+            "id": 5330943,
+            "ref_id": "12557199",
+            "tag_set_id": 75623,
+            "category_id": 14,
+            "description": "An animal holds a man's head and torso in its mouth and lifts him into the air.",
+            "type": "audiovisual",
+            "start_approx": 5538,
+            "end_approx": 5544,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 17,
+        "key": "violence_images",
+        "display_title": "Disturbing Images",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330853,
+            "ref_id": "12557016",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A dead man's body slides down a windshield.",
+            "type": "audiovisual",
+            "start_approx": 2904,
+            "end_approx": 2910,
+            "locked": false
+          },
+          {
+            "id": 5330895,
+            "ref_id": "12557111",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A dead animal with its eyes open lies on top of a dead man.",
+            "type": "audiovisual",
+            "start_approx": 4464,
+            "end_approx": 4476,
+            "locked": false
+          },
+          {
+            "id": 5330899,
+            "ref_id": "12557117",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A dead animal is shown with its eyes open lying on top of a dead man.",
+            "type": "audiovisual",
+            "start_approx": 4500,
+            "end_approx": 4506,
+            "locked": false
+          },
+          {
+            "id": 5330900,
+            "ref_id": "12557118",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A man tapes a dead animal to a dead man's back and puts another dead animal in his mouth.",
+            "type": "audiovisual",
+            "start_approx": 4518,
+            "end_approx": 4554,
+            "locked": false
+          },
+          {
+            "id": 5330902,
+            "ref_id": "12557120",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A dead man is shown with a dead animal taped to his back.",
+            "type": "audiovisual",
+            "start_approx": 4560,
+            "end_approx": 4566,
+            "locked": false
+          },
+          {
+            "id": 5330903,
+            "ref_id": "12557121",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A dead man is shown with a dead animal taped to his back and another dead animal in his mouth.",
+            "type": "audiovisual",
+            "start_approx": 4572,
+            "end_approx": 4578,
+            "locked": false
+          },
+          {
+            "id": 5330905,
+            "ref_id": "12557123",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A man is shown with a dead animal taped to his back and another dead animal in his mouth.",
+            "type": "audiovisual",
+            "start_approx": 4584,
+            "end_approx": 4590,
+            "locked": false
+          },
+          {
+            "id": 5330908,
+            "ref_id": "12557126",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A man is shown with a dead animal taped to his back. The animal's eyes are open.",
+            "type": "audiovisual",
+            "start_approx": 4590,
+            "end_approx": 4620,
+            "locked": false
+          },
+          {
+            "id": 5330909,
+            "ref_id": "12557129",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A man is shown with a dead animal taped to his back.",
+            "type": "audiovisual",
+            "start_approx": 4626,
+            "end_approx": 4644,
+            "locked": false
+          },
+          {
+            "id": 5330938,
+            "ref_id": "12557194",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A hand pushes out of a woman's abdomen.",
+            "type": "audiovisual",
+            "start_approx": 5448,
+            "end_approx": 5448,
+            "locked": false
+          },
+          {
+            "id": 5330941,
+            "ref_id": "12557197",
+            "tag_set_id": 75623,
+            "category_id": 17,
+            "description": "A dead man is shown with a dead animal in his mouth and another taped to his back.",
+            "type": "audiovisual",
+            "start_approx": 5532,
+            "end_approx": 5538,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 26,
+        "key": "objectionable",
+        "display_title": "Objectionable, Disturbing, or Scary",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330840,
+            "ref_id": "12556976",
+            "tag_set_id": 75623,
+            "category_id": 26,
+            "description": "A funeral pyre for a dead animal is shown.",
+            "type": "audiovisual",
+            "start_approx": 2352,
+            "end_approx": 2358,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 4,
+    "key": "alcohol_or_drug_use",
+    "display_title": "Drugs & Alcohol",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_substances-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_substances-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 12,
+        "key": "drugs_illegal",
+        "display_title": "Illegal Usage",
+        "default_type": "audiovisual",
+        "parent_id": 4,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330846,
+            "ref_id": "12557007",
+            "tag_set_id": 75623,
+            "category_id": 12,
+            "description": "A man ingests a pill from another man's prescription bottle.",
+            "type": "audiovisual",
+            "start_approx": 2724,
+            "end_approx": 2730,
+            "locked": false
+          },
+          {
+            "id": 5330847,
+            "ref_id": "12557009",
+            "tag_set_id": 75623,
+            "category_id": 12,
+            "description": "A man ingests another man's prescription pill.",
+            "type": "audiovisual",
+            "start_approx": 2784,
+            "end_approx": 2790,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 11,
+        "key": "drugs_legal",
+        "display_title": "Legal Usage",
+        "default_type": "audiovisual",
+        "parent_id": 4,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330954,
+            "ref_id": "12557400",
+            "tag_set_id": 75623,
+            "category_id": 11,
+            "description": "A man drinks alcohol.",
+            "type": "audiovisual",
+            "start_approx": 546,
+            "end_approx": 552,
+            "locked": false
+          },
+          {
+            "id": 5330828,
+            "ref_id": "12556893",
+            "tag_set_id": 75623,
+            "category_id": 11,
+            "description": "Men and a woman drink alcohol.",
+            "type": "audiovisual",
+            "start_approx": 1704,
+            "end_approx": 1704,
+            "locked": false
+          },
+          {
+            "id": 5330831,
+            "ref_id": "12556957",
+            "tag_set_id": 75623,
+            "category_id": 11,
+            "description": "A man drinks alcohol.",
+            "type": "audiovisual",
+            "start_approx": 1914,
+            "end_approx": 1920,
+            "locked": false
+          },
+          {
+            "id": 5330842,
+            "ref_id": "12556978",
+            "tag_set_id": 75623,
+            "category_id": 11,
+            "description": "A man drinks alcohol.",
+            "type": "audiovisual",
+            "start_approx": 2424,
+            "end_approx": 2430,
+            "locked": false
+          },
+          {
+            "id": 5330864,
+            "ref_id": "12557032",
+            "tag_set_id": 75623,
+            "category_id": 11,
+            "description": "A man drinks alcohol.",
+            "type": "audiovisual",
+            "start_approx": 3432,
+            "end_approx": 3438,
+            "locked": false
+          },
+          {
+            "id": 5330865,
+            "ref_id": "12557033",
+            "tag_set_id": 75623,
+            "category_id": 11,
+            "description": "A man drinks alcohol.",
+            "type": "audiovisual",
+            "start_approx": 3492,
+            "end_approx": 3492,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 10,
+        "key": "drugs_implied",
+        "display_title": "Implied Usage",
+        "default_type": "audiovisual",
+        "parent_id": 4,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330813,
+            "ref_id": "12556840",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "A man tells a woman that they should take a gummy and go to bed early.",
+            "type": "audio",
+            "start_approx": 510,
+            "end_approx": 516,
+            "locked": false
+          },
+          {
+            "id": 5330843,
+            "ref_id": "12556982",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "A man holds a bottle of pills and makes a comment about taking them recreationally with alcohol.",
+            "type": "audiovisual",
+            "start_approx": 2472,
+            "end_approx": 2478,
+            "locked": false
+          },
+          {
+            "id": 5330845,
+            "ref_id": "12557006",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "A man takes a pill from another man's prescription bottle.",
+            "type": "audiovisual",
+            "start_approx": 2718,
+            "end_approx": 2736,
+            "locked": false
+          },
+          {
+            "id": 5330848,
+            "ref_id": "12557010",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "Two men discuss one of them being high on prescription pills.",
+            "type": "audiovisual",
+            "start_approx": 2796,
+            "end_approx": 2802,
+            "locked": false
+          },
+          {
+            "id": 5330855,
+            "ref_id": "12557021",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "A man says that he is hallucinating from drug use.",
+            "type": "audiovisual",
+            "start_approx": 2940,
+            "end_approx": 2946,
+            "locked": false
+          },
+          {
+            "id": 5330960,
+            "ref_id": "12557406",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "A man says that another man is wasted.",
+            "type": "audiovisual",
+            "start_approx": 2952,
+            "end_approx": 2952,
+            "locked": false
+          },
+          {
+            "id": 5330856,
+            "ref_id": "12557022",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "A man asks another man for prescription pills to take recreationally.",
+            "type": "audio",
+            "start_approx": 2958,
+            "end_approx": 2958,
+            "locked": false
+          },
+          {
+            "id": 5330965,
+            "ref_id": "12557428",
+            "tag_set_id": 75623,
+            "category_id": 10,
+            "description": "A man sings about getting high.",
+            "type": "audiovisual",
+            "start_approx": 5070,
+            "end_approx": 5076,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 27,
+    "key": "human_functions",
+    "display_title": "Medical & Body Process",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_medical-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_medical-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 30,
+        "key": "bodily_functions",
+        "display_title": "Bodily Functions/Jokes",
+        "default_type": "audiovisual",
+        "parent_id": 27,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330850,
+            "ref_id": "12557012",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "An animal regurgitates a dead man.",
+            "type": "audiovisual",
+            "start_approx": 2904,
+            "end_approx": 2904,
+            "locked": false
+          },
+          {
+            "id": 5330854,
+            "ref_id": "12557018",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "An animal's digestive fluid drips down a windshield.",
+            "type": "audiovisual",
+            "start_approx": 2916,
+            "end_approx": 2922,
+            "locked": false
+          },
+          {
+            "id": 5330887,
+            "ref_id": "12557101",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A man urinates on another man's leg while men talk to him about it and encourage him. The urine is shown.",
+            "type": "audiovisual",
+            "start_approx": 4212,
+            "end_approx": 4290,
+            "locked": false
+          },
+          {
+            "id": 5330896,
+            "ref_id": "12557112",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A dead animal and a dead man are shown covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 4464,
+            "end_approx": 4476,
+            "locked": false
+          },
+          {
+            "id": 5330898,
+            "ref_id": "12557116",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A dead man and a dead animal are shown covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 4500,
+            "end_approx": 4506,
+            "locked": false
+          },
+          {
+            "id": 5330901,
+            "ref_id": "12557119",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A dead man and a dead animal are shown covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 4518,
+            "end_approx": 4554,
+            "locked": false
+          },
+          {
+            "id": 5330904,
+            "ref_id": "12557122",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A dead man and a dead animal are shown covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 4572,
+            "end_approx": 4578,
+            "locked": false
+          },
+          {
+            "id": 5330906,
+            "ref_id": "12557124",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A man and a dead animal are shown covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 4584,
+            "end_approx": 4590,
+            "locked": false
+          },
+          {
+            "id": 5330907,
+            "ref_id": "12557125",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A man and a dead animal are shown covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 4590,
+            "end_approx": 4620,
+            "locked": false
+          },
+          {
+            "id": 5330910,
+            "ref_id": "12557130",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A man and a dead animal are shown covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 4626,
+            "end_approx": 4632,
+            "locked": false
+          },
+          {
+            "id": 5330940,
+            "ref_id": "12557196",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "Several men are shown from behind as they urinate.",
+            "type": "audiovisual",
+            "start_approx": 5466,
+            "end_approx": 5472,
+            "locked": false
+          },
+          {
+            "id": 5330942,
+            "ref_id": "12557198",
+            "tag_set_id": 75623,
+            "category_id": 30,
+            "description": "A dead man and a dead animal are covered in an animal's digestive fluid.",
+            "type": "audiovisual",
+            "start_approx": 5532,
+            "end_approx": 5538,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 24,
+    "key": "credits",
+    "display_title": "Credits & Extras",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_credits-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_credits-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 33,
+        "key": "opening_credits",
+        "display_title": "Opening Credits",
+        "default_type": "audiovisual",
+        "parent_id": 24,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330808,
+            "ref_id": "12556818",
+            "tag_set_id": 75623,
+            "category_id": 33,
+            "description": "Opening Credits",
+            "type": "audiovisual",
+            "start_approx": 0,
+            "end_approx": 42,
+            "locked": false
+          },
+          {
+            "id": 5330811,
+            "ref_id": "12556830",
+            "tag_set_id": 75623,
+            "category_id": 33,
+            "description": "Opening Credits",
+            "type": "audiovisual",
+            "start_approx": 174,
+            "end_approx": 180,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 34,
+        "key": "closing_credits",
+        "display_title": "Closing Credits",
+        "default_type": "audiovisual",
+        "parent_id": 24,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 5330952,
+            "ref_id": "12557209",
+            "tag_set_id": 75623,
+            "category_id": 34,
+            "description": "Closing Credits",
+            "type": "audiovisual",
+            "start_approx": 5538,
+            "end_approx": 5628,
+            "locked": false
+          },
+          {
+            "id": 5330953,
+            "ref_id": "12557211",
+            "tag_set_id": 75623,
+            "category_id": 34,
+            "description": "Closing Credits",
+            "type": "audiovisual",
+            "start_approx": 5658,
+            "end_approx": 5928,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  }
+]

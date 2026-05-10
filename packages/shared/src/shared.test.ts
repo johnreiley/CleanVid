@@ -8,6 +8,7 @@ import {
   mergeProfanitySuggestions,
   normalizeFilters,
   parseFilterFile,
+  parseFiltersObjectFile,
   parseSkpFile,
   parseSvgRectImport,
   serializeFilterFile
@@ -376,6 +377,213 @@ Language mute 1
 00:01:00.000 - 00:01:03.000
 Broken label
 `)
+    ).toThrowError(FilterValidationError);
+  });
+});
+
+describe('filters-object parsing', () => {
+  it('parses nested categories and maps audio and audiovisual tags', () => {
+    const parsed = parseFiltersObjectFile(
+      [
+        {
+          id: 1,
+          key: 'language',
+          display_title: 'Language',
+          default_type: 'audio',
+          parent_id: null,
+          icon_url: null,
+          white_icon_url: null,
+          tags: [],
+          child_categories: [
+            {
+              id: 2,
+              key: 'profanity',
+              display_title: 'Profanity',
+              default_type: 'audio',
+              parent_id: 1,
+              icon_url: null,
+              white_icon_url: null,
+              tags: [
+                {
+                  id: 10,
+                  ref_id: 'ref-10',
+                  tag_set_id: 100,
+                  category_id: 2,
+                  description: 'word',
+                  type: 'audio',
+                  start_approx: 12,
+                  end_approx: 14,
+                  locked: false
+                }
+              ],
+              child_categories: []
+            }
+          ],
+          locked: false
+        },
+        {
+          id: 3,
+          key: 'violence',
+          display_title: 'Violence',
+          default_type: 'audiovisual',
+          parent_id: null,
+          icon_url: null,
+          white_icon_url: null,
+          tags: [
+            {
+              id: 11,
+              ref_id: 'ref-11',
+              tag_set_id: 100,
+              category_id: 3,
+              description: 'fight',
+              type: 'audiovisual',
+              start_approx: 20,
+              end_approx: 25,
+              locked: false
+            }
+          ],
+          child_categories: [],
+          locked: false
+        }
+      ],
+      { duration: 60 }
+    );
+
+    expect(parsed.warnings).toEqual([]);
+    expect(parsed.categories[0].childCategories[0].title).toBe('Profanity');
+    expect(parsed.tags).toEqual([
+      expect.objectContaining({
+        id: 'filters-object-10',
+        description: 'word',
+        sourceType: 'audio',
+        type: 'mute',
+        start: 12,
+        end: 14,
+        categoryPath: ['Language', 'Profanity']
+      }),
+      expect.objectContaining({
+        id: 'filters-object-11',
+        description: 'fight',
+        sourceType: 'audiovisual',
+        type: 'skip',
+        start: 20,
+        end: 25,
+        categoryPath: ['Violence']
+      })
+    ]);
+  });
+
+  it('expands point tags to 500 ms and clamps them to the duration', () => {
+    const parsed = parseFiltersObjectFile(
+      [
+        {
+          id: 1,
+          key: 'language',
+          display_title: 'Language',
+          default_type: 'audio',
+          parent_id: null,
+          icon_url: null,
+          white_icon_url: null,
+          tags: [
+            {
+              id: 1,
+              description: 'opening',
+              type: 'audio',
+              start_approx: 0,
+              end_approx: 0,
+              locked: false
+            },
+            {
+              id: 2,
+              description: 'ending',
+              type: 'audiovisual',
+              start_approx: 30,
+              end_approx: 30,
+              locked: false
+            }
+          ],
+          child_categories: [],
+          locked: false
+        }
+      ],
+      { duration: 30 }
+    );
+
+    expect(parsed.tags).toEqual([
+      expect.objectContaining({ start: 0, end: 0.5, type: 'mute' }),
+      expect.objectContaining({ start: 29.5, end: 30, type: 'skip' })
+    ]);
+  });
+
+  it('keeps valid tags and reports malformed or unsupported tags', () => {
+    const parsed = parseFiltersObjectFile(
+      [
+        {
+          id: 1,
+          key: 'mixed',
+          display_title: 'Mixed',
+          default_type: 'audio',
+          parent_id: null,
+          icon_url: null,
+          white_icon_url: null,
+          tags: [
+            {
+              id: 1,
+              description: 'valid',
+              type: 'audio',
+              start_approx: 1,
+              end_approx: 2,
+              locked: false
+            },
+            {
+              id: 2,
+              description: 'bad type',
+              type: 'visual',
+              start_approx: 3,
+              end_approx: 4,
+              locked: false
+            },
+            {
+              id: 3,
+              description: 'outside',
+              type: 'audio',
+              start_approx: 99,
+              end_approx: 100,
+              locked: false
+            }
+          ],
+          child_categories: [],
+          locked: false
+        }
+      ],
+      { duration: 10 }
+    );
+
+    expect(parsed.tags).toHaveLength(1);
+    expect(parsed.skippedTagCount).toBe(2);
+    expect(parsed.warnings.join('\n')).toContain('unsupported type');
+    expect(parsed.warnings.join('\n')).toContain('outside the loaded movie duration');
+  });
+
+  it('rejects filters-object files with no usable tags', () => {
+    expect(() =>
+      parseFiltersObjectFile(
+        [
+          {
+            id: 1,
+            key: 'empty',
+            display_title: 'Empty',
+            default_type: 'audio',
+            parent_id: null,
+            icon_url: null,
+            white_icon_url: null,
+            tags: [{ id: 1, type: 'visual', start_approx: 1, end_approx: 2 }],
+            child_categories: [],
+            locked: false
+          }
+        ],
+        { duration: 10 }
+      )
     ).toThrowError(FilterValidationError);
   });
 });

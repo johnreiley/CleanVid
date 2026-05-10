@@ -227,6 +227,83 @@ function setFileText(file: File, value: string) {
   });
 }
 
+function createFiltersObjectImportText() {
+  return JSON.stringify([
+    {
+      id: 1,
+      key: 'language',
+      display_title: 'Language',
+      default_type: 'audio',
+      parent_id: null,
+      icon_url: null,
+      white_icon_url: null,
+      tags: [],
+      child_categories: [
+        {
+          id: 2,
+          key: 'profanity',
+          display_title: 'Profanity',
+          default_type: 'audio',
+          parent_id: 1,
+          icon_url: null,
+          white_icon_url: null,
+          tags: [
+            {
+              id: 101,
+              ref_id: 'ref-101',
+              tag_set_id: 50,
+              category_id: 2,
+              description: 'muted word',
+              type: 'audio',
+              start_approx: 10,
+              end_approx: 10,
+              locked: false
+            },
+            {
+              id: 102,
+              ref_id: 'ref-102',
+              tag_set_id: 50,
+              category_id: 2,
+              description: 'muted phrase',
+              type: 'audio',
+              start_approx: 20,
+              end_approx: 22,
+              locked: false
+            }
+          ],
+          child_categories: [],
+          locked: false
+        }
+      ],
+      locked: false
+    },
+    {
+      id: 3,
+      key: 'violence',
+      display_title: 'Violence',
+      default_type: 'audiovisual',
+      parent_id: null,
+      icon_url: null,
+      white_icon_url: null,
+      tags: [
+        {
+          id: 201,
+          ref_id: 'ref-201',
+          tag_set_id: 50,
+          category_id: 3,
+          description: 'fight',
+          type: 'audiovisual',
+          start_approx: 30,
+          end_approx: 35,
+          locked: false
+        }
+      ],
+      child_categories: [],
+      locked: false
+    }
+  ]);
+}
+
 async function openSvgImportModal(wrapper: ReturnType<typeof mount>) {
   await switchMode(wrapper, 'media');
   await wrapper.get('[data-testid="open-svg-import-modal-button"]').trigger('click');
@@ -1453,6 +1530,109 @@ describe('annotator app', () => {
     await wrapper.get('[data-testid="export-button"]').trigger('click');
     expect(lastExportBlob).toBeDefined();
     await expect(readBlobText(lastExportBlob as Blob)).resolves.toContain('"id": "seg-1"');
+  });
+
+  it('opens a filters-object import modal with unchecked tags and selected preview markers', async () => {
+    const wrapper = mount(App);
+    await openVideo(wrapper);
+    await switchMode(wrapper, 'media');
+
+    const importInput = wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement;
+    const filtersObjectFile = new File([''], 'filters-object.json', { type: 'application/json' });
+    setFileText(filtersObjectFile, createFiltersObjectImportText());
+
+    assignFiles(importInput, [filtersObjectFile]);
+    importInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="filters-object-import-modal"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="skp-import-modal"]').exists()).toBe(false);
+    expect(wrapper.get('[data-testid="filters-object-import-summary"]').text()).toContain(
+      'Imported 3 filters-object tags'
+    );
+    expect(wrapper.get('[data-testid="filters-object-selected-count"]').text()).toContain(
+      '0 selected of 3 tags'
+    );
+    expect(
+      (wrapper.get('[data-testid="apply-filters-object-import-button"]').element as HTMLButtonElement)
+        .disabled
+    ).toBe(true);
+    expect(wrapper.findAll('[data-testid="filters-object-tag-checkbox"]')).toHaveLength(3);
+    expect(
+      wrapper
+        .findAll('[data-testid="filters-object-tag-checkbox"]')
+        .every((checkbox) => !(checkbox.element as HTMLInputElement).checked)
+    ).toBe(true);
+
+    await wrapper.findAll('[data-testid="filters-object-tag-checkbox"]')[0].setValue(true);
+    await nextTick();
+
+    const categoryCheckboxes = wrapper.findAll('[data-testid="filters-object-category-checkbox"]');
+    expect((categoryCheckboxes[0].element as HTMLInputElement).indeterminate).toBe(true);
+    expect(wrapper.get('[data-testid="filters-object-selected-count"]').text()).toContain(
+      '1 selected of 3 tags'
+    );
+    expect(
+      (wrapper.get('[data-testid="apply-filters-object-import-button"]').element as HTMLButtonElement)
+        .disabled
+    ).toBe(false);
+    expect(wrapper.get('[data-testid="filters-object-preview-marker"]').classes()).toContain(
+      'filters-object-preview-marker-audio'
+    );
+
+    await categoryCheckboxes[2].setValue(true);
+    await nextTick();
+
+    const previewMarkers = wrapper.findAll('[data-testid="filters-object-preview-marker"]');
+    expect(previewMarkers).toHaveLength(2);
+    expect(previewMarkers[1].classes()).toContain('filters-object-preview-marker-audiovisual');
+  });
+
+  it('appends selected filters-object tags and exports without imported metadata', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+
+    video.currentTime = 2;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+
+    video.currentTime = 4;
+    video.dispatchEvent(new Event('timeupdate'));
+    await nextTick();
+    await wrapper.get('[data-testid="toggle-mute"]').trigger('click');
+    await nextTick();
+
+    await switchMode(wrapper, 'media');
+    const importInput = wrapper.get('[data-testid="filters-input"]').element as HTMLInputElement;
+    const filtersObjectFile = new File([''], 'filters-object.json', { type: 'application/json' });
+    setFileText(filtersObjectFile, createFiltersObjectImportText());
+
+    assignFiles(importInput, [filtersObjectFile]);
+    importInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+    await nextTick();
+
+    await wrapper.get('[data-testid="filters-object-import-mode-select"]').setValue('append');
+    await wrapper.findAll('[data-testid="filters-object-category-checkbox"]')[0].setValue(true);
+    await nextTick();
+    await wrapper.get('[data-testid="apply-filters-object-import-button"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.find('[data-testid="filters-object-import-modal"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="segment-delete"]')).toHaveLength(3);
+    expect(wrapper.text()).toContain('Appended 2 filters-object filters to the current timeline.');
+    expect(wrapper.get('[data-testid="segment-skp-meta"]').text()).toContain('muted word');
+    expect(wrapper.get('[data-testid="segment-skp-meta"]').text()).toContain('Language > Profanity');
+
+    await wrapper.get('[data-testid="export-button"]').trigger('click');
+    expect(lastExportBlob).toBeDefined();
+    const exportedText = await readBlobText(lastExportBlob as Blob);
+    expect(exportedText).toContain('"type": "mute"');
+    expect(exportedText).not.toContain('muted word');
+    expect(exportedText).not.toContain('Language > Profanity');
+    expect(exportedText).not.toContain('"source"');
   });
 
   it('opens and closes the svg import modal from the media panel', async () => {

@@ -149,7 +149,7 @@ function handleSegmentCard() {
         <span class="segment-duration">{{ formatDuration(segment) }}</span>
       </div>
 
-      <div v-if="segment.source === 'skp'" class="segment-card-imported-meta" data-testid="segment-skp-meta">
+      <div v-if="segment.source" class="segment-card-imported-meta" data-testid="segment-skp-meta">
         <span v-if="segment.description" class="segment-imported-description">{{ segment.description }}</span>
         <span class="segment-imported-chip">{{ formatSegmentCategory(segment) }}</span>
         <span v-if="segment.severity" class="segment-imported-chip">Severity {{ segment.severity }}</span>

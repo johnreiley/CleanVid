@@ -4,9 +4,12 @@ import {
   buildTimeline,
   normalizeFilters,
   parseFilterFile,
+  parseFiltersObjectFile,
   parseSkpFile,
   parseSvgRectImport,
   serializeFilterFile,
+  type FiltersObjectCategory,
+  type FiltersObjectTag,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult,
   type ProfanitySuggestion,
@@ -21,6 +24,7 @@ import { formatTimestamp } from '../time';
 const SEEK_STEP_SECONDS = 5;
 const FINE_SEEK_STEP_SECONDS = 0.1;
 type SvgImportMode = 'replace' | 'append';
+type FiltersObjectImportMode = 'replace' | 'append';
 
 interface OpenVideoResponse {
   cancelled: boolean;
@@ -186,6 +190,12 @@ export function useAnnotatorState() {
   const segments = ref<EditableSegment[]>([]);
   const selectedSegmentId = ref<string | null>(null);
   const profanitySuggestions = ref<ProfanitySuggestion[]>([]);
+  const filtersObjectCategories = ref<FiltersObjectCategory[]>([]);
+  const filtersObjectTags = ref<FiltersObjectTag[]>([]);
+  const filtersObjectSelectedTagIds = ref<string[]>([]);
+  const filtersObjectImportWarnings = ref<string[]>([]);
+  const filtersObjectImportMode = ref<FiltersObjectImportMode>('replace');
+  const filtersObjectReviewRequestKey = ref(0);
   const skpDraftSegments = ref<SkpDraftSegment[]>([]);
   const skpImportWarnings = ref<string[]>([]);
   const skpReviewRequestKey = ref(0);
@@ -355,6 +365,35 @@ export function useAnnotatorState() {
   const skpDraftCountLabel = computed(
     () => `${skpDraftSegments.value.length} draft${skpDraftSegments.value.length === 1 ? '' : 's'}`
   );
+  const filtersObjectSelectedTagIdSet = computed(() => new Set(filtersObjectSelectedTagIds.value));
+  const filtersObjectSelectedTags = computed(() =>
+    filtersObjectTags.value.filter((tag) => filtersObjectSelectedTagIdSet.value.has(tag.id))
+  );
+  const filtersObjectTagCountLabel = computed(
+    () => `${filtersObjectTags.value.length} tag${filtersObjectTags.value.length === 1 ? '' : 's'}`
+  );
+  const filtersObjectSelectedCountLabel = computed(
+    () =>
+      `${filtersObjectSelectedTags.value.length} selected of ${filtersObjectTags.value.length} tag${
+        filtersObjectTags.value.length === 1 ? '' : 's'
+      }`
+  );
+  const filtersObjectImportSummaryText = computed(() => {
+    const importedCount = filtersObjectTags.value.length;
+    const skippedCount = filtersObjectImportWarnings.value.length;
+
+    if (importedCount === 0) {
+      return 'No filters-object tags are ready to review.';
+    }
+
+    if (skippedCount === 0) {
+      return `Imported ${importedCount} filters-object tag${importedCount === 1 ? '' : 's'} for review.`;
+    }
+
+    return `Imported ${importedCount} filters-object tag${
+      importedCount === 1 ? '' : 's'
+    } for review and skipped ${skippedCount} unusable tag${skippedCount === 1 ? '' : 's'}.`;
+  });
   const skpImportSummaryText = computed(() => {
     const importedCount = skpDraftSegments.value.length;
     const skippedCount = skpImportWarnings.value.length;
@@ -393,6 +432,10 @@ export function useAnnotatorState() {
   function updateSvgImportMode(value: SvgImportMode) {
     svgImportMode.value = value;
     clearSvgImportError();
+  }
+
+  function updateFiltersObjectImportMode(value: FiltersObjectImportMode) {
+    filtersObjectImportMode.value = value;
   }
 
   function resetSvgImportForm() {
@@ -723,6 +766,14 @@ export function useAnnotatorState() {
     skpImportWarnings.value = [];
   }
 
+  function clearFiltersObjectImport() {
+    filtersObjectCategories.value = [];
+    filtersObjectTags.value = [];
+    filtersObjectSelectedTagIds.value = [];
+    filtersObjectImportWarnings.value = [];
+    filtersObjectImportMode.value = 'replace';
+  }
+
   function clearFiltersForNextVideo() {
     segments.value = [];
     selectedSegmentId.value = null;
@@ -730,6 +781,7 @@ export function useAnnotatorState() {
     markFiltersPersisted([]);
     clearProfanitySuggestions();
     clearSkpDraftSegments();
+    clearFiltersObjectImport();
     resetSvgImportForm();
     profanitySubtitlePath.value = '';
   }
@@ -954,6 +1006,7 @@ export function useAnnotatorState() {
     try {
       clearFeedback();
       clearSkpDraftSegments();
+      clearFiltersObjectImport();
       const parsed = parseFilterFile(await readTextFile(file));
       segments.value = parsed.filters.map((segment) => ({ ...segment }));
       selectedSegmentId.value = null;
@@ -977,6 +1030,7 @@ export function useAnnotatorState() {
     try {
       clearFeedback();
       clearSkpDraftSegments();
+      clearFiltersObjectImport();
       const parsed = parseSkpFile(await readTextFile(file));
 
       skpDraftSegments.value = parsed.segments.map((segment) => ({ ...segment }));
@@ -998,6 +1052,32 @@ export function useAnnotatorState() {
     }
   }
 
+  async function importFiltersObjectFile(file: File) {
+    try {
+      clearFeedback();
+      clearSkpDraftSegments();
+      clearFiltersObjectImport();
+      const parsed = parseFiltersObjectFile(await readTextFile(file), {
+        duration: effectiveDuration.value
+      });
+
+      filtersObjectCategories.value = parsed.categories;
+      filtersObjectTags.value = parsed.tags;
+      filtersObjectSelectedTagIds.value = [];
+      filtersObjectImportWarnings.value = [...parsed.warnings];
+      filtersObjectImportMode.value = 'replace';
+      filtersObjectReviewRequestKey.value += 1;
+      statusMessage.value = filtersObjectImportSummaryText.value;
+    } catch (error) {
+      if (error instanceof FilterValidationError || error instanceof SyntaxError || error instanceof Error) {
+        setError(error.message);
+        return;
+      }
+
+      setError('Unable to import the filters-object file.');
+    }
+  }
+
   function importSvgFilters() {
     clearFeedback();
     clearSvgImportError();
@@ -1014,6 +1094,7 @@ export function useAnnotatorState() {
       }));
 
       clearSkpDraftSegments();
+      clearFiltersObjectImport();
       pendingStart.value = null;
       pendingType.value = null;
 
@@ -1263,6 +1344,80 @@ export function useAnnotatorState() {
     statusMessage.value = 'Discarded imported SKP filters.';
   }
 
+  function setFiltersObjectTagSelected(payload: { id: string; selected: boolean }) {
+    const nextIds = new Set(filtersObjectSelectedTagIds.value);
+
+    if (payload.selected) {
+      nextIds.add(payload.id);
+    } else {
+      nextIds.delete(payload.id);
+    }
+
+    filtersObjectSelectedTagIds.value = [...nextIds];
+  }
+
+  function setFiltersObjectCategorySelected(payload: { ids: string[]; selected: boolean }) {
+    const nextIds = new Set(filtersObjectSelectedTagIds.value);
+
+    for (const id of payload.ids) {
+      if (payload.selected) {
+        nextIds.add(id);
+      } else {
+        nextIds.delete(id);
+      }
+    }
+
+    filtersObjectSelectedTagIds.value = [...nextIds];
+  }
+
+  function applyFiltersObjectImport() {
+    clearFeedback();
+
+    if (filtersObjectSelectedTags.value.length === 0) {
+      return;
+    }
+
+    const nextSegments = filtersObjectSelectedTags.value.map((tag) => ({
+      id: createSegmentId(),
+      type: tag.type,
+      start: clampToDuration(tag.start),
+      end: clampToDuration(tag.end),
+      source: 'filters-object' as const,
+      category: tag.categoryPath.join(' > '),
+      description: tag.description
+    }));
+
+    pendingStart.value = null;
+    pendingType.value = null;
+    clearSkpDraftSegments();
+
+    if (filtersObjectImportMode.value === 'replace') {
+      segments.value = sortSegments(nextSegments);
+      selectedSegmentId.value = nextSegments[0]?.id ?? null;
+      markFiltersPersisted(segments.value);
+    } else {
+      segments.value = sortSegments([...segments.value, ...nextSegments]);
+      selectedSegmentId.value = nextSegments[0]?.id ?? null;
+    }
+
+    const appliedCount = nextSegments.length;
+    const importMode = filtersObjectImportMode.value;
+    clearFiltersObjectImport();
+    statusMessage.value =
+      importMode === 'replace'
+        ? `Replaced the timeline with ${appliedCount} filters-object filter${
+            appliedCount === 1 ? '' : 's'
+          }.`
+        : `Appended ${appliedCount} filters-object filter${
+            appliedCount === 1 ? '' : 's'
+          } to the current timeline.`;
+  }
+
+  function discardFiltersObjectImport() {
+    clearFiltersObjectImport();
+    statusMessage.value = 'Discarded imported filters-object filters.';
+  }
+
   async function selectOutputPath() {
     clearFeedback();
 
@@ -1353,7 +1508,23 @@ export function useAnnotatorState() {
       return;
     }
 
-    await importFilterFile(file);
+    try {
+      const parsed = JSON.parse(await readTextFile(file)) as unknown;
+
+      if (Array.isArray(parsed)) {
+        await importFiltersObjectFile(file);
+        return;
+      }
+
+      await importFilterFile(file);
+    } catch (error) {
+      if (error instanceof SyntaxError || error instanceof Error) {
+        setError(error.message);
+        return;
+      }
+
+      setError('Unable to import the selected file.');
+    }
   }
 
   function exportFilters(): boolean {
@@ -1516,6 +1687,13 @@ export function useAnnotatorState() {
     statusMessage,
     errorMessage,
     profanitySuggestions,
+    filtersObjectCategories,
+    filtersObjectTags,
+    filtersObjectSelectedTagIds,
+    filtersObjectImportWarnings,
+    filtersObjectImportMode,
+    filtersObjectImportSummaryText,
+    filtersObjectReviewRequestKey,
     skpDraftSegments,
     skpImportWarnings,
     skpImportSummaryText,
@@ -1535,6 +1713,8 @@ export function useAnnotatorState() {
     pendingTypeLabel,
     markerCountLabel,
     profanitySuggestionCountLabel,
+    filtersObjectTagCountLabel,
+    filtersObjectSelectedCountLabel,
     skpDraftCountLabel,
     registerVideoElement,
     handleLoadedMetadata,
@@ -1561,6 +1741,11 @@ export function useAnnotatorState() {
     applyProfanitySuggestions,
     applySkpImport,
     discardSkpImport,
+    setFiltersObjectTagSelected,
+    setFiltersObjectCategorySelected,
+    updateFiltersObjectImportMode,
+    applyFiltersObjectImport,
+    discardFiltersObjectImport,
     updateSvgImportText,
     updateSvgImportType,
     updateSvgImportMode,

@@ -5,8 +5,8 @@ export interface EditableSegment {
   type: FilterType;
   start: number;
   end: number;
-  source?: 'skp';
-  category?: SkpCategory | null;
+  source?: 'filters-object' | 'skp';
+  category?: SkpCategory | string | null;
   severity?: SkpSeverity;
   description?: string;
 }

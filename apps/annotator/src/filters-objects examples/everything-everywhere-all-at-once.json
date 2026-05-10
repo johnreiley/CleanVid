@@ -1,0 +1,3726 @@
+[
+  {
+    "id": 1,
+    "key": "language",
+    "display_title": "Language",
+    "default_type": "audio",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_language-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_language-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 18,
+        "key": "profanity",
+        "display_title": "Profanity",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_language-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_language-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 55,
+            "key": "bitch",
+            "display_title": "b*tch",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385257,
+                "ref_id": "11213568",
+                "tag_set_id": 52192,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 4590,
+                "end_approx": 4596,
+                "locked": false
+              },
+              {
+                "id": 3385339,
+                "ref_id": "11213654",
+                "tag_set_id": 52192,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 6702,
+                "end_approx": 6702,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 60,
+            "key": "damn",
+            "display_title": "d*mn",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385159,
+                "ref_id": "11213451",
+                "tag_set_id": 52192,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 2418,
+                "end_approx": 2418,
+                "locked": false
+              },
+              {
+                "id": 3385195,
+                "ref_id": "11213499",
+                "tag_set_id": 52192,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 3468,
+                "end_approx": 3468,
+                "locked": false
+              },
+              {
+                "id": 3385294,
+                "ref_id": "11213609",
+                "tag_set_id": 52192,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 5076,
+                "end_approx": 5076,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 61,
+            "key": "fuck",
+            "display_title": "f-word",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385114,
+                "ref_id": "11213364",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 492,
+                "end_approx": 492,
+                "locked": false
+              },
+              {
+                "id": 3385116,
+                "ref_id": "11213367",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 528,
+                "end_approx": 528,
+                "locked": false
+              },
+              {
+                "id": 3385121,
+                "ref_id": "11213390",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 900,
+                "end_approx": 900,
+                "locked": false
+              },
+              {
+                "id": 3385140,
+                "ref_id": "11213416",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 1830,
+                "end_approx": 1836,
+                "locked": false
+              },
+              {
+                "id": 3385163,
+                "ref_id": "11213457",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 2664,
+                "end_approx": 2664,
+                "locked": false
+              },
+              {
+                "id": 3385206,
+                "ref_id": "11213511",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 3894,
+                "end_approx": 3900,
+                "locked": false
+              },
+              {
+                "id": 3385207,
+                "ref_id": "11213512",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 3906,
+                "end_approx": 3906,
+                "locked": false
+              },
+              {
+                "id": 3385208,
+                "ref_id": "11213513",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 3906,
+                "end_approx": 3906,
+                "locked": false
+              },
+              {
+                "id": 3385213,
+                "ref_id": "11213518",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 4134,
+                "end_approx": 4140,
+                "locked": false
+              },
+              {
+                "id": 3385243,
+                "ref_id": "11213554",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 4446,
+                "end_approx": 4446,
+                "locked": false
+              },
+              {
+                "id": 3385259,
+                "ref_id": "11213571",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 4650,
+                "end_approx": 4650,
+                "locked": false
+              },
+              {
+                "id": 3385262,
+                "ref_id": "11213574",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 4704,
+                "end_approx": 4704,
+                "locked": false
+              },
+              {
+                "id": 3385383,
+                "ref_id": "11214146",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 4716,
+                "end_approx": 4716,
+                "locked": false
+              },
+              {
+                "id": 3385390,
+                "ref_id": "11251474",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audiovisual",
+                "start_approx": 6078,
+                "end_approx": 6084,
+                "locked": false
+              },
+              {
+                "id": 3385391,
+                "ref_id": "11251475",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audiovisual",
+                "start_approx": 6090,
+                "end_approx": 6096,
+                "locked": false
+              },
+              {
+                "id": 3385337,
+                "ref_id": "11213652",
+                "tag_set_id": 52192,
+                "category_id": 61,
+                "description": "f-word",
+                "type": "audio",
+                "start_approx": 6660,
+                "end_approx": 6660,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 63,
+            "key": "shit",
+            "display_title": "sh*t",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385112,
+                "ref_id": "11213330",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 216,
+                "end_approx": 216,
+                "locked": false
+              },
+              {
+                "id": 3385118,
+                "ref_id": "11213372",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 594,
+                "end_approx": 594,
+                "locked": false
+              },
+              {
+                "id": 3385124,
+                "ref_id": "11213396",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 1224,
+                "end_approx": 1224,
+                "locked": false
+              },
+              {
+                "id": 3385135,
+                "ref_id": "11213409",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 1770,
+                "end_approx": 1776,
+                "locked": false
+              },
+              {
+                "id": 3385181,
+                "ref_id": "11213484",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3306,
+                "end_approx": 3306,
+                "locked": false
+              },
+              {
+                "id": 3385192,
+                "ref_id": "11213496",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3444,
+                "end_approx": 3444,
+                "locked": false
+              },
+              {
+                "id": 3385382,
+                "ref_id": "11214039",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3546,
+                "end_approx": 3546,
+                "locked": false
+              },
+              {
+                "id": 3385200,
+                "ref_id": "11213504",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3600,
+                "end_approx": 3600,
+                "locked": false
+              },
+              {
+                "id": 3385205,
+                "ref_id": "11213510",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 3858,
+                "end_approx": 3858,
+                "locked": false
+              },
+              {
+                "id": 3385211,
+                "ref_id": "11213516",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4080,
+                "end_approx": 4086,
+                "locked": false
+              },
+              {
+                "id": 3385212,
+                "ref_id": "11213517",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4080,
+                "end_approx": 4086,
+                "locked": false
+              },
+              {
+                "id": 3385249,
+                "ref_id": "11213560",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4500,
+                "end_approx": 4506,
+                "locked": false
+              },
+              {
+                "id": 3385283,
+                "ref_id": "11213597",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4854,
+                "end_approx": 4854,
+                "locked": false
+              },
+              {
+                "id": 3385297,
+                "ref_id": "11213612",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 5202,
+                "end_approx": 5202,
+                "locked": false
+              },
+              {
+                "id": 3385389,
+                "ref_id": "11251473",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audiovisual",
+                "start_approx": 6072,
+                "end_approx": 6072,
+                "locked": false
+              },
+              {
+                "id": 3385366,
+                "ref_id": "11213681",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 7368,
+                "end_approx": 7368,
+                "locked": false
+              },
+              {
+                "id": 3385368,
+                "ref_id": "11213683",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 7434,
+                "end_approx": 7434,
+                "locked": false
+              },
+              {
+                "id": 3385370,
+                "ref_id": "11213685",
+                "tag_set_id": 52192,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 7566,
+                "end_approx": 7572,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 64,
+            "key": "other_profanity",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385287,
+                "ref_id": "11213601",
+                "tag_set_id": 52192,
+                "category_id": 64,
+                "description": "p*ss",
+                "type": "audio",
+                "start_approx": 4962,
+                "end_approx": 4962,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 20,
+        "key": "blasphemy",
+        "display_title": "Blasphemy",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_halo-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_halo-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 80,
+            "key": "jesus",
+            "display_title": "J*sus",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385220,
+                "ref_id": "11213529",
+                "tag_set_id": 52192,
+                "category_id": 80,
+                "description": "J*sus",
+                "type": "audio",
+                "start_approx": 4212,
+                "end_approx": 4212,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 81,
+            "key": "god",
+            "display_title": "G*d",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385113,
+                "ref_id": "11213344",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 396,
+                "end_approx": 396,
+                "locked": false
+              },
+              {
+                "id": 3385123,
+                "ref_id": "11213394",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audiovisual",
+                "start_approx": 1002,
+                "end_approx": 1002,
+                "locked": false
+              },
+              {
+                "id": 3385132,
+                "ref_id": "11213405",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 1650,
+                "end_approx": 1650,
+                "locked": false
+              },
+              {
+                "id": 3385147,
+                "ref_id": "11213427",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2040,
+                "end_approx": 2040,
+                "locked": false
+              },
+              {
+                "id": 3385149,
+                "ref_id": "11213429",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2130,
+                "end_approx": 2130,
+                "locked": false
+              },
+              {
+                "id": 3385162,
+                "ref_id": "11213456",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2610,
+                "end_approx": 2610,
+                "locked": false
+              },
+              {
+                "id": 3385172,
+                "ref_id": "11213473",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2928,
+                "end_approx": 2928,
+                "locked": false
+              },
+              {
+                "id": 3385381,
+                "ref_id": "11214007",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2940,
+                "end_approx": 2940,
+                "locked": false
+              },
+              {
+                "id": 3385191,
+                "ref_id": "11213495",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3318,
+                "end_approx": 3318,
+                "locked": false
+              },
+              {
+                "id": 3385187,
+                "ref_id": "11213490",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3336,
+                "end_approx": 3342,
+                "locked": false
+              },
+              {
+                "id": 3385209,
+                "ref_id": "11213514",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3984,
+                "end_approx": 3984,
+                "locked": false
+              },
+              {
+                "id": 3385210,
+                "ref_id": "11213515",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4002,
+                "end_approx": 4002,
+                "locked": false
+              },
+              {
+                "id": 3385221,
+                "ref_id": "11213531",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4212,
+                "end_approx": 4212,
+                "locked": false
+              },
+              {
+                "id": 3385222,
+                "ref_id": "11213532",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4212,
+                "end_approx": 4218,
+                "locked": false
+              },
+              {
+                "id": 3385232,
+                "ref_id": "11213543",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4344,
+                "end_approx": 4344,
+                "locked": false
+              },
+              {
+                "id": 3385234,
+                "ref_id": "11213545",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4350,
+                "end_approx": 4350,
+                "locked": false
+              },
+              {
+                "id": 3385251,
+                "ref_id": "11213562",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4512,
+                "end_approx": 4512,
+                "locked": false
+              },
+              {
+                "id": 3385253,
+                "ref_id": "11213564",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4524,
+                "end_approx": 4524,
+                "locked": false
+              },
+              {
+                "id": 3385263,
+                "ref_id": "11213575",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4710,
+                "end_approx": 4710,
+                "locked": false
+              },
+              {
+                "id": 3385292,
+                "ref_id": "11213607",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 5070,
+                "end_approx": 5070,
+                "locked": false
+              },
+              {
+                "id": 3385293,
+                "ref_id": "11213608",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 5070,
+                "end_approx": 5070,
+                "locked": false
+              },
+              {
+                "id": 3385384,
+                "ref_id": "11214173",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 5454,
+                "end_approx": 5454,
+                "locked": false
+              },
+              {
+                "id": 3385385,
+                "ref_id": "11214175",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 5514,
+                "end_approx": 5514,
+                "locked": false
+              },
+              {
+                "id": 3385310,
+                "ref_id": "11213625",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 5904,
+                "end_approx": 5904,
+                "locked": false
+              },
+              {
+                "id": 3385314,
+                "ref_id": "11213629",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audiovisual",
+                "start_approx": 6030,
+                "end_approx": 6036,
+                "locked": false
+              },
+              {
+                "id": 3385350,
+                "ref_id": "11213665",
+                "tag_set_id": 52192,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 6930,
+                "end_approx": 6930,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 82,
+            "key": "lord",
+            "display_title": "L*rd",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385128,
+                "ref_id": "11213401",
+                "tag_set_id": 52192,
+                "category_id": 82,
+                "description": "L*rd",
+                "type": "audio",
+                "start_approx": 1410,
+                "end_approx": 1410,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 23,
+        "key": "language_racial",
+        "display_title": "Racial & Bigoted Slurs",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_racial-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_racial-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 101,
+            "key": "other_racial",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 23,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385117,
+                "ref_id": "11213369",
+                "tag_set_id": 52192,
+                "category_id": 101,
+                "description": "A man makes a racist comment to a Chinese woman. ",
+                "type": "audiovisual",
+                "start_approx": 546,
+                "end_approx": 552,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 19,
+        "key": "profanity_captions",
+        "display_title": "Captions with Profanity",
+        "default_type": "audiovisual",
+        "parent_id": 1,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 74,
+            "key": "fuck_caption",
+            "display_title": "f-word",
+            "default_type": "audiovisual",
+            "parent_id": 19,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385316,
+                "ref_id": "11213631",
+                "tag_set_id": 52192,
+                "category_id": 74,
+                "description": "f-word",
+                "type": "audiovisual",
+                "start_approx": 6078,
+                "end_approx": 6084,
+                "locked": false
+              },
+              {
+                "id": 3385317,
+                "ref_id": "11213632",
+                "tag_set_id": 52192,
+                "category_id": 74,
+                "description": "f-word",
+                "type": "audiovisual",
+                "start_approx": 6090,
+                "end_approx": 6096,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 76,
+            "key": "shit_caption",
+            "display_title": "sh*t",
+            "default_type": "audiovisual",
+            "parent_id": 19,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385315,
+                "ref_id": "11213630",
+                "tag_set_id": 52192,
+                "category_id": 76,
+                "description": "sh*t",
+                "type": "audiovisual",
+                "start_approx": 6072,
+                "end_approx": 6072,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 22,
+        "key": "language_sexual",
+        "display_title": "Sexual Reference",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_exclamation-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_exclamation-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 150,
+            "key": "other_sexual",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 22,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 3385201,
+                "ref_id": "11213505",
+                "tag_set_id": 52192,
+                "category_id": 150,
+                "description": "Sexually suggestive personal ads are shown.",
+                "type": "audiovisual",
+                "start_approx": 3618,
+                "end_approx": 3624,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 6,
+    "key": "sex_any",
+    "display_title": "Sex",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_sex-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_sex-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 39,
+        "key": "shown_w_nudity",
+        "display_title": "Sex with Nudity",
+        "default_type": "audiovisual",
+        "parent_id": 6,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385267,
+            "ref_id": "11213579",
+            "tag_set_id": 52192,
+            "category_id": 39,
+            "description": "A bottomless man is shown with a sex toy hanging out of his behind. His genitals are pixelated. ",
+            "type": "audiovisual",
+            "start_approx": 4758,
+            "end_approx": 4764,
+            "locked": false
+          },
+          {
+            "id": 3385268,
+            "ref_id": "11213581",
+            "tag_set_id": 52192,
+            "category_id": 39,
+            "description": "A man is shown with a sex toy in his behind. His genitals are pixelated. ",
+            "type": "audiovisual",
+            "start_approx": 4770,
+            "end_approx": 4776,
+            "locked": false
+          },
+          {
+            "id": 3385271,
+            "ref_id": "11213585",
+            "tag_set_id": 52192,
+            "category_id": 39,
+            "description": "A man is shown with a sex toy in his behind. His genitals are blurred. ",
+            "type": "audiovisual",
+            "start_approx": 4782,
+            "end_approx": 4782,
+            "locked": false
+          },
+          {
+            "id": 3385273,
+            "ref_id": "11213587",
+            "tag_set_id": 52192,
+            "category_id": 39,
+            "description": "Two men are shown with objects inserted in their behinds. One man wears pants and the other man's genitals are pixelated. ",
+            "type": "audiovisual",
+            "start_approx": 4794,
+            "end_approx": 4812,
+            "locked": false
+          },
+          {
+            "id": 3385275,
+            "ref_id": "11213589",
+            "tag_set_id": 52192,
+            "category_id": 39,
+            "description": "A man with pixelated genitals is shown with an object in his behind.",
+            "type": "audiovisual",
+            "start_approx": 4812,
+            "end_approx": 4818,
+            "locked": false
+          },
+          {
+            "id": 3385278,
+            "ref_id": "11213592",
+            "tag_set_id": 52192,
+            "category_id": 39,
+            "description": "A woman removes objects from two men's buttocks. A man's buttocks are visible.",
+            "type": "audiovisual",
+            "start_approx": 4824,
+            "end_approx": 4842,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 38,
+        "key": "shown_w_o_nudity",
+        "display_title": "Sex without Nudity",
+        "default_type": "audiovisual",
+        "parent_id": 6,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385143,
+            "ref_id": "11213419",
+            "tag_set_id": 52192,
+            "category_id": 38,
+            "description": "A man and a woman are shown from the shoulders up as they have sex. ",
+            "type": "audiovisual",
+            "start_approx": 1938,
+            "end_approx": 1944,
+            "locked": false
+          },
+          {
+            "id": 3385198,
+            "ref_id": "11213502",
+            "tag_set_id": 52192,
+            "category_id": 38,
+            "description": "A man and a woman lick each other's fingertips. Fluid fills their mouths. ",
+            "type": "audiovisual",
+            "start_approx": 3528,
+            "end_approx": 3534,
+            "locked": false
+          },
+          {
+            "id": 3385266,
+            "ref_id": "11213578",
+            "tag_set_id": 52192,
+            "category_id": 38,
+            "description": "A man jumps and lands sitting on an anal sex toy.",
+            "type": "audiovisual",
+            "start_approx": 4740,
+            "end_approx": 4746,
+            "locked": false
+          },
+          {
+            "id": 3385298,
+            "ref_id": "11213613",
+            "tag_set_id": 52192,
+            "category_id": 38,
+            "description": "A woman and a man are shown with fluid in their mouths from each other's fingertips.",
+            "type": "audiovisual",
+            "start_approx": 5208,
+            "end_approx": 5208,
+            "locked": false
+          },
+          {
+            "id": 3385373,
+            "ref_id": "11213688",
+            "tag_set_id": 52192,
+            "category_id": 38,
+            "description": "Two women put their fingers in each other's mouths.",
+            "type": "audiovisual",
+            "start_approx": 7710,
+            "end_approx": 7716,
+            "locked": false
+          },
+          {
+            "id": 3385375,
+            "ref_id": "11213690",
+            "tag_set_id": 52192,
+            "category_id": 38,
+            "description": "Two women are shown with their mouths full of fluid from each other's fingertips.",
+            "type": "audiovisual",
+            "start_approx": 7734,
+            "end_approx": 7734,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 37,
+        "key": "implied_not_shown",
+        "display_title": "Implied Sex",
+        "default_type": "audiovisual",
+        "parent_id": 6,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385218,
+            "ref_id": "11213524",
+            "tag_set_id": 52192,
+            "category_id": 37,
+            "description": "A woman in a dominatrix outfit leads a man out of a room full of sex toys by his tie. He asks another woman to clean the room.",
+            "type": "audiovisual",
+            "start_approx": 4194,
+            "end_approx": 4206,
+            "locked": false
+          },
+          {
+            "id": 3385233,
+            "ref_id": "11213544",
+            "tag_set_id": 52192,
+            "category_id": 37,
+            "description": "A woman activates a sex toy.",
+            "type": "audiovisual",
+            "start_approx": 4350,
+            "end_approx": 4350,
+            "locked": false
+          },
+          {
+            "id": 3385235,
+            "ref_id": "11213546",
+            "tag_set_id": 52192,
+            "category_id": 37,
+            "description": "A woman tickles her nose with a sex toy.",
+            "type": "audiovisual",
+            "start_approx": 4356,
+            "end_approx": 4356,
+            "locked": false
+          },
+          {
+            "id": 3385261,
+            "ref_id": "11213573",
+            "tag_set_id": 52192,
+            "category_id": 37,
+            "description": "A man lowers his pants and is shown in brief underwear as he tries to sit on an object that is shaped like an anal sex toy.",
+            "type": "audiovisual",
+            "start_approx": 4686,
+            "end_approx": 4710,
+            "locked": false
+          },
+          {
+            "id": 3385264,
+            "ref_id": "11213576",
+            "tag_set_id": 52192,
+            "category_id": 37,
+            "description": "A man tries to reach for an object that is shaped like an anal sex toy.",
+            "type": "audiovisual",
+            "start_approx": 4722,
+            "end_approx": 4734,
+            "locked": false
+          },
+          {
+            "id": 3385280,
+            "ref_id": "11213594",
+            "tag_set_id": 52192,
+            "category_id": 37,
+            "description": "A woman holds objects that are shaped like sex toys after removing them from men's buttocks. ",
+            "type": "audiovisual",
+            "start_approx": 4842,
+            "end_approx": 4842,
+            "locked": false
+          },
+          {
+            "id": 3385354,
+            "ref_id": "11213669",
+            "tag_set_id": 52192,
+            "category_id": 37,
+            "description": "A woman gags a man and spanks him with a whip.",
+            "type": "audiovisual",
+            "start_approx": 6960,
+            "end_approx": 6990,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 36,
+        "key": "sexually_suggestive",
+        "display_title": "Sexually Suggestive",
+        "default_type": "audiovisual",
+        "parent_id": 6,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385111,
+            "ref_id": "11213328",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A woman strokes another woman's hair.",
+            "type": "audiovisual",
+            "start_approx": 204,
+            "end_approx": 210,
+            "locked": false
+          },
+          {
+            "id": 3385122,
+            "ref_id": "11213392",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A man caresses a woman's chin.",
+            "type": "audiovisual",
+            "start_approx": 924,
+            "end_approx": 924,
+            "locked": false
+          },
+          {
+            "id": 3385125,
+            "ref_id": "11213397",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A man presses his hand against a woman's cheek. ",
+            "type": "audiovisual",
+            "start_approx": 1320,
+            "end_approx": 1326,
+            "locked": false
+          },
+          {
+            "id": 3385197,
+            "ref_id": "11213501",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A man and a woman put their fingers in each other's mouths. ",
+            "type": "audiovisual",
+            "start_approx": 3516,
+            "end_approx": 3522,
+            "locked": false
+          },
+          {
+            "id": 3385223,
+            "ref_id": "11213534",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Masks and whips can be seen on the wall. ",
+            "type": "audiovisual",
+            "start_approx": 4248,
+            "end_approx": 4260,
+            "locked": false
+          },
+          {
+            "id": 3385224,
+            "ref_id": "11213535",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Bondage gear can be seen on the wall. ",
+            "type": "audiovisual",
+            "start_approx": 4266,
+            "end_approx": 4278,
+            "locked": false
+          },
+          {
+            "id": 3385225,
+            "ref_id": "11213536",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Bondage items can be seen.",
+            "type": "audiovisual",
+            "start_approx": 4284,
+            "end_approx": 4308,
+            "locked": false
+          },
+          {
+            "id": 3385229,
+            "ref_id": "11213540",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Bondage items hang on the wall. ",
+            "type": "audiovisual",
+            "start_approx": 4326,
+            "end_approx": 4332,
+            "locked": false
+          },
+          {
+            "id": 3385230,
+            "ref_id": "11213541",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Bondage items are visible.",
+            "type": "audiovisual",
+            "start_approx": 4332,
+            "end_approx": 4338,
+            "locked": false
+          },
+          {
+            "id": 3385231,
+            "ref_id": "11213542",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Bondage items can be seen.",
+            "type": "audiovisual",
+            "start_approx": 4344,
+            "end_approx": 4350,
+            "locked": false
+          },
+          {
+            "id": 3385237,
+            "ref_id": "11213548",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Sex toys can be seen on the wall. ",
+            "type": "audiovisual",
+            "start_approx": 4374,
+            "end_approx": 4380,
+            "locked": false
+          },
+          {
+            "id": 3385239,
+            "ref_id": "11213550",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "Several sex toys are partially visible.",
+            "type": "audiovisual",
+            "start_approx": 4416,
+            "end_approx": 4416,
+            "locked": false
+          },
+          {
+            "id": 3385332,
+            "ref_id": "11213647",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A man and a woman stroke each other's faces. ",
+            "type": "audiovisual",
+            "start_approx": 6540,
+            "end_approx": 6540,
+            "locked": false
+          },
+          {
+            "id": 3385386,
+            "ref_id": "11214187",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A woman's defined chest outline is visible.",
+            "type": "audiovisual",
+            "start_approx": 6654,
+            "end_approx": 6660,
+            "locked": false
+          },
+          {
+            "id": 3385340,
+            "ref_id": "11213655",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A woman rubs her foot against another woman's foot.",
+            "type": "audiovisual",
+            "start_approx": 6708,
+            "end_approx": 6708,
+            "locked": false
+          },
+          {
+            "id": 3385342,
+            "ref_id": "11213657",
+            "tag_set_id": 52192,
+            "category_id": 36,
+            "description": "A woman caresses another woman's face with her foot. ",
+            "type": "audiovisual",
+            "start_approx": 6756,
+            "end_approx": 6762,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 2,
+    "key": "sex_nudity_immodesty",
+    "display_title": "Nudity & Immodesty",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_nudity-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_nudity-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 43,
+        "key": "nudity_male",
+        "display_title": "Male",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385241,
+            "ref_id": "11213552",
+            "tag_set_id": 52192,
+            "category_id": 43,
+            "description": "Several trophies that are shaped like anal sex toys are shown.",
+            "type": "audiovisual",
+            "start_approx": 1212,
+            "end_approx": 1230,
+            "locked": false
+          },
+          {
+            "id": 3385183,
+            "ref_id": "11213486",
+            "tag_set_id": 52192,
+            "category_id": 43,
+            "description": "A woman holds sex toys shaped like male genitals and hits a man in the head with them.",
+            "type": "audiovisual",
+            "start_approx": 3330,
+            "end_approx": 3336,
+            "locked": false
+          },
+          {
+            "id": 3385185,
+            "ref_id": "11213488",
+            "tag_set_id": 52192,
+            "category_id": 43,
+            "description": "A woman hits a man with a sex toy shaped like male genitals. ",
+            "type": "audiovisual",
+            "start_approx": 3342,
+            "end_approx": 3348,
+            "locked": false
+          },
+          {
+            "id": 3385189,
+            "ref_id": "11213492",
+            "tag_set_id": 52192,
+            "category_id": 43,
+            "description": "A woman holds sex toys that are shaped like male genitals. ",
+            "type": "audiovisual",
+            "start_approx": 3354,
+            "end_approx": 3354,
+            "locked": false
+          },
+          {
+            "id": 3385228,
+            "ref_id": "11213539",
+            "tag_set_id": 52192,
+            "category_id": 43,
+            "description": "A man's buttocks are partially visible.",
+            "type": "audiovisual",
+            "start_approx": 4320,
+            "end_approx": 4326,
+            "locked": false
+          },
+          {
+            "id": 3385358,
+            "ref_id": "11213673",
+            "tag_set_id": 52192,
+            "category_id": 43,
+            "description": "A man's buttocks can be seen. ",
+            "type": "audiovisual",
+            "start_approx": 7092,
+            "end_approx": 7098,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 41,
+        "key": "implied_nudity",
+        "display_title": "Implied Nudity",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385265,
+            "ref_id": "11213577",
+            "tag_set_id": 52192,
+            "category_id": 41,
+            "description": "A nude man is shown with his buttocks and genitals pixelated. ",
+            "type": "audiovisual",
+            "start_approx": 4734,
+            "end_approx": 4746,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 46,
+        "key": "immodesty_female",
+        "display_title": "Female Immodesty",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385129,
+            "ref_id": "11213402",
+            "tag_set_id": 52192,
+            "category_id": 46,
+            "description": "A woman's defined chest outline can be seen. ",
+            "type": "audiovisual",
+            "start_approx": 1476,
+            "end_approx": 1476,
+            "locked": false
+          },
+          {
+            "id": 3385130,
+            "ref_id": "11213403",
+            "tag_set_id": 52192,
+            "category_id": 46,
+            "description": "A woman's shirt shows her defined chest outline.",
+            "type": "audiovisual",
+            "start_approx": 1482,
+            "end_approx": 1482,
+            "locked": false
+          },
+          {
+            "id": 3385194,
+            "ref_id": "11213498",
+            "tag_set_id": 52192,
+            "category_id": 46,
+            "description": "A woman's crotch is focused on as she urinates in her pants.",
+            "type": "audiovisual",
+            "start_approx": 3450,
+            "end_approx": 3450,
+            "locked": false
+          },
+          {
+            "id": 3385338,
+            "ref_id": "11213653",
+            "tag_set_id": 52192,
+            "category_id": 46,
+            "description": "A woman's top shows her defined chest outline. ",
+            "type": "audiovisual",
+            "start_approx": 6678,
+            "end_approx": 6702,
+            "locked": false
+          },
+          {
+            "id": 3385374,
+            "ref_id": "11213689",
+            "tag_set_id": 52192,
+            "category_id": 46,
+            "description": "A woman's defined chest outline is visible.",
+            "type": "audiovisual",
+            "start_approx": 7716,
+            "end_approx": 7722,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 45,
+        "key": "immodesty_male",
+        "display_title": "Male Immodesty",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385247,
+            "ref_id": "11213558",
+            "tag_set_id": 52192,
+            "category_id": 45,
+            "description": "An injured man grabs his genitals. ",
+            "type": "audiovisual",
+            "start_approx": 4476,
+            "end_approx": 4476,
+            "locked": false
+          },
+          {
+            "id": 3385277,
+            "ref_id": "11213591",
+            "tag_set_id": 52192,
+            "category_id": 45,
+            "description": "A bottomless man is shown in a long shirt. ",
+            "type": "audiovisual",
+            "start_approx": 4818,
+            "end_approx": 4824,
+            "locked": false
+          },
+          {
+            "id": 3385321,
+            "ref_id": "11213636",
+            "tag_set_id": 52192,
+            "category_id": 45,
+            "description": "A man wears a long shirt with no pants. ",
+            "type": "audiovisual",
+            "start_approx": 6288,
+            "end_approx": 6288,
+            "locked": false
+          },
+          {
+            "id": 3385324,
+            "ref_id": "11213639",
+            "tag_set_id": 52192,
+            "category_id": 45,
+            "description": "A man can be seen wearing a long shirt with no pants. ",
+            "type": "audiovisual",
+            "start_approx": 6402,
+            "end_approx": 6408,
+            "locked": false
+          },
+          {
+            "id": 3385326,
+            "ref_id": "11213641",
+            "tag_set_id": 52192,
+            "category_id": 45,
+            "description": "A man in a long shirt with no pants can be seen. ",
+            "type": "audiovisual",
+            "start_approx": 6414,
+            "end_approx": 6420,
+            "locked": false
+          },
+          {
+            "id": 3385344,
+            "ref_id": "11213659",
+            "tag_set_id": 52192,
+            "category_id": 45,
+            "description": "A man is shown in a long shirt with no pants. His upper thighs are visible.",
+            "type": "audiovisual",
+            "start_approx": 6798,
+            "end_approx": 6804,
+            "locked": false
+          },
+          {
+            "id": 3385359,
+            "ref_id": "11213674",
+            "tag_set_id": 52192,
+            "category_id": 45,
+            "description": "A man with no pants is shown with his shirt covering his genitals. ",
+            "type": "audiovisual",
+            "start_approx": 7104,
+            "end_approx": 7104,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 151,
+        "key": "nudity_statues_and_paintings",
+        "display_title": "Nude Statues & Paintings",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385204,
+            "ref_id": "11213509",
+            "tag_set_id": 52192,
+            "category_id": 151,
+            "description": "A statue of two nude women shows their breasts and genitals.",
+            "type": "audiovisual",
+            "start_approx": 3738,
+            "end_approx": 3744,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 9,
+    "key": "kissing",
+    "display_title": "Kissing",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_kissing-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_kissing-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 48,
+        "key": "kissing_normal",
+        "display_title": "Heterosexual Normal",
+        "default_type": "audiovisual",
+        "parent_id": 9,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385119,
+            "ref_id": "11213379",
+            "tag_set_id": 52192,
+            "category_id": 48,
+            "description": "A woman kisses the corner of a man's mouth.",
+            "type": "audiovisual",
+            "start_approx": 768,
+            "end_approx": 768,
+            "locked": false
+          },
+          {
+            "id": 3385349,
+            "ref_id": "11213664",
+            "tag_set_id": 52192,
+            "category_id": 48,
+            "description": "A man and a woman kiss each other. ",
+            "type": "audiovisual",
+            "start_approx": 6912,
+            "end_approx": 6918,
+            "locked": false
+          },
+          {
+            "id": 3385377,
+            "ref_id": "11213692",
+            "tag_set_id": 52192,
+            "category_id": 48,
+            "description": "A woman kisses a man.",
+            "type": "audiovisual",
+            "start_approx": 7872,
+            "end_approx": 7878,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 49,
+        "key": "kissing_passion",
+        "display_title": "Heterosexual Passionate",
+        "default_type": "audiovisual",
+        "parent_id": 9,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385304,
+            "ref_id": "11213619",
+            "tag_set_id": 52192,
+            "category_id": 49,
+            "description": "A woman kisses a man.",
+            "type": "audiovisual",
+            "start_approx": 5826,
+            "end_approx": 5832,
+            "locked": false
+          },
+          {
+            "id": 3385309,
+            "ref_id": "11213624",
+            "tag_set_id": 52192,
+            "category_id": 49,
+            "description": "A woman kisses a man against a wall. ",
+            "type": "audiovisual",
+            "start_approx": 5868,
+            "end_approx": 5868,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 50,
+        "key": "kissing_homo_normal",
+        "display_title": "Homosexual Normal",
+        "default_type": "audiovisual",
+        "parent_id": 9,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385376,
+            "ref_id": "11213691",
+            "tag_set_id": 52192,
+            "category_id": 50,
+            "description": "Two women kiss each other. ",
+            "type": "audiovisual",
+            "start_approx": 7836,
+            "end_approx": 7842,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 51,
+        "key": "kissing_homo_passion",
+        "display_title": "Homosexual Passionate",
+        "default_type": "audiovisual",
+        "parent_id": 9,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385110,
+            "ref_id": "11213327",
+            "tag_set_id": 52192,
+            "category_id": 51,
+            "description": "A woman grabs another woman's face and kisses her cheek and neck several times. ",
+            "type": "audiovisual",
+            "start_approx": 192,
+            "end_approx": 198,
+            "locked": false
+          },
+          {
+            "id": 3385341,
+            "ref_id": "11213656",
+            "tag_set_id": 52192,
+            "category_id": 51,
+            "description": "A woman kisses another woman's fingertip.",
+            "type": "audiovisual",
+            "start_approx": 6720,
+            "end_approx": 6720,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 3,
+    "key": "violence_blood_gore",
+    "display_title": "Violence",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_violence-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_violence-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 15,
+        "key": "graphic",
+        "display_title": "Graphic Violence",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_violence-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_violence-4x.png",
+        "tags": [
+          {
+            "id": 3385126,
+            "ref_id": "11213399",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman breaks a man's neck. ",
+            "type": "audiovisual",
+            "start_approx": 1386,
+            "end_approx": 1386,
+            "locked": false
+          },
+          {
+            "id": 3385142,
+            "ref_id": "11213418",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman is shown with blood in her mouth.",
+            "type": "audiovisual",
+            "start_approx": 1938,
+            "end_approx": 1938,
+            "locked": false
+          },
+          {
+            "id": 3385144,
+            "ref_id": "11213423",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood sprays from a woman's eyes and mouth.",
+            "type": "audiovisual",
+            "start_approx": 1944,
+            "end_approx": 1956,
+            "locked": false
+          },
+          {
+            "id": 3385145,
+            "ref_id": "11213424",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs from a woman's eyes and mouth.",
+            "type": "audiovisual",
+            "start_approx": 1956,
+            "end_approx": 1962,
+            "locked": false
+          },
+          {
+            "id": 3385146,
+            "ref_id": "11213425",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood can be seen on a woman's hand.",
+            "type": "audiovisual",
+            "start_approx": 1974,
+            "end_approx": 1980,
+            "locked": false
+          },
+          {
+            "id": 3385380,
+            "ref_id": "11213967",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman punches a man in the face.",
+            "type": "audiovisual",
+            "start_approx": 2736,
+            "end_approx": 2736,
+            "locked": false
+          },
+          {
+            "id": 3385174,
+            "ref_id": "11213476",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman in bloody clothes swings an axe towards a man.",
+            "type": "audiovisual",
+            "start_approx": 3018,
+            "end_approx": 3024,
+            "locked": false
+          },
+          {
+            "id": 3385176,
+            "ref_id": "11213478",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman pulls a staple out of her forehead. Blood runs from the wound.",
+            "type": "audiovisual",
+            "start_approx": 3150,
+            "end_approx": 3150,
+            "locked": false
+          },
+          {
+            "id": 3385179,
+            "ref_id": "11213482",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A man shoots a man in the abdomen and chest with a gun.",
+            "type": "audiovisual",
+            "start_approx": 3288,
+            "end_approx": 3294,
+            "locked": false
+          },
+          {
+            "id": 3385180,
+            "ref_id": "11213483",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman jumps on a man and slams his head on the ground. His neck breaks. ",
+            "type": "audiovisual",
+            "start_approx": 3300,
+            "end_approx": 3300,
+            "locked": false
+          },
+          {
+            "id": 3385182,
+            "ref_id": "11213485",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A man shoots a woman in the side with a gun. Blood sprays onto another woman's face. ",
+            "type": "audiovisual",
+            "start_approx": 3312,
+            "end_approx": 3318,
+            "locked": false
+          },
+          {
+            "id": 3385186,
+            "ref_id": "11213489",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood sprays as a woman hits a man in the head with sex toys that are shaped like male genitals. ",
+            "type": "audiovisual",
+            "start_approx": 3336,
+            "end_approx": 3342,
+            "locked": false
+          },
+          {
+            "id": 3385188,
+            "ref_id": "11213491",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman hits a man in the head with a bloody sex toy and he flips to the floor. ",
+            "type": "audiovisual",
+            "start_approx": 3342,
+            "end_approx": 3348,
+            "locked": false
+          },
+          {
+            "id": 3385190,
+            "ref_id": "11213493",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman holds bloody sex toys.",
+            "type": "audiovisual",
+            "start_approx": 3354,
+            "end_approx": 3354,
+            "locked": false
+          },
+          {
+            "id": 3385288,
+            "ref_id": "11213602",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood is shown on the faces of a man and a dead woman. The dead woman's eyes are open.",
+            "type": "audiovisual",
+            "start_approx": 4974,
+            "end_approx": 4980,
+            "locked": false
+          },
+          {
+            "id": 3385289,
+            "ref_id": "11213603",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs down a man's face. ",
+            "type": "audiovisual",
+            "start_approx": 4986,
+            "end_approx": 4992,
+            "locked": false
+          },
+          {
+            "id": 3385290,
+            "ref_id": "11213604",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs from a man's mouth.",
+            "type": "audiovisual",
+            "start_approx": 4998,
+            "end_approx": 5004,
+            "locked": false
+          },
+          {
+            "id": 3385300,
+            "ref_id": "11213615",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A cartoon woman cuts her side open with a knife. ",
+            "type": "audiovisual",
+            "start_approx": 5376,
+            "end_approx": 5382,
+            "locked": false
+          },
+          {
+            "id": 3385303,
+            "ref_id": "11213618",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs down a woman's face.",
+            "type": "audiovisual",
+            "start_approx": 5706,
+            "end_approx": 5712,
+            "locked": false
+          },
+          {
+            "id": 3385307,
+            "ref_id": "11213622",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood can be seen on a woman's face. ",
+            "type": "audiovisual",
+            "start_approx": 5838,
+            "end_approx": 5844,
+            "locked": false
+          },
+          {
+            "id": 3385308,
+            "ref_id": "11213623",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman is shown with a bloody face. She pulls a bloody shard of glass out of a man's side. ",
+            "type": "audiovisual",
+            "start_approx": 5844,
+            "end_approx": 5850,
+            "locked": false
+          },
+          {
+            "id": 3385311,
+            "ref_id": "11213626",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood is shown on a woman's face and on a shard of glass. A man collapses. ",
+            "type": "audiovisual",
+            "start_approx": 5928,
+            "end_approx": 5934,
+            "locked": false
+          },
+          {
+            "id": 3385312,
+            "ref_id": "11213627",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman's eyes bleed. ",
+            "type": "audiovisual",
+            "start_approx": 5946,
+            "end_approx": 5946,
+            "locked": false
+          },
+          {
+            "id": 3385313,
+            "ref_id": "11213628",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Bloody dead animals hang from a track in a food production factory. A woman's eyes bleed.  ",
+            "type": "audiovisual",
+            "start_approx": 5952,
+            "end_approx": 5958,
+            "locked": false
+          },
+          {
+            "id": 3385320,
+            "ref_id": "11213635",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman is shown with blood on her face. ",
+            "type": "audiovisual",
+            "start_approx": 6282,
+            "end_approx": 6288,
+            "locked": false
+          },
+          {
+            "id": 3385322,
+            "ref_id": "11213637",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs down a woman's face. ",
+            "type": "audiovisual",
+            "start_approx": 6360,
+            "end_approx": 6372,
+            "locked": false
+          },
+          {
+            "id": 3385323,
+            "ref_id": "11213638",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood is shown on a woman's face. ",
+            "type": "audiovisual",
+            "start_approx": 6396,
+            "end_approx": 6396,
+            "locked": false
+          },
+          {
+            "id": 3385325,
+            "ref_id": "11213640",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman can be seen with blood on her face. ",
+            "type": "audiovisual",
+            "start_approx": 6408,
+            "end_approx": 6414,
+            "locked": false
+          },
+          {
+            "id": 3385327,
+            "ref_id": "11213642",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood is shown on a woman's hand.",
+            "type": "audiovisual",
+            "start_approx": 6432,
+            "end_approx": 6432,
+            "locked": false
+          },
+          {
+            "id": 3385328,
+            "ref_id": "11213643",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs down the side of a woman's face.",
+            "type": "audiovisual",
+            "start_approx": 6450,
+            "end_approx": 6450,
+            "locked": false
+          },
+          {
+            "id": 3385329,
+            "ref_id": "11213644",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman is shown with blood on her face.",
+            "type": "audiovisual",
+            "start_approx": 6456,
+            "end_approx": 6456,
+            "locked": false
+          },
+          {
+            "id": 3385330,
+            "ref_id": "11213645",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood can be seen on a woman's face.",
+            "type": "audiovisual",
+            "start_approx": 6486,
+            "end_approx": 6492,
+            "locked": false
+          },
+          {
+            "id": 3385331,
+            "ref_id": "11213646",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman is shown with blood on her face.",
+            "type": "audiovisual",
+            "start_approx": 6522,
+            "end_approx": 6528,
+            "locked": false
+          },
+          {
+            "id": 3385333,
+            "ref_id": "11213648",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs down the side of a woman's face.",
+            "type": "audiovisual",
+            "start_approx": 6546,
+            "end_approx": 6546,
+            "locked": false
+          },
+          {
+            "id": 3385345,
+            "ref_id": "11213660",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A woman is shown with blood on her face. ",
+            "type": "audiovisual",
+            "start_approx": 6804,
+            "end_approx": 6810,
+            "locked": false
+          },
+          {
+            "id": 3385346,
+            "ref_id": "11213661",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood can be seen on a woman's face. ",
+            "type": "audiovisual",
+            "start_approx": 6810,
+            "end_approx": 6816,
+            "locked": false
+          },
+          {
+            "id": 3385347,
+            "ref_id": "11213662",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "Blood runs down a woman's face.",
+            "type": "audiovisual",
+            "start_approx": 6816,
+            "end_approx": 6822,
+            "locked": false
+          },
+          {
+            "id": 3385387,
+            "ref_id": "11214201",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A bloody cut is seen on a woman's face.",
+            "type": "audiovisual",
+            "start_approx": 6906,
+            "end_approx": 6906,
+            "locked": false
+          },
+          {
+            "id": 3385388,
+            "ref_id": "11214203",
+            "tag_set_id": 52192,
+            "category_id": 15,
+            "description": "A bloody cut is shown on a woman's face.",
+            "type": "audiovisual",
+            "start_approx": 6918,
+            "end_approx": 6924,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 14,
+        "key": "non_graphic",
+        "display_title": "Non-graphic Violence",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_non_graphic_violence-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_non_graphic_violence-4x.png",
+        "tags": [
+          {
+            "id": 3385127,
+            "ref_id": "11213400",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman hits a woman in the face with a metal pipe. ",
+            "type": "audiovisual",
+            "start_approx": 1404,
+            "end_approx": 1404,
+            "locked": false
+          },
+          {
+            "id": 3385131,
+            "ref_id": "11213404",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman pushes a man aside and punches another woman in the face. ",
+            "type": "audiovisual",
+            "start_approx": 1566,
+            "end_approx": 1566,
+            "locked": false
+          },
+          {
+            "id": 3385133,
+            "ref_id": "11213406",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man hits a man in the face with a bag. ",
+            "type": "audiovisual",
+            "start_approx": 1746,
+            "end_approx": 1746,
+            "locked": false
+          },
+          {
+            "id": 3385134,
+            "ref_id": "11213407",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man hits men and a woman in the stomach and face with a bag. He kicks and punches a man in the stomach and face and throws him to the ground.",
+            "type": "audiovisual",
+            "start_approx": 1758,
+            "end_approx": 1770,
+            "locked": false
+          },
+          {
+            "id": 3385136,
+            "ref_id": "11213410",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man hits a man in the face with a bag and his head hits a woman in the nose. ",
+            "type": "audiovisual",
+            "start_approx": 1776,
+            "end_approx": 1776,
+            "locked": false
+          },
+          {
+            "id": 3385137,
+            "ref_id": "11213411",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man hits a man on the head with a bag. ",
+            "type": "audiovisual",
+            "start_approx": 1788,
+            "end_approx": 1788,
+            "locked": false
+          },
+          {
+            "id": 3385138,
+            "ref_id": "11213412",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man flips a man to the floor. ",
+            "type": "audiovisual",
+            "start_approx": 1788,
+            "end_approx": 1794,
+            "locked": false
+          },
+          {
+            "id": 3385139,
+            "ref_id": "11213415",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man hits men and women in the face with a bag full of rocks.",
+            "type": "audiovisual",
+            "start_approx": 1824,
+            "end_approx": 1836,
+            "locked": false
+          },
+          {
+            "id": 3385141,
+            "ref_id": "11213417",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man shoves a plastic clasp up a man's nose and pulls him to the floor on his face.",
+            "type": "audiovisual",
+            "start_approx": 1842,
+            "end_approx": 1848,
+            "locked": false
+          },
+          {
+            "id": 3385150,
+            "ref_id": "11213434",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman staples a piece of paper to her forehead. ",
+            "type": "audiovisual",
+            "start_approx": 2274,
+            "end_approx": 2274,
+            "locked": false
+          },
+          {
+            "id": 3385151,
+            "ref_id": "11213437",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man cuts the skin between his fingers with a piece of paper. ",
+            "type": "audiovisual",
+            "start_approx": 2334,
+            "end_approx": 2340,
+            "locked": false
+          },
+          {
+            "id": 3385152,
+            "ref_id": "11213439",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man uses a piece of paper to cut the skin between his fingers. ",
+            "type": "audiovisual",
+            "start_approx": 2340,
+            "end_approx": 2340,
+            "locked": false
+          },
+          {
+            "id": 3385153,
+            "ref_id": "11213440",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man slices the skin between his fingers with a piece of paper. ",
+            "type": "audiovisual",
+            "start_approx": 2346,
+            "end_approx": 2346,
+            "locked": false
+          },
+          {
+            "id": 3385154,
+            "ref_id": "11213441",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man uses a piece of paper to cut the skin between his finger and thumb.",
+            "type": "audiovisual",
+            "start_approx": 2358,
+            "end_approx": 2358,
+            "locked": false
+          },
+          {
+            "id": 3385155,
+            "ref_id": "11213443",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman headbutts a man.",
+            "type": "audiovisual",
+            "start_approx": 2364,
+            "end_approx": 2364,
+            "locked": false
+          },
+          {
+            "id": 3385156,
+            "ref_id": "11213444",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman slams a man's back down over her knee. ",
+            "type": "audiovisual",
+            "start_approx": 2382,
+            "end_approx": 2388,
+            "locked": false
+          },
+          {
+            "id": 3385157,
+            "ref_id": "11213445",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman jumps and kicks a man in the chest. ",
+            "type": "audiovisual",
+            "start_approx": 2394,
+            "end_approx": 2400,
+            "locked": false
+          },
+          {
+            "id": 3385158,
+            "ref_id": "11213450",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man slams his shoulder against a filing cabinet. ",
+            "type": "audiovisual",
+            "start_approx": 2418,
+            "end_approx": 2418,
+            "locked": false
+          },
+          {
+            "id": 3385160,
+            "ref_id": "11213453",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman grabs another woman's arm and slams her head through glass. A woman hits her head on a steering wheel.",
+            "type": "audiovisual",
+            "start_approx": 2538,
+            "end_approx": 2544,
+            "locked": false
+          },
+          {
+            "id": 3385161,
+            "ref_id": "11213455",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman throws another woman across a room and she lands on the floor.",
+            "type": "audiovisual",
+            "start_approx": 2568,
+            "end_approx": 2568,
+            "locked": false
+          },
+          {
+            "id": 3385164,
+            "ref_id": "11213458",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man pushes a woman to the ground.",
+            "type": "audiovisual",
+            "start_approx": 2736,
+            "end_approx": 2736,
+            "locked": false
+          },
+          {
+            "id": 3385165,
+            "ref_id": "11213462",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman kicks a woman in the head. ",
+            "type": "audiovisual",
+            "start_approx": 2748,
+            "end_approx": 2748,
+            "locked": false
+          },
+          {
+            "id": 3385166,
+            "ref_id": "11213464",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman punches a woman in the face. ",
+            "type": "audiovisual",
+            "start_approx": 2754,
+            "end_approx": 2754,
+            "locked": false
+          },
+          {
+            "id": 3385167,
+            "ref_id": "11213465",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman punches a woman in the chest and she falls through the floor. ",
+            "type": "audiovisual",
+            "start_approx": 2784,
+            "end_approx": 2790,
+            "locked": false
+          },
+          {
+            "id": 3385168,
+            "ref_id": "11213466",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman hits a woman in the side with her palm. ",
+            "type": "audiovisual",
+            "start_approx": 2802,
+            "end_approx": 2808,
+            "locked": false
+          },
+          {
+            "id": 3385169,
+            "ref_id": "11213467",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman jumps into the air and falls down a flight of stairs. ",
+            "type": "audiovisual",
+            "start_approx": 2808,
+            "end_approx": 2814,
+            "locked": false
+          },
+          {
+            "id": 3385170,
+            "ref_id": "11213468",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman's head slams through a wall. ",
+            "type": "audiovisual",
+            "start_approx": 2820,
+            "end_approx": 2820,
+            "locked": false
+          },
+          {
+            "id": 3385171,
+            "ref_id": "11213471",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man slaps a woman across the face. ",
+            "type": "audiovisual",
+            "start_approx": 2892,
+            "end_approx": 2892,
+            "locked": false
+          },
+          {
+            "id": 3385175,
+            "ref_id": "11213477",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man uses a taser on another man's chest. ",
+            "type": "audiovisual",
+            "start_approx": 3138,
+            "end_approx": 3144,
+            "locked": false
+          },
+          {
+            "id": 3385177,
+            "ref_id": "11213480",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man explodes into confetti. ",
+            "type": "audiovisual",
+            "start_approx": 3270,
+            "end_approx": 3270,
+            "locked": false
+          },
+          {
+            "id": 3385184,
+            "ref_id": "11213487",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman hits a man in the face with a sex toy shaped like male genitals. ",
+            "type": "audiovisual",
+            "start_approx": 3330,
+            "end_approx": 3330,
+            "locked": false
+          },
+          {
+            "id": 3385196,
+            "ref_id": "11213500",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "An animal slaps another animal in the face. ",
+            "type": "audiovisual",
+            "start_approx": 3498,
+            "end_approx": 3504,
+            "locked": false
+          },
+          {
+            "id": 3385202,
+            "ref_id": "11213506",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man tackles a woman.",
+            "type": "audiovisual",
+            "start_approx": 3702,
+            "end_approx": 3702,
+            "locked": false
+          },
+          {
+            "id": 3385203,
+            "ref_id": "11213507",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man throws a woman through a wall. ",
+            "type": "audiovisual",
+            "start_approx": 3702,
+            "end_approx": 3702,
+            "locked": false
+          },
+          {
+            "id": 3385214,
+            "ref_id": "11213519",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman rubs hand sanitizer in her own eyes.",
+            "type": "audiovisual",
+            "start_approx": 4158,
+            "end_approx": 4158,
+            "locked": false
+          },
+          {
+            "id": 3385219,
+            "ref_id": "11213527",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman breaks a glass bottle on a man's hand.",
+            "type": "audiovisual",
+            "start_approx": 4212,
+            "end_approx": 4212,
+            "locked": false
+          },
+          {
+            "id": 3385226,
+            "ref_id": "11213537",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman pulls a chunk of her own hair out.",
+            "type": "audiovisual",
+            "start_approx": 4314,
+            "end_approx": 4314,
+            "locked": false
+          },
+          {
+            "id": 3385236,
+            "ref_id": "11213547",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A girl trips and falls with her eye moving towards a stick.",
+            "type": "audiovisual",
+            "start_approx": 4362,
+            "end_approx": 4362,
+            "locked": false
+          },
+          {
+            "id": 3385238,
+            "ref_id": "11213549",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman grabs a man and a woman by their heads and slams them to the floor. ",
+            "type": "audiovisual",
+            "start_approx": 4410,
+            "end_approx": 4416,
+            "locked": false
+          },
+          {
+            "id": 3385240,
+            "ref_id": "11213551",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man kicks a woman in the back. ",
+            "type": "audiovisual",
+            "start_approx": 4422,
+            "end_approx": 4422,
+            "locked": false
+          },
+          {
+            "id": 3385242,
+            "ref_id": "11213553",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man shoves a woman against a wall.",
+            "type": "audiovisual",
+            "start_approx": 4428,
+            "end_approx": 4428,
+            "locked": false
+          },
+          {
+            "id": 3385244,
+            "ref_id": "11213555",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman hits men and women in the face with a shield. ",
+            "type": "audiovisual",
+            "start_approx": 4464,
+            "end_approx": 4464,
+            "locked": false
+          },
+          {
+            "id": 3385245,
+            "ref_id": "11213556",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman hits men in the head and stomach with a shield and kicks a man in the stomach.",
+            "type": "audiovisual",
+            "start_approx": 4470,
+            "end_approx": 4470,
+            "locked": false
+          },
+          {
+            "id": 3385246,
+            "ref_id": "11213557",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman causes a man to fall into the splits. She hits men and women in the legs and face with a shield.",
+            "type": "audiovisual",
+            "start_approx": 4476,
+            "end_approx": 4488,
+            "locked": false
+          },
+          {
+            "id": 3385248,
+            "ref_id": "11213559",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman hits men and women in the head and chest with a shield. She flips a man to the ground.",
+            "type": "audiovisual",
+            "start_approx": 4488,
+            "end_approx": 4500,
+            "locked": false
+          },
+          {
+            "id": 3385250,
+            "ref_id": "11213561",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman hits a man in the head with a wrench.",
+            "type": "audiovisual",
+            "start_approx": 4506,
+            "end_approx": 4506,
+            "locked": false
+          },
+          {
+            "id": 3385252,
+            "ref_id": "11213563",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "An animal is thrown against a woman's chest and she slams into a vending machine.",
+            "type": "audiovisual",
+            "start_approx": 4518,
+            "end_approx": 4524,
+            "locked": false
+          },
+          {
+            "id": 3385254,
+            "ref_id": "11213565",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman swings an animal around by a leash and throws it into a fridge.",
+            "type": "audiovisual",
+            "start_approx": 4536,
+            "end_approx": 4548,
+            "locked": false
+          },
+          {
+            "id": 3385255,
+            "ref_id": "11213566",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman kicks an animal and swings it around by its leash.",
+            "type": "audiovisual",
+            "start_approx": 4566,
+            "end_approx": 4566,
+            "locked": false
+          },
+          {
+            "id": 3385256,
+            "ref_id": "11213567",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "An animal is thrown across a room.",
+            "type": "audiovisual",
+            "start_approx": 4572,
+            "end_approx": 4578,
+            "locked": false
+          },
+          {
+            "id": 3385258,
+            "ref_id": "11213569",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman throws a metal egg at another woman's face and knocks her unconscious.",
+            "type": "audiovisual",
+            "start_approx": 4590,
+            "end_approx": 4596,
+            "locked": false
+          },
+          {
+            "id": 3385260,
+            "ref_id": "11213572",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man and a woman hit each other in the ear with metal pipes. ",
+            "type": "audiovisual",
+            "start_approx": 4662,
+            "end_approx": 4668,
+            "locked": false
+          },
+          {
+            "id": 3385269,
+            "ref_id": "11213582",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man kicks a woman in the chest and she falls against a scaffolding.",
+            "type": "audiovisual",
+            "start_approx": 4776,
+            "end_approx": 4776,
+            "locked": false
+          },
+          {
+            "id": 3385270,
+            "ref_id": "11213583",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman slams her hand against a man's chest and pushes him to the floor. ",
+            "type": "audiovisual",
+            "start_approx": 4782,
+            "end_approx": 4782,
+            "locked": false
+          },
+          {
+            "id": 3385272,
+            "ref_id": "11213586",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man punches a woman in the face and she flies across the room. ",
+            "type": "audiovisual",
+            "start_approx": 4788,
+            "end_approx": 4788,
+            "locked": false
+          },
+          {
+            "id": 3385274,
+            "ref_id": "11213588",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man kicks a woman in the face. ",
+            "type": "audiovisual",
+            "start_approx": 4812,
+            "end_approx": 4812,
+            "locked": false
+          },
+          {
+            "id": 3385276,
+            "ref_id": "11213590",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man kicks a woman in the face and knocks her down.",
+            "type": "audiovisual",
+            "start_approx": 4818,
+            "end_approx": 4818,
+            "locked": false
+          },
+          {
+            "id": 3385279,
+            "ref_id": "11213593",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "Two men slam into objects as they fall.",
+            "type": "audiovisual",
+            "start_approx": 4836,
+            "end_approx": 4842,
+            "locked": false
+          },
+          {
+            "id": 3385282,
+            "ref_id": "11213596",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man uses a chair to slam a woman against a wall. ",
+            "type": "audiovisual",
+            "start_approx": 4848,
+            "end_approx": 4854,
+            "locked": false
+          },
+          {
+            "id": 3385285,
+            "ref_id": "11213599",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man slams against a wall. ",
+            "type": "audiovisual",
+            "start_approx": 4884,
+            "end_approx": 4884,
+            "locked": false
+          },
+          {
+            "id": 3385286,
+            "ref_id": "11213600",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman punches and kicks men and women in the chest and face. They fly through the air. ",
+            "type": "audiovisual",
+            "start_approx": 4902,
+            "end_approx": 4920,
+            "locked": false
+          },
+          {
+            "id": 3385296,
+            "ref_id": "11213611",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman is hit by a vehicle.",
+            "type": "audiovisual",
+            "start_approx": 5148,
+            "end_approx": 5148,
+            "locked": false
+          },
+          {
+            "id": 3385299,
+            "ref_id": "11213614",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman shoves another woman.",
+            "type": "audiovisual",
+            "start_approx": 5208,
+            "end_approx": 5214,
+            "locked": false
+          },
+          {
+            "id": 3385301,
+            "ref_id": "11213616",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "Two women pull each other's hair and strangle each other with their hands.",
+            "type": "audiovisual",
+            "start_approx": 5418,
+            "end_approx": 5418,
+            "locked": false
+          },
+          {
+            "id": 3385302,
+            "ref_id": "11213617",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman punches herself and another woman in the face. ",
+            "type": "audiovisual",
+            "start_approx": 5418,
+            "end_approx": 5424,
+            "locked": false
+          },
+          {
+            "id": 3385305,
+            "ref_id": "11213620",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman strangles a man with her hands. ",
+            "type": "audiovisual",
+            "start_approx": 5832,
+            "end_approx": 5832,
+            "locked": false
+          },
+          {
+            "id": 3385306,
+            "ref_id": "11213621",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman slaps a man across the face and throws food at his face.",
+            "type": "audiovisual",
+            "start_approx": 5838,
+            "end_approx": 5838,
+            "locked": false
+          },
+          {
+            "id": 3385334,
+            "ref_id": "11213649",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "Men are sucked into a void.",
+            "type": "audiovisual",
+            "start_approx": 6612,
+            "end_approx": 6612,
+            "locked": false
+          },
+          {
+            "id": 3385335,
+            "ref_id": "11213650",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man's face distorts as he is sucked into a void.",
+            "type": "audiovisual",
+            "start_approx": 6618,
+            "end_approx": 6624,
+            "locked": false
+          },
+          {
+            "id": 3385336,
+            "ref_id": "11213651",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman strangles a woman with her hand. ",
+            "type": "audiovisual",
+            "start_approx": 6648,
+            "end_approx": 6654,
+            "locked": false
+          },
+          {
+            "id": 3385343,
+            "ref_id": "11213658",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman strangles two men with her feet and kicks them in the throat. ",
+            "type": "audiovisual",
+            "start_approx": 6768,
+            "end_approx": 6774,
+            "locked": false
+          },
+          {
+            "id": 3385348,
+            "ref_id": "11213663",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman slams her hands against the arms of a man and a woman and pulls them together. ",
+            "type": "audiovisual",
+            "start_approx": 6906,
+            "end_approx": 6912,
+            "locked": false
+          },
+          {
+            "id": 3385351,
+            "ref_id": "11213666",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man grabs a woman by her neck. ",
+            "type": "audiovisual",
+            "start_approx": 6936,
+            "end_approx": 6936,
+            "locked": false
+          },
+          {
+            "id": 3385352,
+            "ref_id": "11213667",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman slams her hands down on a man's shoulders. ",
+            "type": "audiovisual",
+            "start_approx": 6942,
+            "end_approx": 6942,
+            "locked": false
+          },
+          {
+            "id": 3385355,
+            "ref_id": "11213670",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman pulls a whip that is wrapped around another woman's ankle and she rolls down a flight of stairs. ",
+            "type": "audiovisual",
+            "start_approx": 7014,
+            "end_approx": 7020,
+            "locked": false
+          },
+          {
+            "id": 3385356,
+            "ref_id": "11213671",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman slams her hand down on a man's shoulder and pulls his hair. ",
+            "type": "audiovisual",
+            "start_approx": 7032,
+            "end_approx": 7032,
+            "locked": false
+          },
+          {
+            "id": 3385357,
+            "ref_id": "11213672",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man throws two men.",
+            "type": "audiovisual",
+            "start_approx": 7092,
+            "end_approx": 7098,
+            "locked": false
+          },
+          {
+            "id": 3385360,
+            "ref_id": "11213675",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man is shoved down a flight of stairs. A man slams a woman against a railing.",
+            "type": "audiovisual",
+            "start_approx": 7122,
+            "end_approx": 7128,
+            "locked": false
+          },
+          {
+            "id": 3385361,
+            "ref_id": "11213676",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A man squeezes a woman with a robotic claw around her waist. ",
+            "type": "audiovisual",
+            "start_approx": 7164,
+            "end_approx": 7164,
+            "locked": false
+          },
+          {
+            "id": 3385362,
+            "ref_id": "11213677",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman punches another woman in the side and headbutts her. ",
+            "type": "audiovisual",
+            "start_approx": 7326,
+            "end_approx": 7326,
+            "locked": false
+          },
+          {
+            "id": 3385363,
+            "ref_id": "11213678",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman punches a woman in the chest and slams her palms against her shoulders. A woman shoves another woman in the chest.",
+            "type": "audiovisual",
+            "start_approx": 7338,
+            "end_approx": 7350,
+            "locked": false
+          },
+          {
+            "id": 3385364,
+            "ref_id": "11213679",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "Two women punch each other in the chest. ",
+            "type": "audiovisual",
+            "start_approx": 7356,
+            "end_approx": 7356,
+            "locked": false
+          },
+          {
+            "id": 3385365,
+            "ref_id": "11213680",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman grabs another woman's face and sweeps her leg out from under her.",
+            "type": "audiovisual",
+            "start_approx": 7362,
+            "end_approx": 7368,
+            "locked": false
+          },
+          {
+            "id": 3385367,
+            "ref_id": "11213682",
+            "tag_set_id": 52192,
+            "category_id": 14,
+            "description": "A woman stomps on another woman's foot.",
+            "type": "audiovisual",
+            "start_approx": 7398,
+            "end_approx": 7398,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 17,
+        "key": "violence_images",
+        "display_title": "Disturbing Images",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385295,
+            "ref_id": "11213610",
+            "tag_set_id": 52192,
+            "category_id": 17,
+            "description": "A woman dies with her eyes open.",
+            "type": "audiovisual",
+            "start_approx": 5076,
+            "end_approx": 5082,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 25,
+        "key": "vulgar_gestures",
+        "display_title": "Vulgar Gestures",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385227,
+            "ref_id": "11213538",
+            "tag_set_id": 52192,
+            "category_id": 25,
+            "description": "A man mimics sex with a lamp.",
+            "type": "audiovisual",
+            "start_approx": 4320,
+            "end_approx": 4326,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 26,
+        "key": "objectionable",
+        "display_title": "Objectionable, Disturbing, or Scary",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385115,
+            "ref_id": "11213365",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman says that she will kill herself.",
+            "type": "audio",
+            "start_approx": 492,
+            "end_approx": 492,
+            "locked": false
+          },
+          {
+            "id": 3385148,
+            "ref_id": "11213428",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A man peels gum off the bottom of a desk and chews it.",
+            "type": "audiovisual",
+            "start_approx": 2106,
+            "end_approx": 2112,
+            "locked": false
+          },
+          {
+            "id": 3385173,
+            "ref_id": "11213474",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A man spits out chewed food. ",
+            "type": "audiovisual",
+            "start_approx": 2934,
+            "end_approx": 2934,
+            "locked": false
+          },
+          {
+            "id": 3385217,
+            "ref_id": "11213522",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman rubs mucus from a man's nose in his mouth.",
+            "type": "audiovisual",
+            "start_approx": 4182,
+            "end_approx": 4188,
+            "locked": false
+          },
+          {
+            "id": 3385284,
+            "ref_id": "11213598",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman inhales an insect. ",
+            "type": "audiovisual",
+            "start_approx": 4866,
+            "end_approx": 4866,
+            "locked": false
+          },
+          {
+            "id": 3385318,
+            "ref_id": "11213633",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman talks about killing herself. ",
+            "type": "audio",
+            "start_approx": 6132,
+            "end_approx": 6132,
+            "locked": false
+          },
+          {
+            "id": 3385319,
+            "ref_id": "11213634",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman talks about wanting to die. ",
+            "type": "audio",
+            "start_approx": 6138,
+            "end_approx": 6138,
+            "locked": false
+          },
+          {
+            "id": 3385353,
+            "ref_id": "11213668",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman cracks a man's neck into alignment.",
+            "type": "audiovisual",
+            "start_approx": 6948,
+            "end_approx": 6954,
+            "locked": false
+          },
+          {
+            "id": 3385369,
+            "ref_id": "11213684",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman allows herself to be pulled into a void.",
+            "type": "audiovisual",
+            "start_approx": 7500,
+            "end_approx": 7506,
+            "locked": false
+          },
+          {
+            "id": 3385371,
+            "ref_id": "11213686",
+            "tag_set_id": 52192,
+            "category_id": 26,
+            "description": "A woman allows herself to disappear into a void.",
+            "type": "audiovisual",
+            "start_approx": 7644,
+            "end_approx": 7650,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 4,
+    "key": "alcohol_or_drug_use",
+    "display_title": "Drugs & Alcohol",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_substances-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_substances-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 12,
+        "key": "drugs_illegal",
+        "display_title": "Illegal Usage",
+        "default_type": "audiovisual",
+        "parent_id": 4,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385178,
+            "ref_id": "11213481",
+            "tag_set_id": 52192,
+            "category_id": 12,
+            "description": "A woman smokes marijuana from a gun.",
+            "type": "audiovisual",
+            "start_approx": 3276,
+            "end_approx": 3282,
+            "locked": false
+          },
+          {
+            "id": 3385372,
+            "ref_id": "11213687",
+            "tag_set_id": 52192,
+            "category_id": 12,
+            "description": "A woman uses a marijuana vaporizer.",
+            "type": "audiovisual",
+            "start_approx": 7662,
+            "end_approx": 7668,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 27,
+    "key": "human_functions",
+    "display_title": "Medical & Body Process",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_medical-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_medical-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 30,
+        "key": "bodily_functions",
+        "display_title": "Bodily Functions/Jokes",
+        "default_type": "audiovisual",
+        "parent_id": 27,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385120,
+            "ref_id": "11213389",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "A woman vomits into a sink.",
+            "type": "audiovisual",
+            "start_approx": 882,
+            "end_approx": 888,
+            "locked": false
+          },
+          {
+            "id": 3385379,
+            "ref_id": "11213694",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "A man gags and spits up confetti.",
+            "type": "audiovisual",
+            "start_approx": 3264,
+            "end_approx": 3264,
+            "locked": false
+          },
+          {
+            "id": 3385193,
+            "ref_id": "11213497",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "A woman's pants are focused on as she urinates in them. ",
+            "type": "audiovisual",
+            "start_approx": 3450,
+            "end_approx": 3450,
+            "locked": false
+          },
+          {
+            "id": 3385199,
+            "ref_id": "11213503",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "A woman gags. ",
+            "type": "audiovisual",
+            "start_approx": 3534,
+            "end_approx": 3534,
+            "locked": false
+          },
+          {
+            "id": 3385215,
+            "ref_id": "11213520",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "Mucus runs from a man's nose.",
+            "type": "audiovisual",
+            "start_approx": 4176,
+            "end_approx": 4182,
+            "locked": false
+          },
+          {
+            "id": 3385216,
+            "ref_id": "11213521",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "A woman wipes mucus from a man's nose and rubs it into his mouth.",
+            "type": "audiovisual",
+            "start_approx": 4182,
+            "end_approx": 4188,
+            "locked": false
+          },
+          {
+            "id": 3385281,
+            "ref_id": "11213595",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "A woman gags. ",
+            "type": "audiovisual",
+            "start_approx": 4842,
+            "end_approx": 4842,
+            "locked": false
+          },
+          {
+            "id": 3385291,
+            "ref_id": "11213606",
+            "tag_set_id": 52192,
+            "category_id": 30,
+            "description": "A woman vomits on the floor. ",
+            "type": "audiovisual",
+            "start_approx": 5058,
+            "end_approx": 5070,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 24,
+    "key": "credits",
+    "display_title": "Credits & Extras",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_credits-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_credits-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 33,
+        "key": "opening_credits",
+        "display_title": "Opening Credits",
+        "default_type": "audiovisual",
+        "parent_id": 24,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385109,
+            "ref_id": "11213319",
+            "tag_set_id": 52192,
+            "category_id": 33,
+            "description": "Opening Credits",
+            "type": "audiovisual",
+            "start_approx": 0,
+            "end_approx": 6,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 34,
+        "key": "closing_credits",
+        "display_title": "Closing Credits",
+        "default_type": "audiovisual",
+        "parent_id": 24,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 3385378,
+            "ref_id": "11213693",
+            "tag_set_id": 52192,
+            "category_id": 34,
+            "description": "Closing Credits",
+            "type": "audiovisual",
+            "start_approx": 7944,
+            "end_approx": 8346,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  }
+]

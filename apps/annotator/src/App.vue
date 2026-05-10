@@ -79,6 +79,19 @@ watch(
   }
 );
 
+watch(
+  () => annotator.filtersObjectReviewRequestKey,
+  (filtersObjectReviewRequestKey, previousKey) => {
+    if (
+      filtersObjectReviewRequestKey > 0 &&
+      filtersObjectReviewRequestKey !== previousKey &&
+      annotator.filtersObjectTags.length > 0
+    ) {
+      uiMode.value = 'annotate';
+    }
+  }
+);
+
 onMounted(() => {
   window.addEventListener('keydown', annotator.handleKeydown);
   window.addEventListener('beforeunload', annotator.handleBeforeUnload);
@@ -105,7 +118,17 @@ onBeforeUnmount(() => {
         :can-import-svg="annotator.effectiveDuration > 0"
         :can-process-video="annotator.canProcessVideo"
         :current-mode="uiMode"
+        :effective-duration="annotator.effectiveDuration"
         :error-message="annotator.errorMessage"
+        :filters-object-categories="annotator.filtersObjectCategories"
+        :filters-object-import-mode="annotator.filtersObjectImportMode"
+        :filters-object-import-summary-text="annotator.filtersObjectImportSummaryText"
+        :filters-object-import-warnings="annotator.filtersObjectImportWarnings"
+        :filters-object-review-request-key="annotator.filtersObjectReviewRequestKey"
+        :filters-object-selected-count-label="annotator.filtersObjectSelectedCountLabel"
+        :filters-object-selected-tag-ids="annotator.filtersObjectSelectedTagIds"
+        :filters-object-tag-count-label="annotator.filtersObjectTagCountLabel"
+        :filters-object-tags="annotator.filtersObjectTags"
         :input-name="annotator.inputName"
         :is-analyzing-profanity="annotator.isAnalyzingProfanity"
         :is-opening-video="annotator.isOpeningVideo"
@@ -139,11 +162,13 @@ onBeforeUnmount(() => {
         :svg-import-type="annotator.svgImportType"
         @active-type-change="handleActiveTypeChange"
         @analyze-profanity="annotator.analyzeProfanity"
+        @apply-filters-object-import="annotator.applyFiltersObjectImport"
         @apply-profanity-suggestions="annotator.applyProfanitySuggestions"
         @apply-skp-import="annotator.applySkpImport"
         @clear-svg-import-error="annotator.clearSvgImportError"
         @clear-profanity-subtitle-path="annotator.clearProfanitySubtitlePath"
         @change-mode="handleModeChange"
+        @discard-filters-object-import="annotator.discardFiltersObjectImport"
         @discard-skp-import="annotator.discardSkpImport"
         @discard-profanity-suggestions="annotator.discardProfanitySuggestions"
         @filters-selected="annotator.loadFilterFile"
@@ -153,11 +178,14 @@ onBeforeUnmount(() => {
         @select-profanity-subtitle-path="annotator.selectProfanitySubtitlePath"
         @process-linked-video="annotator.processLinkedVideo"
         @submit-svg-import="annotator.importSvgFilters"
+        @toggle-filters-object-category="annotator.setFiltersObjectCategorySelected"
+        @toggle-filters-object-tag="annotator.setFiltersObjectTagSelected"
         @toggle-mark="annotator.toggleMark"
         @seek="annotator.seekTo"
         @select-segment="annotator.selectSegment"
         @update-output-path="handleOutputPathUpdate"
         @update-segment="handleSegmentUpdate"
+        @update-filters-object-import-mode="annotator.updateFiltersObjectImportMode"
         @update-svg-import-mode="handleSvgImportModeChange"
         @update-svg-import-text="annotator.updateSvgImportText"
         @update-svg-import-type="annotator.updateSvgImportType"

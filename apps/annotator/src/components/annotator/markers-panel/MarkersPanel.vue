@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
-import type { ProfanitySuggestion, SkpDraftSegment } from '@cleanvid/shared';
+import type {
+  FiltersObjectCategory,
+  FiltersObjectTag,
+  ProfanitySuggestion,
+  SkpDraftSegment
+} from '@cleanvid/shared';
 import {
   computed,
   nextTick,
@@ -11,6 +16,8 @@ import {
   type ComponentPublicInstance
 } from 'vue';
 import type { EditableSegment, SegmentIssue } from '../../../annotator-types';
+import FiltersObjectImportReviewSection from './FiltersObjectImportReviewSection.vue';
+import type { FiltersObjectImportMode } from './FiltersObjectImportReviewSection.vue';
 import MarkActionTiles from './MarkActionTiles.vue';
 import ProfanityAnalysisSection from './ProfanityAnalysisSection.vue';
 import ProcessingOptionsSection from './ProcessingOptionsSection.vue';
@@ -30,9 +37,11 @@ const emit = defineEmits<{
   deleteSegment: [id: string];
   filtersSelected: [file: File];
   analyzeProfanity: [];
+  applyFiltersObjectImport: [];
   applyProfanitySuggestions: [];
   applySkpImport: [];
   clearProfanitySubtitlePath: [];
+  discardFiltersObjectImport: [];
   discardSkpImport: [];
   discardProfanitySuggestions: [];
   removeProfanitySuggestion: [id: string];
@@ -44,7 +53,10 @@ const emit = defineEmits<{
   seek: [start: number];
   selectSegment: [id: string | null];
   submitSvgImport: [];
+  toggleFiltersObjectCategory: [payload: { ids: string[]; selected: boolean }];
+  toggleFiltersObjectTag: [payload: { id: string; selected: boolean }];
   toggleMark: [value: FilterType];
+  updateFiltersObjectImportMode: [value: FiltersObjectImportMode];
   updateOutputPath: [value: string];
   updateSegment: [payload: { id: string; field: 'start' | 'end'; value: string }];
   updateSvgImportMode: [value: SvgImportMode];
@@ -58,7 +70,17 @@ const props = defineProps<{
   canProcessVideo: boolean;
   canImportSvg: boolean;
   currentMode: AnnotatorUiMode;
+  effectiveDuration: number;
   errorMessage: string;
+  filtersObjectCategories: FiltersObjectCategory[];
+  filtersObjectImportMode: FiltersObjectImportMode;
+  filtersObjectImportSummaryText: string;
+  filtersObjectImportWarnings: string[];
+  filtersObjectReviewRequestKey: number;
+  filtersObjectSelectedCountLabel: string;
+  filtersObjectSelectedTagIds: string[];
+  filtersObjectTagCountLabel: string;
+  filtersObjectTags: FiltersObjectTag[];
   inputName: string;
   isAnalyzingProfanity: boolean;
   isOpeningVideo: boolean;
@@ -103,6 +125,7 @@ const processButtonLabel = computed(() =>
   props.isProcessing ? `Exporting ${clampedProcessProgressPercent.value}%` : 'Export Video'
 );
 const hasLoadedVideo = computed(() => props.inputName !== '');
+const isFiltersObjectImportModalOpen = ref(false);
 const isProfanityModalOpen = ref(false);
 const isSkpImportModalOpen = ref(false);
 const isSvgImportModalOpen = ref(false);
@@ -145,6 +168,16 @@ function openProfanityModal() {
   isProfanityModalOpen.value = true;
 }
 
+function openFiltersObjectImportModal() {
+  if (props.filtersObjectTags.length === 0) {
+    return;
+  }
+
+  isFiltersObjectImportModalOpen.value = true;
+  closeProfanityModal();
+  closeSkpImportModal();
+}
+
 function openSvgImportModal() {
   if (!props.canImportSvg) {
     return;
@@ -167,6 +200,10 @@ function closeProfanityModal() {
   isProfanityModalOpen.value = false;
 }
 
+function closeFiltersObjectImportModal() {
+  isFiltersObjectImportModalOpen.value = false;
+}
+
 function closeSvgImportModal() {
   isSvgImportModalOpen.value = false;
   emit('clearSvgImportError');
@@ -179,6 +216,16 @@ function closeSkpImportModal() {
 function handleProfanitySuggestionsApply() {
   emit('applyProfanitySuggestions');
   closeProfanityModal();
+}
+
+function handleFiltersObjectImportApply() {
+  emit('applyFiltersObjectImport');
+  closeFiltersObjectImportModal();
+}
+
+function handleFiltersObjectImportDiscard() {
+  emit('discardFiltersObjectImport');
+  closeFiltersObjectImportModal();
 }
 
 function handleProfanitySuggestionsDiscard() {
@@ -203,6 +250,11 @@ function handleWindowKeydown(event: KeyboardEvent) {
 
   if (isSkpImportModalOpen.value) {
     closeSkpImportModal();
+    return;
+  }
+
+  if (isFiltersObjectImportModalOpen.value) {
+    closeFiltersObjectImportModal();
     return;
   }
 
@@ -252,6 +304,7 @@ watch(
     if (!loaded) {
       closeProfanityModal();
       closeSkpImportModal();
+      closeFiltersObjectImportModal();
       closeSvgImportModal();
       return;
     }
@@ -259,10 +312,22 @@ watch(
     if (currentMode !== 'annotate') {
       closeProfanityModal();
       closeSkpImportModal();
+      closeFiltersObjectImportModal();
     }
 
     if (currentMode !== 'media') {
       closeSvgImportModal();
+    }
+  }
+);
+
+watch(
+  () => props.filtersObjectReviewRequestKey,
+  () => {
+    if (props.filtersObjectTags.length > 0) {
+      isFiltersObjectImportModalOpen.value = true;
+      closeProfanityModal();
+      closeSkpImportModal();
     }
   }
 );
@@ -273,6 +338,7 @@ watch(
     if (props.skpDraftSegments.length > 0) {
       isSkpImportModalOpen.value = true;
       closeProfanityModal();
+      closeFiltersObjectImportModal();
     }
   }
 );
@@ -361,6 +427,16 @@ onMounted(() => {
         </button>
 
         <button
+          v-if="filtersObjectTags.length > 0"
+          type="button"
+          class="subtle-action"
+          data-testid="open-filters-object-import-modal-button"
+          @click="openFiltersObjectImportModal"
+        >
+          Review Filters Object
+        </button>
+
+        <button
           v-if="skpDraftSegments.length > 0"
           type="button"
           class="subtle-action"
@@ -418,6 +494,39 @@ onMounted(() => {
         @update-mode="emit('updateSvgImportMode', $event)"
         @update-text="emit('updateSvgImportText', $event)"
         @update-type="emit('updateSvgImportType', $event)"
+      />
+    </div>
+  </div>
+
+  <div
+    v-if="isFiltersObjectImportModalOpen"
+    class="modal-backdrop profanity-modal-backdrop"
+    data-testid="filters-object-import-modal"
+    @click.self="closeFiltersObjectImportModal"
+  >
+    <div
+      class="panel profanity-modal-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Review Filters Object Import"
+    >
+      <FiltersObjectImportReviewSection
+        :categories="filtersObjectCategories"
+        :duration="effectiveDuration"
+        :import-mode="filtersObjectImportMode"
+        :selected-count-label="filtersObjectSelectedCountLabel"
+        :selected-tag-ids="filtersObjectSelectedTagIds"
+        :show-close-button="true"
+        :summary-text="filtersObjectImportSummaryText"
+        :tag-count-label="filtersObjectTagCountLabel"
+        :tags="filtersObjectTags"
+        :warnings="filtersObjectImportWarnings"
+        @apply="handleFiltersObjectImportApply"
+        @close="closeFiltersObjectImportModal"
+        @discard="handleFiltersObjectImportDiscard"
+        @toggle-category="emit('toggleFiltersObjectCategory', $event)"
+        @toggle-tag="emit('toggleFiltersObjectTag', $event)"
+        @update-mode="emit('updateFiltersObjectImportMode', $event)"
       />
     </div>
   </div>

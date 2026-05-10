@@ -1,0 +1,3736 @@
+[
+  {
+    "id": 1,
+    "key": "language",
+    "display_title": "Language",
+    "default_type": "audio",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_language-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_language-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 18,
+        "key": "profanity",
+        "display_title": "Profanity",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_language-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_language-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 53,
+            "key": "ass",
+            "display_title": "*ss",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140463,
+                "ref_id": "1249331",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 1728,
+                "end_approx": 1728,
+                "locked": false
+              },
+              {
+                "id": 4140478,
+                "ref_id": "1249355",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 1986,
+                "end_approx": 1986,
+                "locked": false
+              },
+              {
+                "id": 4140482,
+                "ref_id": "1249369",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 2094,
+                "end_approx": 2094,
+                "locked": false
+              },
+              {
+                "id": 4140485,
+                "ref_id": "1249375",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 2112,
+                "end_approx": 2112,
+                "locked": false
+              },
+              {
+                "id": 4140486,
+                "ref_id": "1249376",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 2118,
+                "end_approx": 2118,
+                "locked": false
+              },
+              {
+                "id": 4140673,
+                "ref_id": "1249777",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 3108,
+                "end_approx": 3108,
+                "locked": false
+              },
+              {
+                "id": 4140538,
+                "ref_id": "1249477",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 4710,
+                "end_approx": 4710,
+                "locked": false
+              },
+              {
+                "id": 4140548,
+                "ref_id": "1249508",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 4878,
+                "end_approx": 4878,
+                "locked": false
+              },
+              {
+                "id": 4140562,
+                "ref_id": "1249548",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 5058,
+                "end_approx": 5058,
+                "locked": false
+              },
+              {
+                "id": 4140566,
+                "ref_id": "1249571",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 5220,
+                "end_approx": 5220,
+                "locked": false
+              },
+              {
+                "id": 4140579,
+                "ref_id": "1249594",
+                "tag_set_id": 60849,
+                "category_id": 53,
+                "description": "*ss",
+                "type": "audio",
+                "start_approx": 5538,
+                "end_approx": 5538,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 55,
+            "key": "bitch",
+            "display_title": "b*tch",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140474,
+                "ref_id": "1249351",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 1896,
+                "end_approx": 1896,
+                "locked": false
+              },
+              {
+                "id": 4140493,
+                "ref_id": "1249390",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 2718,
+                "end_approx": 2718,
+                "locked": false
+              },
+              {
+                "id": 4140498,
+                "ref_id": "1249395",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 3072,
+                "end_approx": 3072,
+                "locked": false
+              },
+              {
+                "id": 4140675,
+                "ref_id": "1249779",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 4788,
+                "end_approx": 4788,
+                "locked": false
+              },
+              {
+                "id": 4140547,
+                "ref_id": "1249507",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 4866,
+                "end_approx": 4866,
+                "locked": false
+              },
+              {
+                "id": 4140698,
+                "ref_id": "11786359",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 5502,
+                "end_approx": 5502,
+                "locked": false
+              },
+              {
+                "id": 4140593,
+                "ref_id": "1249641",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 5718,
+                "end_approx": 5718,
+                "locked": false
+              },
+              {
+                "id": 4140631,
+                "ref_id": "1249703",
+                "tag_set_id": 60849,
+                "category_id": 55,
+                "description": "b*tch",
+                "type": "audio",
+                "start_approx": 6768,
+                "end_approx": 6774,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 60,
+            "key": "damn",
+            "display_title": "d*mn",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140433,
+                "ref_id": "1249267",
+                "tag_set_id": 60849,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 246,
+                "end_approx": 246,
+                "locked": false
+              },
+              {
+                "id": 4140684,
+                "ref_id": "2280067",
+                "tag_set_id": 60849,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 492,
+                "end_approx": 492,
+                "locked": false
+              },
+              {
+                "id": 4140444,
+                "ref_id": "1249290",
+                "tag_set_id": 60849,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 498,
+                "end_approx": 498,
+                "locked": false
+              },
+              {
+                "id": 4140455,
+                "ref_id": "1249311",
+                "tag_set_id": 60849,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 1536,
+                "end_approx": 1536,
+                "locked": false
+              },
+              {
+                "id": 4140570,
+                "ref_id": "1249577",
+                "tag_set_id": 60849,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 5370,
+                "end_approx": 5370,
+                "locked": false
+              },
+              {
+                "id": 4140572,
+                "ref_id": "1249581",
+                "tag_set_id": 60849,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 5424,
+                "end_approx": 5424,
+                "locked": false
+              },
+              {
+                "id": 4140665,
+                "ref_id": "1249743",
+                "tag_set_id": 60849,
+                "category_id": 60,
+                "description": "d*mn",
+                "type": "audio",
+                "start_approx": 7800,
+                "end_approx": 7800,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 62,
+            "key": "hell",
+            "display_title": "h*ll",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140439,
+                "ref_id": "1249275",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 366,
+                "end_approx": 366,
+                "locked": false
+              },
+              {
+                "id": 4140443,
+                "ref_id": "1249288",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 498,
+                "end_approx": 498,
+                "locked": false
+              },
+              {
+                "id": 4140447,
+                "ref_id": "1249296",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 876,
+                "end_approx": 876,
+                "locked": false
+              },
+              {
+                "id": 4140484,
+                "ref_id": "1249373",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 2106,
+                "end_approx": 2112,
+                "locked": false
+              },
+              {
+                "id": 4140494,
+                "ref_id": "1249391",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 2736,
+                "end_approx": 2736,
+                "locked": false
+              },
+              {
+                "id": 4140495,
+                "ref_id": "1249392",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 2874,
+                "end_approx": 2874,
+                "locked": false
+              },
+              {
+                "id": 4140500,
+                "ref_id": "1249397",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 3654,
+                "end_approx": 3654,
+                "locked": false
+              },
+              {
+                "id": 4140501,
+                "ref_id": "1249398",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 3726,
+                "end_approx": 3726,
+                "locked": false
+              },
+              {
+                "id": 4140521,
+                "ref_id": "1249438",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 4416,
+                "end_approx": 4416,
+                "locked": false
+              },
+              {
+                "id": 4140565,
+                "ref_id": "1249569",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 5070,
+                "end_approx": 5070,
+                "locked": false
+              },
+              {
+                "id": 4140712,
+                "ref_id": "11786412",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 5304,
+                "end_approx": 5310,
+                "locked": false
+              },
+              {
+                "id": 4140585,
+                "ref_id": "1249620",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 5592,
+                "end_approx": 5592,
+                "locked": false
+              },
+              {
+                "id": 4140701,
+                "ref_id": "11786368",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 5742,
+                "end_approx": 5748,
+                "locked": false
+              },
+              {
+                "id": 4140626,
+                "ref_id": "1249698",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 6714,
+                "end_approx": 6714,
+                "locked": false
+              },
+              {
+                "id": 4140633,
+                "ref_id": "1249705",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 6780,
+                "end_approx": 6780,
+                "locked": false
+              },
+              {
+                "id": 4140637,
+                "ref_id": "1249709",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 6864,
+                "end_approx": 6864,
+                "locked": false
+              },
+              {
+                "id": 4140646,
+                "ref_id": "1249722",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 7068,
+                "end_approx": 7068,
+                "locked": false
+              },
+              {
+                "id": 4140653,
+                "ref_id": "1249730",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 7338,
+                "end_approx": 7338,
+                "locked": false
+              },
+              {
+                "id": 4140654,
+                "ref_id": "1249731",
+                "tag_set_id": 60849,
+                "category_id": 62,
+                "description": "h*ll",
+                "type": "audio",
+                "start_approx": 7350,
+                "end_approx": 7350,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 63,
+            "key": "shit",
+            "display_title": "sh*t",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140489,
+                "ref_id": "1249383",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 2460,
+                "end_approx": 2460,
+                "locked": false
+              },
+              {
+                "id": 4140490,
+                "ref_id": "1249385",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 2478,
+                "end_approx": 2478,
+                "locked": false
+              },
+              {
+                "id": 4140491,
+                "ref_id": "1249387",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 2670,
+                "end_approx": 2670,
+                "locked": false
+              },
+              {
+                "id": 4140511,
+                "ref_id": "1249426",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4158,
+                "end_approx": 4158,
+                "locked": false
+              },
+              {
+                "id": 4140515,
+                "ref_id": "1249432",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4236,
+                "end_approx": 4236,
+                "locked": false
+              },
+              {
+                "id": 4140527,
+                "ref_id": "1249458",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4488,
+                "end_approx": 4488,
+                "locked": false
+              },
+              {
+                "id": 4140695,
+                "ref_id": "11786343",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4638,
+                "end_approx": 4638,
+                "locked": false
+              },
+              {
+                "id": 4140549,
+                "ref_id": "1249514",
+                "tag_set_id": 60849,
+                "category_id": 63,
+                "description": "sh*t",
+                "type": "audio",
+                "start_approx": 4884,
+                "end_approx": 4884,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 64,
+            "key": "other_profanity",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 18,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140710,
+                "ref_id": "11786409",
+                "tag_set_id": 60849,
+                "category_id": 64,
+                "description": "scr*w",
+                "type": "audio",
+                "start_approx": 2250,
+                "end_approx": 2250,
+                "locked": false
+              },
+              {
+                "id": 4140672,
+                "ref_id": "1249776",
+                "tag_set_id": 60849,
+                "category_id": 64,
+                "description": "p*ss",
+                "type": "audio",
+                "start_approx": 2892,
+                "end_approx": 2892,
+                "locked": false
+              },
+              {
+                "id": 4140563,
+                "ref_id": "1249550",
+                "tag_set_id": 60849,
+                "category_id": 64,
+                "description": "p*ss",
+                "type": "audio",
+                "start_approx": 5064,
+                "end_approx": 5064,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 20,
+        "key": "blasphemy",
+        "display_title": "Blasphemy",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_halo-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_halo-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 81,
+            "key": "god",
+            "display_title": "G*d",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140438,
+                "ref_id": "1249274",
+                "tag_set_id": 60849,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 360,
+                "end_approx": 360,
+                "locked": false
+              },
+              {
+                "id": 4140442,
+                "ref_id": "1249278",
+                "tag_set_id": 60849,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 492,
+                "end_approx": 492,
+                "locked": false
+              },
+              {
+                "id": 4140497,
+                "ref_id": "1249394",
+                "tag_set_id": 60849,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 2988,
+                "end_approx": 2988,
+                "locked": false
+              },
+              {
+                "id": 4140711,
+                "ref_id": "11786410",
+                "tag_set_id": 60849,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3336,
+                "end_approx": 3336,
+                "locked": false
+              },
+              {
+                "id": 4140503,
+                "ref_id": "1249411",
+                "tag_set_id": 60849,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 3876,
+                "end_approx": 3876,
+                "locked": false
+              },
+              {
+                "id": 4140534,
+                "ref_id": "1249473",
+                "tag_set_id": 60849,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4602,
+                "end_approx": 4602,
+                "locked": false
+              },
+              {
+                "id": 4140676,
+                "ref_id": "1249780",
+                "tag_set_id": 60849,
+                "category_id": 81,
+                "description": "G*d",
+                "type": "audio",
+                "start_approx": 4962,
+                "end_approx": 4962,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 82,
+            "key": "lord",
+            "display_title": "L*rd",
+            "default_type": "audio",
+            "parent_id": 20,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140713,
+                "ref_id": "11786414",
+                "tag_set_id": 60849,
+                "category_id": 82,
+                "description": "L*rd",
+                "type": "audio",
+                "start_approx": 5922,
+                "end_approx": 5922,
+                "locked": false
+              },
+              {
+                "id": 4140604,
+                "ref_id": "1249675",
+                "tag_set_id": 60849,
+                "category_id": 82,
+                "description": "L*rd",
+                "type": "audio",
+                "start_approx": 5958,
+                "end_approx": 5958,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 23,
+        "key": "language_racial",
+        "display_title": "Racial & Bigoted Slurs",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_racial-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_racial-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 94,
+            "key": "jap",
+            "display_title": "j*p",
+            "default_type": "audio",
+            "parent_id": 23,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140685,
+                "ref_id": "11786327",
+                "tag_set_id": 60849,
+                "category_id": 94,
+                "description": "j*p",
+                "type": "audio",
+                "start_approx": 3108,
+                "end_approx": 3108,
+                "locked": false
+              },
+              {
+                "id": 4140509,
+                "ref_id": "1249423",
+                "tag_set_id": 60849,
+                "category_id": 94,
+                "description": "j*p",
+                "type": "audio",
+                "start_approx": 4086,
+                "end_approx": 4092,
+                "locked": false
+              },
+              {
+                "id": 4140568,
+                "ref_id": "1249575",
+                "tag_set_id": 60849,
+                "category_id": 94,
+                "description": "j*p",
+                "type": "audio",
+                "start_approx": 5256,
+                "end_approx": 5256,
+                "locked": false
+              },
+              {
+                "id": 4140607,
+                "ref_id": "1249678",
+                "tag_set_id": 60849,
+                "category_id": 94,
+                "description": "j*p",
+                "type": "audio",
+                "start_approx": 6012,
+                "end_approx": 6018,
+                "locked": false
+              },
+              {
+                "id": 4140609,
+                "ref_id": "1249680",
+                "tag_set_id": 60849,
+                "category_id": 94,
+                "description": "j*p",
+                "type": "audio",
+                "start_approx": 6156,
+                "end_approx": 6156,
+                "locked": false
+              },
+              {
+                "id": 4140627,
+                "ref_id": "1249699",
+                "tag_set_id": 60849,
+                "category_id": 94,
+                "description": "j*p",
+                "type": "audio",
+                "start_approx": 6726,
+                "end_approx": 6726,
+                "locked": false
+              },
+              {
+                "id": 4140647,
+                "ref_id": "1249723",
+                "tag_set_id": 60849,
+                "category_id": 94,
+                "description": "j*p",
+                "type": "audio",
+                "start_approx": 7068,
+                "end_approx": 7068,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          },
+          {
+            "id": 101,
+            "key": "other_racial",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 23,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140508,
+                "ref_id": "1249421",
+                "tag_set_id": 60849,
+                "category_id": 101,
+                "description": "nips",
+                "type": "audio",
+                "start_approx": 4068,
+                "end_approx": 4068,
+                "locked": false
+              },
+              {
+                "id": 4140510,
+                "ref_id": "1249424",
+                "tag_set_id": 60849,
+                "category_id": 101,
+                "description": "nip",
+                "type": "audio",
+                "start_approx": 4092,
+                "end_approx": 4098,
+                "locked": false
+              },
+              {
+                "id": 4140630,
+                "ref_id": "1249702",
+                "tag_set_id": 60849,
+                "category_id": 101,
+                "description": "nip",
+                "type": "audio",
+                "start_approx": 6768,
+                "end_approx": 6768,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      },
+      {
+        "id": 22,
+        "key": "language_sexual",
+        "display_title": "Sexual Reference",
+        "default_type": "audio",
+        "parent_id": 1,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_exclamation-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_exclamation-4x.png",
+        "tags": [],
+        "child_categories": [
+          {
+            "id": 150,
+            "key": "other_sexual",
+            "display_title": "other",
+            "default_type": "audio",
+            "parent_id": 22,
+            "icon_url": null,
+            "white_icon_url": null,
+            "tags": [
+              {
+                "id": 4140461,
+                "ref_id": "1249317",
+                "tag_set_id": 60849,
+                "category_id": 150,
+                "description": "A man makes a joke about another man's genitals. A man brags about his genitals.",
+                "type": "audiovisual",
+                "start_approx": 1674,
+                "end_approx": 1686,
+                "locked": false
+              },
+              {
+                "id": 4140462,
+                "ref_id": "1249318",
+                "tag_set_id": 60849,
+                "category_id": 150,
+                "description": "A man refers to another man's genitals. A man makes a joke about the size of another man's genitals.",
+                "type": "audiovisual",
+                "start_approx": 1704,
+                "end_approx": 1710,
+                "locked": false
+              },
+              {
+                "id": 4140476,
+                "ref_id": "1249353",
+                "tag_set_id": 60849,
+                "category_id": 150,
+                "description": "A man makes a remark about another man's genitals.",
+                "type": "audio",
+                "start_approx": 1974,
+                "end_approx": 1974,
+                "locked": false
+              },
+              {
+                "id": 4140480,
+                "ref_id": "1249357",
+                "tag_set_id": 60849,
+                "category_id": 150,
+                "description": "A man mentions breasts and a bra.",
+                "type": "audiovisual",
+                "start_approx": 2046,
+                "end_approx": 2052,
+                "locked": false
+              },
+              {
+                "id": 4140487,
+                "ref_id": "1249378",
+                "tag_set_id": 60849,
+                "category_id": 150,
+                "description": "A man refers to a gun in sexual terms.",
+                "type": "audiovisual",
+                "start_approx": 2148,
+                "end_approx": 2154,
+                "locked": false
+              },
+              {
+                "id": 4140496,
+                "ref_id": "1249393",
+                "tag_set_id": 60849,
+                "category_id": 150,
+                "description": "A group of men are heard making sexual remarks.",
+                "type": "audiovisual",
+                "start_approx": 2886,
+                "end_approx": 2904,
+                "locked": false
+              }
+            ],
+            "child_categories": [],
+            "locked": false
+          }
+        ],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 6,
+    "key": "sex_any",
+    "display_title": "Sex",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_sex-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_sex-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 40,
+        "key": "sexual_assault",
+        "display_title": "Sexual Assault",
+        "default_type": "audiovisual",
+        "parent_id": 6,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140450,
+            "ref_id": "1249302",
+            "tag_set_id": 60849,
+            "category_id": 40,
+            "description": "A man kisses a woman without permission.",
+            "type": "audiovisual",
+            "start_approx": 1074,
+            "end_approx": 1086,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 37,
+        "key": "implied_not_shown",
+        "display_title": "Implied Sex",
+        "default_type": "audiovisual",
+        "parent_id": 6,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140502,
+            "ref_id": "1249409",
+            "tag_set_id": 60849,
+            "category_id": 37,
+            "description": "A man and woman kiss and lay down on their wedding night.",
+            "type": "audiovisual",
+            "start_approx": 3834,
+            "end_approx": 3858,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 36,
+        "key": "sexually_suggestive",
+        "display_title": "Sexually Suggestive",
+        "default_type": "audiovisual",
+        "parent_id": 6,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140464,
+            "ref_id": "1249332",
+            "tag_set_id": 60849,
+            "category_id": 36,
+            "description": "A man shows another man a pornographic magazine.",
+            "type": "audiovisual",
+            "start_approx": 1764,
+            "end_approx": 1770,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 2,
+    "key": "sex_nudity_immodesty",
+    "display_title": "Nudity & Immodesty",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_nudity-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_nudity-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 42,
+        "key": "nudity_female",
+        "display_title": "Female",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140465,
+            "ref_id": "1249334",
+            "tag_set_id": 60849,
+            "category_id": 42,
+            "description": "A woman's upper thighs and bare back are shown.",
+            "type": "audiovisual",
+            "start_approx": 1770,
+            "end_approx": 1770,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 43,
+        "key": "nudity_male",
+        "display_title": "Male",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140460,
+            "ref_id": "1249316",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man's buttocks are focused on.",
+            "type": "audiovisual",
+            "start_approx": 1674,
+            "end_approx": 1692,
+            "locked": false
+          },
+          {
+            "id": 4140467,
+            "ref_id": "1249338",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man is shown from the side, his buttocks can be seen.",
+            "type": "audiovisual",
+            "start_approx": 1776,
+            "end_approx": 1776,
+            "locked": false
+          },
+          {
+            "id": 4140468,
+            "ref_id": "1249340",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man covers his genitals with his hands, the side of his buttocks is visible.",
+            "type": "audiovisual",
+            "start_approx": 1794,
+            "end_approx": 1794,
+            "locked": false
+          },
+          {
+            "id": 4140469,
+            "ref_id": "1249343",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man is shown from the side, part of his buttocks can be seen.",
+            "type": "audiovisual",
+            "start_approx": 1800,
+            "end_approx": 1806,
+            "locked": false
+          },
+          {
+            "id": 4140470,
+            "ref_id": "1249344",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man covers his genitals with his hands, the side of his buttocks can be seen.",
+            "type": "audiovisual",
+            "start_approx": 1806,
+            "end_approx": 1812,
+            "locked": false
+          },
+          {
+            "id": 4140471,
+            "ref_id": "1249346",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man's buttocks can be seen from the side, his hands are over his genitals.",
+            "type": "audiovisual",
+            "start_approx": 1830,
+            "end_approx": 1836,
+            "locked": false
+          },
+          {
+            "id": 4140473,
+            "ref_id": "1249350",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man is shown from the side with his hands over his genitals. His buttocks are partially visible.",
+            "type": "audiovisual",
+            "start_approx": 1884,
+            "end_approx": 1890,
+            "locked": false
+          },
+          {
+            "id": 4140708,
+            "ref_id": "11786406",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A naked man is seen covering his genitals.",
+            "type": "audiovisual",
+            "start_approx": 1926,
+            "end_approx": 1932,
+            "locked": false
+          },
+          {
+            "id": 4140475,
+            "ref_id": "1249352",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man is shown from the side with his hands over his genitals, part of his buttocks can be seen.",
+            "type": "audiovisual",
+            "start_approx": 1944,
+            "end_approx": 1962,
+            "locked": false
+          },
+          {
+            "id": 4140477,
+            "ref_id": "1249354",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man's buttocks and part of his genital area can be seen.",
+            "type": "audiovisual",
+            "start_approx": 1974,
+            "end_approx": 1986,
+            "locked": false
+          },
+          {
+            "id": 4140481,
+            "ref_id": "1249358",
+            "tag_set_id": 60849,
+            "category_id": 43,
+            "description": "A nude man is covered in mud, part of his buttocks can be seen.",
+            "type": "audiovisual",
+            "start_approx": 2082,
+            "end_approx": 2088,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 41,
+        "key": "implied_nudity",
+        "display_title": "Implied Nudity",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140705,
+            "ref_id": "11786402",
+            "tag_set_id": 60849,
+            "category_id": 41,
+            "description": "A naked man is seen.",
+            "type": "audiovisual",
+            "start_approx": 1698,
+            "end_approx": 1710,
+            "locked": false
+          },
+          {
+            "id": 4140706,
+            "ref_id": "11786403",
+            "tag_set_id": 60849,
+            "category_id": 41,
+            "description": "A naked man is seen.",
+            "type": "audiovisual",
+            "start_approx": 1782,
+            "end_approx": 1782,
+            "locked": false
+          },
+          {
+            "id": 4140707,
+            "ref_id": "11786405",
+            "tag_set_id": 60849,
+            "category_id": 41,
+            "description": "A naked man is seen.",
+            "type": "audiovisual",
+            "start_approx": 1836,
+            "end_approx": 1848,
+            "locked": false
+          },
+          {
+            "id": 4140709,
+            "ref_id": "11786407",
+            "tag_set_id": 60849,
+            "category_id": 41,
+            "description": "A naked man is seen.",
+            "type": "audiovisual",
+            "start_approx": 1962,
+            "end_approx": 1974,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 46,
+        "key": "immodesty_female",
+        "display_title": "Female Immodesty",
+        "default_type": "audiovisual",
+        "parent_id": 2,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140457,
+            "ref_id": "1249313",
+            "tag_set_id": 60849,
+            "category_id": 46,
+            "description": "A woman leans forward and shows cleavage.",
+            "type": "audiovisual",
+            "start_approx": 1602,
+            "end_approx": 1602,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 9,
+    "key": "kissing",
+    "display_title": "Kissing",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_kissing-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_kissing-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 48,
+        "key": "kissing_normal",
+        "display_title": "Heterosexual Normal",
+        "default_type": "audiovisual",
+        "parent_id": 9,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140448,
+            "ref_id": "1249298",
+            "tag_set_id": 60849,
+            "category_id": 48,
+            "description": "A man and a woman kiss in a movie theatre.",
+            "type": "audiovisual",
+            "start_approx": 966,
+            "end_approx": 972,
+            "locked": false
+          },
+          {
+            "id": 4140449,
+            "ref_id": "1249300",
+            "tag_set_id": 60849,
+            "category_id": 48,
+            "description": "A man kisses a woman.",
+            "type": "audiovisual",
+            "start_approx": 978,
+            "end_approx": 978,
+            "locked": false
+          },
+          {
+            "id": 4140452,
+            "ref_id": "1249307",
+            "tag_set_id": 60849,
+            "category_id": 48,
+            "description": "A man and a woman kiss.",
+            "type": "audiovisual",
+            "start_approx": 1356,
+            "end_approx": 1368,
+            "locked": false
+          },
+          {
+            "id": 4140458,
+            "ref_id": "1249314",
+            "tag_set_id": 60849,
+            "category_id": 48,
+            "description": "A woman kisses a man in the background.",
+            "type": "audiovisual",
+            "start_approx": 1602,
+            "end_approx": 1602,
+            "locked": false
+          },
+          {
+            "id": 4140459,
+            "ref_id": "1249315",
+            "tag_set_id": 60849,
+            "category_id": 48,
+            "description": "A woman and a man kiss quickly.",
+            "type": "audiovisual",
+            "start_approx": 1620,
+            "end_approx": 1620,
+            "locked": false
+          },
+          {
+            "id": 4140664,
+            "ref_id": "1249742",
+            "tag_set_id": 60849,
+            "category_id": 48,
+            "description": "A man and a woman kiss each other.",
+            "type": "audiovisual",
+            "start_approx": 7740,
+            "end_approx": 7746,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 49,
+        "key": "kissing_passion",
+        "display_title": "Heterosexual Passionate",
+        "default_type": "audiovisual",
+        "parent_id": 9,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140453,
+            "ref_id": "1249309",
+            "tag_set_id": 60849,
+            "category_id": 49,
+            "description": "A man kisses a woman.",
+            "type": "audiovisual",
+            "start_approx": 1368,
+            "end_approx": 1380,
+            "locked": false
+          },
+          {
+            "id": 4140454,
+            "ref_id": "1249310",
+            "tag_set_id": 60849,
+            "category_id": 49,
+            "description": "A man and a woman kiss each other.",
+            "type": "audiovisual",
+            "start_approx": 1458,
+            "end_approx": 1458,
+            "locked": false
+          },
+          {
+            "id": 4140456,
+            "ref_id": "1249312",
+            "tag_set_id": 60849,
+            "category_id": 49,
+            "description": "A man and a woman share a long kiss.",
+            "type": "audiovisual",
+            "start_approx": 1590,
+            "end_approx": 1596,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 3,
+    "key": "violence_blood_gore",
+    "display_title": "Violence",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_violence-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_violence-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 16,
+        "key": "gore",
+        "display_title": "Gore",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_gore-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_gore-4x.png",
+        "tags": [
+          {
+            "id": 4140687,
+            "ref_id": "11786329",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A dismembered dead man is seen.",
+            "type": "audiovisual",
+            "start_approx": 4326,
+            "end_approx": 4332,
+            "locked": false
+          },
+          {
+            "id": 4140688,
+            "ref_id": "11786330",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A dead man's intestines are seen.",
+            "type": "audiovisual",
+            "start_approx": 4332,
+            "end_approx": 4338,
+            "locked": false
+          },
+          {
+            "id": 4140689,
+            "ref_id": "11786331",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A dead man's severed head is covered in insects.",
+            "type": "audiovisual",
+            "start_approx": 4338,
+            "end_approx": 4344,
+            "locked": false
+          },
+          {
+            "id": 4140690,
+            "ref_id": "11786332",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "Dismembered dead men are seen.",
+            "type": "audiovisual",
+            "start_approx": 4344,
+            "end_approx": 4350,
+            "locked": false
+          },
+          {
+            "id": 4140518,
+            "ref_id": "1249435",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "Two men are shot repeatedly with guns. Their skulls and bones are shattered.",
+            "type": "audiovisual",
+            "start_approx": 4386,
+            "end_approx": 4392,
+            "locked": false
+          },
+          {
+            "id": 4140520,
+            "ref_id": "1249437",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "Explosives hit and dismember men.",
+            "type": "audiovisual",
+            "start_approx": 4410,
+            "end_approx": 4416,
+            "locked": false
+          },
+          {
+            "id": 4140524,
+            "ref_id": "1249453",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A man carries part of a bloody, disemboweled man as a shield. Men shoot other men. Explosives land on men.",
+            "type": "audiovisual",
+            "start_approx": 4440,
+            "end_approx": 4452,
+            "locked": false
+          },
+          {
+            "id": 4140693,
+            "ref_id": "11786340",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A man's legs are blown off.",
+            "type": "audiovisual",
+            "start_approx": 4566,
+            "end_approx": 4584,
+            "locked": false
+          },
+          {
+            "id": 4140536,
+            "ref_id": "1249475",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A man's mangled leg is focused on.",
+            "type": "audiovisual",
+            "start_approx": 4650,
+            "end_approx": 4650,
+            "locked": false
+          },
+          {
+            "id": 4140586,
+            "ref_id": "1249622",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A man shoots another man in the head. Blood and brain matter fly.",
+            "type": "audiovisual",
+            "start_approx": 5592,
+            "end_approx": 5592,
+            "locked": false
+          },
+          {
+            "id": 4140623,
+            "ref_id": "1249695",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A man's legs are frayed below the knee.",
+            "type": "audiovisual",
+            "start_approx": 6618,
+            "end_approx": 6618,
+            "locked": false
+          },
+          {
+            "id": 4140703,
+            "ref_id": "11786396",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": "A dead man's intestines are seen.",
+            "type": "audiovisual",
+            "start_approx": 7578,
+            "end_approx": 7584,
+            "locked": false
+          },
+          {
+            "id": 4140704,
+            "ref_id": "11786398",
+            "tag_set_id": 60849,
+            "category_id": 16,
+            "description": " A man beheads another man.",
+            "type": "audiovisual",
+            "start_approx": 7626,
+            "end_approx": 7632,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 15,
+        "key": "graphic",
+        "display_title": "Graphic Violence",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_violence-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_violence-4x.png",
+        "tags": [
+          {
+            "id": 4140424,
+            "ref_id": "1249249",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Several bloody dead bodies are shown. Blood sprays from a man's wound. A man burns.",
+            "type": "audiovisual",
+            "start_approx": 60,
+            "end_approx": 78,
+            "locked": false
+          },
+          {
+            "id": 4140668,
+            "ref_id": "1249772",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man is shot, blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 84,
+            "end_approx": 90,
+            "locked": false
+          },
+          {
+            "id": 4140425,
+            "ref_id": "1249251",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men are shown on fire.",
+            "type": "audiovisual",
+            "start_approx": 96,
+            "end_approx": 108,
+            "locked": false
+          },
+          {
+            "id": 4140427,
+            "ref_id": "1249255",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "An explosive sets a man on fire and throws him through the air.",
+            "type": "audiovisual",
+            "start_approx": 114,
+            "end_approx": 120,
+            "locked": false
+          },
+          {
+            "id": 4140430,
+            "ref_id": "1249261",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men are shown on fire.",
+            "type": "audiovisual",
+            "start_approx": 132,
+            "end_approx": 138,
+            "locked": false
+          },
+          {
+            "id": 4140431,
+            "ref_id": "1249263",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man's wounded thigh is focused on.",
+            "type": "audiovisual",
+            "start_approx": 144,
+            "end_approx": 150,
+            "locked": false
+          },
+          {
+            "id": 4140434,
+            "ref_id": "1249269",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Blood drips from a cut on a man's hand.",
+            "type": "audiovisual",
+            "start_approx": 312,
+            "end_approx": 324,
+            "locked": false
+          },
+          {
+            "id": 4140441,
+            "ref_id": "1249277",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "An illustrated man swings a bloody club towards a bloody man.",
+            "type": "audiovisual",
+            "start_approx": 432,
+            "end_approx": 438,
+            "locked": false
+          },
+          {
+            "id": 4140445,
+            "ref_id": "1249292",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Blood gushes from a teenage boy's leg.",
+            "type": "audiovisual",
+            "start_approx": 606,
+            "end_approx": 606,
+            "locked": false
+          },
+          {
+            "id": 4140446,
+            "ref_id": "1249294",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Blood sprays from a teenage boy's leg.",
+            "type": "audiovisual",
+            "start_approx": 612,
+            "end_approx": 618,
+            "locked": false
+          },
+          {
+            "id": 4140504,
+            "ref_id": "1249413",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A vehicle carries many bloody dead men.",
+            "type": "audiovisual",
+            "start_approx": 3906,
+            "end_approx": 3918,
+            "locked": false
+          },
+          {
+            "id": 4140505,
+            "ref_id": "1249415",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man's face is covered with blood.",
+            "type": "audiovisual",
+            "start_approx": 3924,
+            "end_approx": 3930,
+            "locked": false
+          },
+          {
+            "id": 4140506,
+            "ref_id": "1249417",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A vehicle full of bloody dead men drive past.",
+            "type": "audiovisual",
+            "start_approx": 3948,
+            "end_approx": 3948,
+            "locked": false
+          },
+          {
+            "id": 4140507,
+            "ref_id": "1249418",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Dead men are shown covered in blood.",
+            "type": "audiovisual",
+            "start_approx": 3954,
+            "end_approx": 3960,
+            "locked": false
+          },
+          {
+            "id": 4140514,
+            "ref_id": "1249431",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Blood drips onto men.",
+            "type": "audiovisual",
+            "start_approx": 4230,
+            "end_approx": 4242,
+            "locked": false
+          },
+          {
+            "id": 4140686,
+            "ref_id": "11786328",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Bloody dead men are seen.",
+            "type": "audiovisual",
+            "start_approx": 4326,
+            "end_approx": 4326,
+            "locked": false
+          },
+          {
+            "id": 4140691,
+            "ref_id": "11786333",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A bloody dead man is seen.",
+            "type": "audiovisual",
+            "start_approx": 4356,
+            "end_approx": 4356,
+            "locked": false
+          },
+          {
+            "id": 4140517,
+            "ref_id": "1249434",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Insects crawl out of a dead man's mouth.",
+            "type": "audiovisual",
+            "start_approx": 4368,
+            "end_approx": 4368,
+            "locked": false
+          },
+          {
+            "id": 4140692,
+            "ref_id": "11786337",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Several men are shot with guns and caught in explosions.",
+            "type": "audiovisual",
+            "start_approx": 4392,
+            "end_approx": 4404,
+            "locked": false
+          },
+          {
+            "id": 4140522,
+            "ref_id": "1249449",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the head.",
+            "type": "audiovisual",
+            "start_approx": 4422,
+            "end_approx": 4422,
+            "locked": false
+          },
+          {
+            "id": 4140525,
+            "ref_id": "1249455",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men shoot a dead man.",
+            "type": "audiovisual",
+            "start_approx": 4476,
+            "end_approx": 4476,
+            "locked": false
+          },
+          {
+            "id": 4140526,
+            "ref_id": "1249457",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the chest.",
+            "type": "audiovisual",
+            "start_approx": 4482,
+            "end_approx": 4488,
+            "locked": false
+          },
+          {
+            "id": 4140528,
+            "ref_id": "1249460",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man ignites several men with a flamethrower.",
+            "type": "audiovisual",
+            "start_approx": 4488,
+            "end_approx": 4500,
+            "locked": false
+          },
+          {
+            "id": 4140529,
+            "ref_id": "1249462",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the chest.",
+            "type": "audiovisual",
+            "start_approx": 4506,
+            "end_approx": 4506,
+            "locked": false
+          },
+          {
+            "id": 4140531,
+            "ref_id": "1249466",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man several times. Blood splatters.",
+            "type": "audiovisual",
+            "start_approx": 4524,
+            "end_approx": 4524,
+            "locked": false
+          },
+          {
+            "id": 4140533,
+            "ref_id": "1249471",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "An explosive hits a man. Body parts and blood fly. A man is shown with his feet blown off.",
+            "type": "audiovisual",
+            "start_approx": 4554,
+            "end_approx": 4566,
+            "locked": false
+          },
+          {
+            "id": 4140694,
+            "ref_id": "11786342",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man's bloody leg is shown.",
+            "type": "audiovisual",
+            "start_approx": 4590,
+            "end_approx": 4590,
+            "locked": false
+          },
+          {
+            "id": 4140674,
+            "ref_id": "1249778",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man is seen with his legs blown off.",
+            "type": "audiovisual",
+            "start_approx": 4596,
+            "end_approx": 4602,
+            "locked": false
+          },
+          {
+            "id": 4140537,
+            "ref_id": "1249476",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men shoot several other men in the chest and head.",
+            "type": "audiovisual",
+            "start_approx": 4698,
+            "end_approx": 4704,
+            "locked": false
+          },
+          {
+            "id": 4140539,
+            "ref_id": "1249478",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the head. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 4764,
+            "end_approx": 4764,
+            "locked": false
+          },
+          {
+            "id": 4140542,
+            "ref_id": "1249493",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men shoot a group of men.",
+            "type": "audiovisual",
+            "start_approx": 4782,
+            "end_approx": 4782,
+            "locked": false
+          },
+          {
+            "id": 4140544,
+            "ref_id": "1249497",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man. Blood splatters.",
+            "type": "audiovisual",
+            "start_approx": 4806,
+            "end_approx": 4806,
+            "locked": false
+          },
+          {
+            "id": 4140551,
+            "ref_id": "1249520",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man. A cloud of blood is shown.",
+            "type": "audiovisual",
+            "start_approx": 4920,
+            "end_approx": 4926,
+            "locked": false
+          },
+          {
+            "id": 4140553,
+            "ref_id": "1249526",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots other men. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 4926,
+            "end_approx": 4938,
+            "locked": false
+          },
+          {
+            "id": 4140555,
+            "ref_id": "1249530",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Two men shoot a group of men.",
+            "type": "audiovisual",
+            "start_approx": 4944,
+            "end_approx": 4950,
+            "locked": false
+          },
+          {
+            "id": 4140556,
+            "ref_id": "1249532",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man hits another man, blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 4950,
+            "end_approx": 4956,
+            "locked": false
+          },
+          {
+            "id": 4140557,
+            "ref_id": "1249534",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man stabs another man repeatedly. Blood sprays. A man shoots another man in the chest.",
+            "type": "audiovisual",
+            "start_approx": 4974,
+            "end_approx": 4980,
+            "locked": false
+          },
+          {
+            "id": 4140558,
+            "ref_id": "1249536",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A grenade explodes underneath a man. A cloud of blood is shown.",
+            "type": "audiovisual",
+            "start_approx": 4986,
+            "end_approx": 4992,
+            "locked": false
+          },
+          {
+            "id": 4140559,
+            "ref_id": "1249538",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man. A cloud of blood is shown.",
+            "type": "audiovisual",
+            "start_approx": 4998,
+            "end_approx": 4998,
+            "locked": false
+          },
+          {
+            "id": 4140560,
+            "ref_id": "1249540",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man ignites other men with a flamethrower.",
+            "type": "audiovisual",
+            "start_approx": 5004,
+            "end_approx": 5010,
+            "locked": false
+          },
+          {
+            "id": 4140567,
+            "ref_id": "1249573",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Animals eat parts of dead men's bodies.",
+            "type": "audiovisual",
+            "start_approx": 5238,
+            "end_approx": 5250,
+            "locked": false
+          },
+          {
+            "id": 4140569,
+            "ref_id": "1249576",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A group of men shoot two men.",
+            "type": "audiovisual",
+            "start_approx": 5292,
+            "end_approx": 5292,
+            "locked": false
+          },
+          {
+            "id": 4140573,
+            "ref_id": "1249583",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the head. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 5496,
+            "end_approx": 5502,
+            "locked": false
+          },
+          {
+            "id": 4140574,
+            "ref_id": "1249585",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the chest. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 5502,
+            "end_approx": 5508,
+            "locked": false
+          },
+          {
+            "id": 4140575,
+            "ref_id": "1249586",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots several men. Clouds of blood can be seen.",
+            "type": "audiovisual",
+            "start_approx": 5514,
+            "end_approx": 5520,
+            "locked": false
+          },
+          {
+            "id": 4140576,
+            "ref_id": "1249588",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the shoulder. A man stabs another man with a bayonet.",
+            "type": "audiovisual",
+            "start_approx": 5526,
+            "end_approx": 5532,
+            "locked": false
+          },
+          {
+            "id": 4140578,
+            "ref_id": "1249592",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man slashes and stabs another man with a bayonet. A spray of blood is shown.",
+            "type": "audiovisual",
+            "start_approx": 5532,
+            "end_approx": 5538,
+            "locked": false
+          },
+          {
+            "id": 4140581,
+            "ref_id": "1249597",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Several men shoot other men.",
+            "type": "audiovisual",
+            "start_approx": 5556,
+            "end_approx": 5562,
+            "locked": false
+          },
+          {
+            "id": 4140582,
+            "ref_id": "1249599",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man stabs a man. A man slashes another man's face with a bayonet.",
+            "type": "audiovisual",
+            "start_approx": 5568,
+            "end_approx": 5568,
+            "locked": false
+          },
+          {
+            "id": 4140587,
+            "ref_id": "1249624",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men shoot multiple men in their chests and heads.",
+            "type": "audiovisual",
+            "start_approx": 5604,
+            "end_approx": 5604,
+            "locked": false
+          },
+          {
+            "id": 4140588,
+            "ref_id": "1249627",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men are thrown by an explosion. A man is hit by a rifle. A man shoots another man. A man ignites several men with a flamethrower. A man causes another man to explode and become engulfed in flames.",
+            "type": "audiovisual",
+            "start_approx": 5604,
+            "end_approx": 5646,
+            "locked": false
+          },
+          {
+            "id": 4140589,
+            "ref_id": "1249633",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots other men with a machine gun.",
+            "type": "audiovisual",
+            "start_approx": 5652,
+            "end_approx": 5652,
+            "locked": false
+          },
+          {
+            "id": 4140590,
+            "ref_id": "1249635",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the knee. Blood pours from his wound.",
+            "type": "audiovisual",
+            "start_approx": 5658,
+            "end_approx": 5664,
+            "locked": false
+          },
+          {
+            "id": 4140591,
+            "ref_id": "1249637",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the shoulder and head. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 5664,
+            "end_approx": 5670,
+            "locked": false
+          },
+          {
+            "id": 4140592,
+            "ref_id": "1249639",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots other men in the chest. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 5706,
+            "end_approx": 5712,
+            "locked": false
+          },
+          {
+            "id": 4140700,
+            "ref_id": "11786367",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the chest with a gun.",
+            "type": "audiovisual",
+            "start_approx": 5718,
+            "end_approx": 5718,
+            "locked": false
+          },
+          {
+            "id": 4140594,
+            "ref_id": "1249642",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man holds a grenade to another man's chest. Two men explode.",
+            "type": "audiovisual",
+            "start_approx": 5724,
+            "end_approx": 5724,
+            "locked": false
+          },
+          {
+            "id": 4140596,
+            "ref_id": "1249648",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots several men in the chest and shoulder. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 5748,
+            "end_approx": 5748,
+            "locked": false
+          },
+          {
+            "id": 4140597,
+            "ref_id": "1249650",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man. Blood splatter is shown.",
+            "type": "audiovisual",
+            "start_approx": 5754,
+            "end_approx": 5754,
+            "locked": false
+          },
+          {
+            "id": 4140598,
+            "ref_id": "1249652",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A group of men shoot another man in the chest.",
+            "type": "audiovisual",
+            "start_approx": 5766,
+            "end_approx": 5772,
+            "locked": false
+          },
+          {
+            "id": 4140599,
+            "ref_id": "1249654",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the chest.",
+            "type": "audiovisual",
+            "start_approx": 5778,
+            "end_approx": 5778,
+            "locked": false
+          },
+          {
+            "id": 4140616,
+            "ref_id": "1249688",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man impales a dead man with a bayonet.",
+            "type": "audiovisual",
+            "start_approx": 6318,
+            "end_approx": 6318,
+            "locked": false
+          },
+          {
+            "id": 4140680,
+            "ref_id": "1249785",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A bloody man is shown.",
+            "type": "audiovisual",
+            "start_approx": 6468,
+            "end_approx": 6480,
+            "locked": false
+          },
+          {
+            "id": 4140622,
+            "ref_id": "1249694",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man's face is covered in blood.",
+            "type": "audiovisual",
+            "start_approx": 6546,
+            "end_approx": 6552,
+            "locked": false
+          },
+          {
+            "id": 4140624,
+            "ref_id": "1249696",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man wears his hands raw on a rope.",
+            "type": "audiovisual",
+            "start_approx": 6660,
+            "end_approx": 6660,
+            "locked": false
+          },
+          {
+            "id": 4140629,
+            "ref_id": "1249701",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men shoot other men. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 6762,
+            "end_approx": 6762,
+            "locked": false
+          },
+          {
+            "id": 4140632,
+            "ref_id": "1249704",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man's wounded leg is focused on.",
+            "type": "audiovisual",
+            "start_approx": 6774,
+            "end_approx": 6774,
+            "locked": false
+          },
+          {
+            "id": 4140681,
+            "ref_id": "1249786",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man is shown with several wounds.",
+            "type": "audiovisual",
+            "start_approx": 6792,
+            "end_approx": 6798,
+            "locked": false
+          },
+          {
+            "id": 4140641,
+            "ref_id": "1249713",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the head. Blood splatters.",
+            "type": "audiovisual",
+            "start_approx": 6954,
+            "end_approx": 6960,
+            "locked": false
+          },
+          {
+            "id": 4140643,
+            "ref_id": "1249716",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 7002,
+            "end_approx": 7002,
+            "locked": false
+          },
+          {
+            "id": 4140644,
+            "ref_id": "1249718",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man shoots another man in the chest. Blood sprays.",
+            "type": "audiovisual",
+            "start_approx": 7008,
+            "end_approx": 7008,
+            "locked": false
+          },
+          {
+            "id": 4140648,
+            "ref_id": "1249724",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A group of men shoot other men. Sprays of blood are visible.",
+            "type": "audiovisual",
+            "start_approx": 7080,
+            "end_approx": 7086,
+            "locked": false
+          },
+          {
+            "id": 4140652,
+            "ref_id": "1249729",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Men wash blood off another man.",
+            "type": "audiovisual",
+            "start_approx": 7188,
+            "end_approx": 7200,
+            "locked": false
+          },
+          {
+            "id": 4140657,
+            "ref_id": "1249735",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Bloody dead men are engulfed in flames. A man burns.",
+            "type": "audiovisual",
+            "start_approx": 7440,
+            "end_approx": 7446,
+            "locked": false
+          },
+          {
+            "id": 4140659,
+            "ref_id": "1249737",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Flames engulf a group of men.",
+            "type": "audiovisual",
+            "start_approx": 7470,
+            "end_approx": 7476,
+            "locked": false
+          },
+          {
+            "id": 4140661,
+            "ref_id": "1249739",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Many men shoot a group of men. Blood sprays. A man's wounded leg is focused on.",
+            "type": "audiovisual",
+            "start_approx": 7524,
+            "end_approx": 7536,
+            "locked": false
+          },
+          {
+            "id": 4140662,
+            "ref_id": "1249740",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "Bloody and dismembered dead men are shown.",
+            "type": "audiovisual",
+            "start_approx": 7578,
+            "end_approx": 7584,
+            "locked": false
+          },
+          {
+            "id": 4140663,
+            "ref_id": "1249741",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man disembowels himself.",
+            "type": "audiovisual",
+            "start_approx": 7620,
+            "end_approx": 7626,
+            "locked": false
+          },
+          {
+            "id": 4140683,
+            "ref_id": "1249788",
+            "tag_set_id": 60849,
+            "category_id": 15,
+            "description": "A man's bloody injury is focused on.",
+            "type": "audiovisual",
+            "start_approx": 7674,
+            "end_approx": 7674,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 14,
+        "key": "non_graphic",
+        "display_title": "Non-graphic Violence",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_non_graphic_violence-4x.png",
+        "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_non_graphic_violence-4x.png",
+        "tags": [
+          {
+            "id": 4140426,
+            "ref_id": "1249253",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosion throws two men to the ground.",
+            "type": "audiovisual",
+            "start_approx": 108,
+            "end_approx": 108,
+            "locked": false
+          },
+          {
+            "id": 4140429,
+            "ref_id": "1249259",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "Explosions knock several men to the ground. A man tackles another man.",
+            "type": "audiovisual",
+            "start_approx": 120,
+            "end_approx": 132,
+            "locked": false
+          },
+          {
+            "id": 4140669,
+            "ref_id": "1249773",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man is thrown through the air.",
+            "type": "audiovisual",
+            "start_approx": 138,
+            "end_approx": 138,
+            "locked": false
+          },
+          {
+            "id": 4140435,
+            "ref_id": "1249271",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A boy punches another boy in the head multiple times.",
+            "type": "audiovisual",
+            "start_approx": 330,
+            "end_approx": 342,
+            "locked": false
+          },
+          {
+            "id": 4140436,
+            "ref_id": "1249272",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A boy strangles another boy. A boy punches another boy in the face.",
+            "type": "audiovisual",
+            "start_approx": 348,
+            "end_approx": 354,
+            "locked": false
+          },
+          {
+            "id": 4140437,
+            "ref_id": "1249273",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A boy hits another boy in the head with a brick.",
+            "type": "audiovisual",
+            "start_approx": 360,
+            "end_approx": 360,
+            "locked": false
+          },
+          {
+            "id": 4140451,
+            "ref_id": "1249305",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A woman slaps a man's face.",
+            "type": "audiovisual",
+            "start_approx": 1086,
+            "end_approx": 1086,
+            "locked": false
+          },
+          {
+            "id": 4140466,
+            "ref_id": "1249336",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man throws a knife into another man's foot.",
+            "type": "audiovisual",
+            "start_approx": 1776,
+            "end_approx": 1776,
+            "locked": false
+          },
+          {
+            "id": 4140671,
+            "ref_id": "1249775",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man pulls a knife out of a man's foot.",
+            "type": "audiovisual",
+            "start_approx": 1950,
+            "end_approx": 1956,
+            "locked": false
+          },
+          {
+            "id": 4140483,
+            "ref_id": "1249371",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man kicks another man in the face.",
+            "type": "audiovisual",
+            "start_approx": 2100,
+            "end_approx": 2106,
+            "locked": false
+          },
+          {
+            "id": 4140488,
+            "ref_id": "1249380",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man punches another man in the face.",
+            "type": "audiovisual",
+            "start_approx": 2436,
+            "end_approx": 2442,
+            "locked": false
+          },
+          {
+            "id": 4140492,
+            "ref_id": "1249389",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A group of men throw a man to the ground and beat him.",
+            "type": "audiovisual",
+            "start_approx": 2712,
+            "end_approx": 2724,
+            "locked": false
+          },
+          {
+            "id": 4140499,
+            "ref_id": "1249396",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man pushes a woman. A man pushes another man.",
+            "type": "audiovisual",
+            "start_approx": 3336,
+            "end_approx": 3342,
+            "locked": false
+          },
+          {
+            "id": 4140519,
+            "ref_id": "1249436",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man shoots another man.",
+            "type": "audiovisual",
+            "start_approx": 4410,
+            "end_approx": 4410,
+            "locked": false
+          },
+          {
+            "id": 4140530,
+            "ref_id": "1249464",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosive throws a man. A man tackles another man to the ground and chokes him.",
+            "type": "audiovisual",
+            "start_approx": 4512,
+            "end_approx": 4524,
+            "locked": false
+          },
+          {
+            "id": 4140532,
+            "ref_id": "1249468",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man shoots another man in the head. An explosion throws a man to the ground.",
+            "type": "audiovisual",
+            "start_approx": 4536,
+            "end_approx": 4548,
+            "locked": false
+          },
+          {
+            "id": 4140540,
+            "ref_id": "1249489",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosion knocks a man down.",
+            "type": "audiovisual",
+            "start_approx": 4770,
+            "end_approx": 4770,
+            "locked": false
+          },
+          {
+            "id": 4140541,
+            "ref_id": "1249491",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosion knocks several men to the ground.",
+            "type": "audiovisual",
+            "start_approx": 4770,
+            "end_approx": 4776,
+            "locked": false
+          },
+          {
+            "id": 4140545,
+            "ref_id": "1249503",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A group of men shoot several men.",
+            "type": "audiovisual",
+            "start_approx": 4854,
+            "end_approx": 4854,
+            "locked": false
+          },
+          {
+            "id": 4140546,
+            "ref_id": "1249505",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosion throws a man.",
+            "type": "audiovisual",
+            "start_approx": 4860,
+            "end_approx": 4866,
+            "locked": false
+          },
+          {
+            "id": 4140550,
+            "ref_id": "1249516",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man shoots several men.",
+            "type": "audiovisual",
+            "start_approx": 4902,
+            "end_approx": 4902,
+            "locked": false
+          },
+          {
+            "id": 4140552,
+            "ref_id": "1249522",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "Explosions knock men to the ground. A man shoots several men.",
+            "type": "audiovisual",
+            "start_approx": 4926,
+            "end_approx": 4932,
+            "locked": false
+          },
+          {
+            "id": 4140554,
+            "ref_id": "1249528",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man tackles another man. Men wrestle and hit each other with their fists and guns.",
+            "type": "audiovisual",
+            "start_approx": 4938,
+            "end_approx": 4944,
+            "locked": false
+          },
+          {
+            "id": 4140696,
+            "ref_id": "11786351",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man hits a man in the head with the butt of a rifle.",
+            "type": "audiovisual",
+            "start_approx": 4986,
+            "end_approx": 4986,
+            "locked": false
+          },
+          {
+            "id": 4140697,
+            "ref_id": "11786354",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "Several men are shot with guns and caught in an explosion.",
+            "type": "audiovisual",
+            "start_approx": 4992,
+            "end_approx": 4992,
+            "locked": false
+          },
+          {
+            "id": 4140571,
+            "ref_id": "1249579",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man pushes a woman down. A man pushes another man.",
+            "type": "audiovisual",
+            "start_approx": 5412,
+            "end_approx": 5412,
+            "locked": false
+          },
+          {
+            "id": 4140699,
+            "ref_id": "11786361",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "Several men are caught in an explosion.",
+            "type": "audiovisual",
+            "start_approx": 5550,
+            "end_approx": 5550,
+            "locked": false
+          },
+          {
+            "id": 4140583,
+            "ref_id": "1249601",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man stabs another man in the stomach with a bayonet. Men shoot other men.",
+            "type": "audiovisual",
+            "start_approx": 5568,
+            "end_approx": 5574,
+            "locked": false
+          },
+          {
+            "id": 4140584,
+            "ref_id": "1249603",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosive hits a group of men.",
+            "type": "audiovisual",
+            "start_approx": 5580,
+            "end_approx": 5580,
+            "locked": false
+          },
+          {
+            "id": 4140595,
+            "ref_id": "1249644",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "Men shoot other men.",
+            "type": "audiovisual",
+            "start_approx": 5724,
+            "end_approx": 5730,
+            "locked": false
+          },
+          {
+            "id": 4140677,
+            "ref_id": "1249781",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man throws an explosive at other men.",
+            "type": "audiovisual",
+            "start_approx": 5736,
+            "end_approx": 5736,
+            "locked": false
+          },
+          {
+            "id": 4140667,
+            "ref_id": "1249765",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosive throws several men.",
+            "type": "audiovisual",
+            "start_approx": 5742,
+            "end_approx": 5742,
+            "locked": false
+          },
+          {
+            "id": 4140678,
+            "ref_id": "1249782",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "Men are thrown from several explosions.",
+            "type": "audiovisual",
+            "start_approx": 5760,
+            "end_approx": 5766,
+            "locked": false
+          },
+          {
+            "id": 4140600,
+            "ref_id": "1249655",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "Several explosives hit a large group of men.",
+            "type": "audiovisual",
+            "start_approx": 5784,
+            "end_approx": 5790,
+            "locked": false
+          },
+          {
+            "id": 4140679,
+            "ref_id": "1249783",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man is hit in an explosion.",
+            "type": "audiovisual",
+            "start_approx": 5820,
+            "end_approx": 5826,
+            "locked": false
+          },
+          {
+            "id": 4140611,
+            "ref_id": "1249683",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man stabs another man with a bayonet.",
+            "type": "audiovisual",
+            "start_approx": 6258,
+            "end_approx": 6258,
+            "locked": false
+          },
+          {
+            "id": 4140702,
+            "ref_id": "11786386",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man is knocked down by a bullet to his helmet.",
+            "type": "audiovisual",
+            "start_approx": 6900,
+            "end_approx": 6906,
+            "locked": false
+          },
+          {
+            "id": 4140645,
+            "ref_id": "1249719",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man shoots another man in the distance.",
+            "type": "audiovisual",
+            "start_approx": 7014,
+            "end_approx": 7014,
+            "locked": false
+          },
+          {
+            "id": 4140649,
+            "ref_id": "1249725",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man falls from a great height.",
+            "type": "audiovisual",
+            "start_approx": 7086,
+            "end_approx": 7092,
+            "locked": false
+          },
+          {
+            "id": 4140651,
+            "ref_id": "1249727",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man falls from a high ledge.",
+            "type": "audiovisual",
+            "start_approx": 7092,
+            "end_approx": 7092,
+            "locked": false
+          },
+          {
+            "id": 4140655,
+            "ref_id": "1249732",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosion knocks several men to the ground.",
+            "type": "audiovisual",
+            "start_approx": 7410,
+            "end_approx": 7422,
+            "locked": false
+          },
+          {
+            "id": 4140656,
+            "ref_id": "1249733",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man shoots other men. An explosion knocks men to the ground.",
+            "type": "audiovisual",
+            "start_approx": 7422,
+            "end_approx": 7440,
+            "locked": false
+          },
+          {
+            "id": 4140658,
+            "ref_id": "1249736",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "A man stabs another man. A man kicks another man.",
+            "type": "audiovisual",
+            "start_approx": 7452,
+            "end_approx": 7458,
+            "locked": false
+          },
+          {
+            "id": 4140660,
+            "ref_id": "1249738",
+            "tag_set_id": 60849,
+            "category_id": 14,
+            "description": "An explosion knocks men down.",
+            "type": "audiovisual",
+            "start_approx": 7518,
+            "end_approx": 7524,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 17,
+        "key": "violence_images",
+        "display_title": "Disturbing Images",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140428,
+            "ref_id": "1249257",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Dead men can be seen.",
+            "type": "audiovisual",
+            "start_approx": 114,
+            "end_approx": 120,
+            "locked": false
+          },
+          {
+            "id": 4140432,
+            "ref_id": "1249265",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Several dead men are visible.",
+            "type": "audiovisual",
+            "start_approx": 162,
+            "end_approx": 162,
+            "locked": false
+          },
+          {
+            "id": 4140440,
+            "ref_id": "1249276",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "An unconscious boy is shown from being hit with a brick.",
+            "type": "audiovisual",
+            "start_approx": 366,
+            "end_approx": 372,
+            "locked": false
+          },
+          {
+            "id": 4140472,
+            "ref_id": "1249349",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A knife protrudes from a man's foot.",
+            "type": "audiovisual",
+            "start_approx": 1860,
+            "end_approx": 1860,
+            "locked": false
+          },
+          {
+            "id": 4140516,
+            "ref_id": "1249433",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Dead bodies can be seen.",
+            "type": "audiovisual",
+            "start_approx": 4302,
+            "end_approx": 4326,
+            "locked": false
+          },
+          {
+            "id": 4140523,
+            "ref_id": "1249451",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Dead men can be seen.",
+            "type": "audiovisual",
+            "start_approx": 4428,
+            "end_approx": 4428,
+            "locked": false
+          },
+          {
+            "id": 4140543,
+            "ref_id": "1249495",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A man moves a dead man.",
+            "type": "audiovisual",
+            "start_approx": 4788,
+            "end_approx": 4788,
+            "locked": false
+          },
+          {
+            "id": 4140561,
+            "ref_id": "1249546",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Several dead men are shown.",
+            "type": "audiovisual",
+            "start_approx": 5046,
+            "end_approx": 5052,
+            "locked": false
+          },
+          {
+            "id": 4140577,
+            "ref_id": "1249590",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Many dead men roll down an embankment.",
+            "type": "audiovisual",
+            "start_approx": 5532,
+            "end_approx": 5538,
+            "locked": false
+          },
+          {
+            "id": 4140580,
+            "ref_id": "1249596",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A pile of dead men is shown.",
+            "type": "audiovisual",
+            "start_approx": 5550,
+            "end_approx": 5556,
+            "locked": false
+          },
+          {
+            "id": 4140602,
+            "ref_id": "1249673",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A dead man is shown.",
+            "type": "audiovisual",
+            "start_approx": 5838,
+            "end_approx": 5844,
+            "locked": false
+          },
+          {
+            "id": 4140603,
+            "ref_id": "1249674",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A man closes a dead man's eyes.",
+            "type": "audiovisual",
+            "start_approx": 5868,
+            "end_approx": 5874,
+            "locked": false
+          },
+          {
+            "id": 4140605,
+            "ref_id": "1249676",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Dead men are focused on.",
+            "type": "audiovisual",
+            "start_approx": 5976,
+            "end_approx": 5988,
+            "locked": false
+          },
+          {
+            "id": 4140606,
+            "ref_id": "1249677",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A dead man is shown.",
+            "type": "audiovisual",
+            "start_approx": 5994,
+            "end_approx": 6000,
+            "locked": false
+          },
+          {
+            "id": 4140608,
+            "ref_id": "1249679",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A man holds a severed hand.",
+            "type": "audiovisual",
+            "start_approx": 6042,
+            "end_approx": 6048,
+            "locked": false
+          },
+          {
+            "id": 4140612,
+            "ref_id": "1249684",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Several dead men are visible.",
+            "type": "audiovisual",
+            "start_approx": 6264,
+            "end_approx": 6264,
+            "locked": false
+          },
+          {
+            "id": 4140613,
+            "ref_id": "1249685",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Dead men can be seen.",
+            "type": "audiovisual",
+            "start_approx": 6276,
+            "end_approx": 6276,
+            "locked": false
+          },
+          {
+            "id": 4140614,
+            "ref_id": "1249686",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A man covers himself with a dead man. Several dead men are shown.",
+            "type": "audiovisual",
+            "start_approx": 6288,
+            "end_approx": 6294,
+            "locked": false
+          },
+          {
+            "id": 4140615,
+            "ref_id": "1249687",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A man kicks a dead man.",
+            "type": "audiovisual",
+            "start_approx": 6312,
+            "end_approx": 6312,
+            "locked": false
+          },
+          {
+            "id": 4140617,
+            "ref_id": "1249689",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Multiple dead men are visible in the background. A man hides under a dead man.",
+            "type": "audiovisual",
+            "start_approx": 6318,
+            "end_approx": 6336,
+            "locked": false
+          },
+          {
+            "id": 4140618,
+            "ref_id": "1249690",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Animals crawl on a dead man.",
+            "type": "audiovisual",
+            "start_approx": 6390,
+            "end_approx": 6396,
+            "locked": false
+          },
+          {
+            "id": 4140619,
+            "ref_id": "1249691",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A dead man is shown with animals on his chest.",
+            "type": "audiovisual",
+            "start_approx": 6396,
+            "end_approx": 6408,
+            "locked": false
+          },
+          {
+            "id": 4140620,
+            "ref_id": "1249692",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A hanged dead man is focused on.",
+            "type": "audiovisual",
+            "start_approx": 6426,
+            "end_approx": 6438,
+            "locked": false
+          },
+          {
+            "id": 4140621,
+            "ref_id": "1249693",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Many dead men can be seen.",
+            "type": "audiovisual",
+            "start_approx": 6516,
+            "end_approx": 6534,
+            "locked": false
+          },
+          {
+            "id": 4140628,
+            "ref_id": "1249700",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A dead man is shown.",
+            "type": "audiovisual",
+            "start_approx": 6756,
+            "end_approx": 6756,
+            "locked": false
+          },
+          {
+            "id": 4140634,
+            "ref_id": "1249706",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Many dead men are shown in the background.",
+            "type": "audiovisual",
+            "start_approx": 6816,
+            "end_approx": 6816,
+            "locked": false
+          },
+          {
+            "id": 4140638,
+            "ref_id": "1249710",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Dead men are visible in the background.",
+            "type": "audiovisual",
+            "start_approx": 6894,
+            "end_approx": 6900,
+            "locked": false
+          },
+          {
+            "id": 4140639,
+            "ref_id": "1249711",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Many dead men are shown.",
+            "type": "audiovisual",
+            "start_approx": 6918,
+            "end_approx": 6924,
+            "locked": false
+          },
+          {
+            "id": 4140640,
+            "ref_id": "1249712",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Many dead men can be seen.",
+            "type": "audiovisual",
+            "start_approx": 6948,
+            "end_approx": 6954,
+            "locked": false
+          },
+          {
+            "id": 4140642,
+            "ref_id": "1249714",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "Dead men are visible in the background.",
+            "type": "audiovisual",
+            "start_approx": 6960,
+            "end_approx": 6966,
+            "locked": false
+          },
+          {
+            "id": 4140650,
+            "ref_id": "1249726",
+            "tag_set_id": 60849,
+            "category_id": 17,
+            "description": "A dead man is shown.",
+            "type": "audiovisual",
+            "start_approx": 7092,
+            "end_approx": 7092,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 25,
+        "key": "vulgar_gestures",
+        "display_title": "Vulgar Gestures",
+        "default_type": "audiovisual",
+        "parent_id": 3,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140479,
+            "ref_id": "1249356",
+            "tag_set_id": 60849,
+            "category_id": 25,
+            "description": "A man holds up an object to indicate breasts.",
+            "type": "audiovisual",
+            "start_approx": 2046,
+            "end_approx": 2046,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 27,
+    "key": "human_functions",
+    "display_title": "Medical & Body Process",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_medical-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_medical-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 31,
+        "key": "medical_graphic",
+        "display_title": "Medical Graphic",
+        "default_type": "audiovisual",
+        "parent_id": 27,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140670,
+            "ref_id": "1249774",
+            "tag_set_id": 60849,
+            "category_id": 31,
+            "description": "A woman draws a man's blood, a needle penetrates the skin.",
+            "type": "audiovisual",
+            "start_approx": 786,
+            "end_approx": 792,
+            "locked": false
+          },
+          {
+            "id": 4140610,
+            "ref_id": "1249681",
+            "tag_set_id": 60849,
+            "category_id": 31,
+            "description": "A wounded man's burned arm is shown.",
+            "type": "audiovisual",
+            "start_approx": 6168,
+            "end_approx": 6174,
+            "locked": false
+          },
+          {
+            "id": 4140625,
+            "ref_id": "1249697",
+            "tag_set_id": 60849,
+            "category_id": 31,
+            "description": "Men are seen operating on bloody men.",
+            "type": "audiovisual",
+            "start_approx": 6714,
+            "end_approx": 6720,
+            "locked": false
+          },
+          {
+            "id": 4140635,
+            "ref_id": "1249707",
+            "tag_set_id": 60849,
+            "category_id": 31,
+            "description": "A man's face is covered in blood.",
+            "type": "audiovisual",
+            "start_approx": 6828,
+            "end_approx": 6828,
+            "locked": false
+          },
+          {
+            "id": 4140636,
+            "ref_id": "1249708",
+            "tag_set_id": 60849,
+            "category_id": 31,
+            "description": "Men operate on several men, their hands are covered in blood.",
+            "type": "audiovisual",
+            "start_approx": 6858,
+            "end_approx": 6864,
+            "locked": false
+          },
+          {
+            "id": 4140682,
+            "ref_id": "1249787",
+            "tag_set_id": 60849,
+            "category_id": 31,
+            "description": "Men are shown operating on a man, blood is visible.",
+            "type": "audiovisual",
+            "start_approx": 6876,
+            "end_approx": 6882,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 32,
+        "key": "medical_procedures",
+        "display_title": "Medical Procedures",
+        "default_type": "audiovisual",
+        "parent_id": 27,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140535,
+            "ref_id": "1249474",
+            "tag_set_id": 60849,
+            "category_id": 32,
+            "description": "A man injects an injured man with morphine.",
+            "type": "audiovisual",
+            "start_approx": 4620,
+            "end_approx": 4620,
+            "locked": false
+          },
+          {
+            "id": 4140601,
+            "ref_id": "1249669",
+            "tag_set_id": 60849,
+            "category_id": 32,
+            "description": "A man injects an injured man with morphine.",
+            "type": "audiovisual",
+            "start_approx": 5796,
+            "end_approx": 5796,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 30,
+        "key": "bodily_functions",
+        "display_title": "Bodily Functions/Jokes",
+        "default_type": "audiovisual",
+        "parent_id": 27,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140512,
+            "ref_id": "1249429",
+            "tag_set_id": 60849,
+            "category_id": 30,
+            "description": "A man vomits.",
+            "type": "audiovisual",
+            "start_approx": 4188,
+            "end_approx": 4188,
+            "locked": false
+          },
+          {
+            "id": 4140513,
+            "ref_id": "1249430",
+            "tag_set_id": 60849,
+            "category_id": 30,
+            "description": "A man spits.",
+            "type": "audiovisual",
+            "start_approx": 4206,
+            "end_approx": 4206,
+            "locked": false
+          },
+          {
+            "id": 4140564,
+            "ref_id": "1249551",
+            "tag_set_id": 60849,
+            "category_id": 30,
+            "description": "A man talks about urination and defecation.",
+            "type": "audio",
+            "start_approx": 5064,
+            "end_approx": 5064,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  },
+  {
+    "id": 24,
+    "key": "credits",
+    "display_title": "Credits & Extras",
+    "default_type": "audiovisual",
+    "parent_id": null,
+    "icon_url": "https://content.vidangel.com/onboarding/filter-icons/black/va_credits-4x.png",
+    "white_icon_url": "https://content.vidangel.com/onboarding/filter-icons/white/va_credits-4x.png",
+    "tags": [],
+    "child_categories": [
+      {
+        "id": 33,
+        "key": "opening_credits",
+        "display_title": "Opening Credits",
+        "default_type": "audiovisual",
+        "parent_id": 24,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140423,
+            "ref_id": "1249247",
+            "tag_set_id": 60849,
+            "category_id": 33,
+            "description": "Opening Credits",
+            "type": "audiovisual",
+            "start_approx": 0,
+            "end_approx": 60,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      },
+      {
+        "id": 34,
+        "key": "closing_credits",
+        "display_title": "Closing Credits",
+        "default_type": "audiovisual",
+        "parent_id": 24,
+        "icon_url": null,
+        "white_icon_url": null,
+        "tags": [
+          {
+            "id": 4140666,
+            "ref_id": "1249744",
+            "tag_set_id": 60849,
+            "category_id": 34,
+            "description": "Closing Credits",
+            "type": "audiovisual",
+            "start_approx": 7872,
+            "end_approx": 8334,
+            "locked": false
+          }
+        ],
+        "child_categories": [],
+        "locked": false
+      }
+    ],
+    "locked": false
+  }
+]

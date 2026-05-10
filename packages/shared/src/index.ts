@@ -1,4 +1,5 @@
 export * from './errors.js';
+export * from './filters-object.js';
 export * from './filters.js';
 export * from './profanity.js';
 export * from './skp.js';
