@@ -32,7 +32,7 @@ Install these first:
 - `ffprobe` on your `PATH`
 
 Annotator note:
-- the built-in native dialogs for opening videos, choosing subtitle files, and browsing for an output path are Windows-only in the current build
+- the built-in native dialogs for opening videos, choosing subtitle or transcript files, and browsing for an output path are Windows-only in the current build
 
 ## Install
 
@@ -85,7 +85,7 @@ packages/
 3. Click the empty stage or `Open Video` to choose a source file.
 4. In the Media tab, optionally import existing filters from `.json` or `.skp`, or paste an SVG timeline for conversion into filters.
 5. Annotate `mute` and `skip` ranges.
-6. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles.
+6. Optionally click `Auto-Detect Profanity` to open the analysis modal and generate draft mute suggestions from subtitles or a Media Transcription Studio transcript.
 7. Review, seek through, and apply the suggestions you want.
 8. Fine-tune timestamps or jump around from the timeline and segment list.
 9. Export filters, or switch to Export mode to render the cleaned video.
@@ -138,23 +138,24 @@ SVG import:
 
 ## Profanity Analysis
 
-The Annotate tab includes an `Auto-Detect Profanity` button that opens a subtitle-based analysis modal. The flow creates draft `mute` suggestions instead of changing the timeline automatically.
+The Annotate tab includes an `Auto-Detect Profanity` button that opens the analysis modal. The flow creates draft `mute` suggestions instead of changing the timeline automatically.
 
 How it works:
-- CleanVid checks embedded text subtitle tracks first
-- if the video has no usable subtitles, you can choose your own `.srt`, `.vtt`, `.ass`, or `.ssa` file in the modal
-- detections are padded, merged, and shown as draft suggestions you can review before applying
+- CleanVid uses embedded text subtitles unless you choose a file in the modal; clearing the selection goes back to embedded subtitles
+- `Choose Subtitle or Transcript` accepts `.srt`, `.vtt`, `.ass`, `.ssa`, and Media Transcription Studio v1 transcript `.json` files
+- subtitle detections keep their existing padding; transcript ranges use exact word timestamps (or segment timestamps when no word timing can be mapped) without padding
+- use a transcript for the original video and its first audio track, which is the track CleanVid exports; review any source mismatch, coverage, or zero-duration match warnings
 
 Suggestion review behavior:
 - draft suggestions stay separate from your filter timeline until you click `Apply all as mute filters`
-- each suggestion shows its source: embedded subtitles or a subtitle file you provided
+- each suggestion shows its source: embedded subtitles, a provided subtitle, or a provided transcript
 - clicking a suggestion seeks playback to its start time
 - `Discard suggestions` clears the draft analysis results without changing your current filters
 
 Current analysis scope:
 - English-first profanity matching
 - image-based subtitle tracks are ignored in v1
-- if the video has no subtitles, the app prompts you to provide one yourself instead of using automatic remote or transcription fallbacks
+- if the video has no subtitles, provide a subtitle or transcript file; CleanVid does not fetch subtitles or generate transcripts automatically
 - the modal suggests searching `https://www.opensubtitles.com/` if you need to find a subtitle file yourself
 
 ## Export From The Annotator

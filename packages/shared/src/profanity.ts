@@ -1,11 +1,12 @@
 import badWords from './badwords.js';
 
-export type ProfanitySuggestionSource = 'embedded' | 'provided';
+export type ProfanitySuggestionSource = 'embedded' | 'provided' | 'transcript';
 
 export type ProfanityAnalysisPhase =
   | 'probe-media'
   | 'extract-embedded-subtitles'
   | 'load-provided-subtitles'
+  | 'load-provided-transcript'
   | 'normalize-text'
   | 'detect-profanity'
   | 'merge-detections'
@@ -37,6 +38,8 @@ export interface ProfanityAnalysisResult {
   suggestions: ProfanitySuggestion[];
   usedSources: ProfanitySuggestionSource[];
   subtitleCueCount: number;
+  transcriptSegmentCount?: number;
+  warnings?: string[];
   message: string;
 }
 
@@ -144,14 +147,28 @@ const PROFANITY_PATTERNS: ProfanityPatternRule[] = [
   ...createSupplementalProfanityPatterns(badWords as Record<string, number>)
 ];
 
+const PROFANITY_NORMALIZATION_RULES = [
+  /<[^>]+>/g,
+  /\[[^\]]*\]|\([^)]*\)|\{[^}]*\}/g,
+  /^[A-Z][A-Z0-9 .'-]{1,24}:\s*/gim,
+  /[^a-z0-9'\s-]+/g,
+  /\s+/g
+];
+
 export function normalizeProfanityText(text: string): string {
-  return sanitizeWhitespace(
-    text
-      .toLowerCase()
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\[[^\]]*\]|\([^)]*\)|\{[^}]*\}/g, ' ')
-      .replace(/^[A-Z][A-Z0-9 .'-]{1,24}:\s*/gim, ' ')
-      .replace(/[^a-z0-9'\s-]+/g, ' ')
+  return PROFANITY_NORMALIZATION_RULES.reduce(
+    (value, rule) => value.replace(rule, ' '),
+    text.toLowerCase()
+  ).trim();
+}
+
+function findProfanityMatches(normalized: string) {
+  return PROFANITY_PATTERNS.flatMap(({ canonical, pattern }) =>
+    Array.from(normalized.matchAll(pattern), (match) => ({
+      canonical,
+      start: match.index,
+      end: match.index + match[0].length
+    }))
   );
 }
 
@@ -219,6 +236,126 @@ export function buildProfanitySuggestions(
   });
 }
 
+function normalizeTimedWords(segment: TimedTextCue & { words: TimedTextCue[] }) {
+  let text = '';
+  let wordIndexes: number[] = [];
+  const preserveSpacing = segment.words.map((word) => word.text).join('').trim() === segment.text.trim();
+
+  segment.words.forEach((word, index) => {
+    // MTS includes spacing in word text, but the contract does not require it.
+    if (!preserveSpacing && /[\p{L}\p{N}]$/u.test(text.slice(-2)) && /^[\p{L}\p{N}]/u.test(word.text)) {
+      text += ' ';
+      wordIndexes.push(-1);
+    }
+    const lower = word.text.toLowerCase();
+    text += lower;
+    for (let offset = 0; offset < lower.length; offset += 1) {
+      wordIndexes.push(index);
+    }
+  });
+
+  const trimmed = text.trimStart();
+  wordIndexes = wordIndexes.slice(text.length - trimmed.length);
+  text = trimmed;
+
+  // Carry word provenance through the same replacements used for subtitle matching.
+  for (const rule of PROFANITY_NORMALIZATION_RULES) {
+    const nextIndexes: number[] = [];
+    let cursor = 0;
+    text = text.replace(rule, (match: string, index: number) => {
+      for (; cursor < index; cursor += 1) {
+        nextIndexes.push(wordIndexes[cursor]);
+      }
+      nextIndexes.push(-1);
+      cursor += match.length;
+      return ' ';
+    });
+    for (; cursor < wordIndexes.length; cursor += 1) {
+      nextIndexes.push(wordIndexes[cursor]);
+    }
+    wordIndexes = nextIndexes;
+  }
+
+  return { text, wordIndexes };
+}
+
+export function buildTranscriptProfanitySuggestions(
+  segments: Array<TimedTextCue & { words: TimedTextCue[] }>
+): { suggestions: ProfanitySuggestion[]; warnings: string[] } {
+  const suggestions: ProfanitySuggestion[] = [];
+  const pointMatches = new Set<string>();
+  let segmentFallbackCount = 0;
+
+  function addMatch(start: number, end: number, snippet: string, terms: string[]) {
+    if (end === start) {
+      pointMatches.add(`${terms.join(', ')} at ${start.toFixed(3)}s`);
+      return;
+    }
+    suggestions.push({
+      id: `transcript-${suggestions.length + 1}`,
+      start,
+      end,
+      snippet: sanitizeWhitespace(snippet),
+      source: 'transcript',
+      sources: ['transcript'],
+      matchedTerms: terms
+    });
+  }
+
+  for (const segment of segments) {
+    const { text, wordIndexes } = normalizeTimedWords(segment);
+    const represented = new Map<string, Set<string>>();
+    for (const match of findProfanityMatches(text)) {
+      const indexes = wordIndexes.slice(match.start, match.end).filter((index) => index >= 0);
+      if (indexes.length === 0) {
+        continue;
+      }
+      const matchedWords = segment.words.slice(indexes[0], indexes.at(-1)! + 1);
+      const occurrences = represented.get(match.canonical) ?? new Set<string>();
+      const occurrence = `${match.start}:${match.end}`;
+      if (occurrences.has(occurrence)) {
+        continue;
+      }
+      occurrences.add(occurrence);
+      represented.set(match.canonical, occurrences);
+      addMatch(
+        matchedWords.reduce((start, word) => Math.min(start, word.start), Infinity),
+        matchedWords.reduce((end, word) => Math.max(end, word.end), 0),
+        matchedWords.map((word) => word.text.trim()).join(' '),
+        [match.canonical]
+      );
+    }
+
+    const segmentText = normalizeProfanityText(segment.text.trim());
+    if (segmentText !== text.trim()) {
+      const occurrences = new Map<string, Set<string>>();
+      for (const match of findProfanityMatches(segmentText)) {
+        const spans = occurrences.get(match.canonical) ?? new Set<string>();
+        spans.add(`${match.start}:${match.end}`);
+        occurrences.set(match.canonical, spans);
+      }
+      const missing = [...occurrences]
+        .filter(([term, spans]) => spans.size > (represented.get(term)?.size ?? 0))
+        .map(([term]) => term)
+        .sort();
+      if (missing.length > 0) {
+        segmentFallbackCount += 1;
+        addMatch(segment.start, segment.end, segment.text, missing);
+      }
+    }
+  }
+
+  const warnings: string[] = [];
+  if (segmentFallbackCount > 0) {
+    warnings.push(`Used segment timestamps where word timing was missing in ${segmentFallbackCount} transcript segment(s).`);
+  }
+  if (pointMatches.size > 0) {
+    const examples = [...pointMatches].slice(0, 5).join('; ');
+    warnings.push(`Review ${pointMatches.size} zero-duration transcript match(es) manually; no mute range was created: ${examples}${pointMatches.size > 5 ? '; and more' : ''}.`);
+  }
+  return { suggestions, warnings };
+}
+
 export function mergeProfanitySuggestions(
   suggestions: ProfanitySuggestion[],
   duration = Number.POSITIVE_INFINITY
@@ -226,8 +363,8 @@ export function mergeProfanitySuggestions(
   const normalized = suggestions
     .map((suggestion) => ({
       ...suggestion,
-      start: Math.max(0, suggestion.start - START_PADDING_SECONDS),
-      end: Math.min(duration, suggestion.end + END_PADDING_SECONDS)
+      start: Math.max(0, suggestion.start - (suggestion.source === 'transcript' ? 0 : START_PADDING_SECONDS)),
+      end: Math.min(duration, suggestion.end + (suggestion.source === 'transcript' ? 0 : END_PADDING_SECONDS))
     }))
     .filter((suggestion) => suggestion.end > suggestion.start)
     .sort((left, right) => left.start - right.start || left.end - right.end);
@@ -238,8 +375,12 @@ export function mergeProfanitySuggestions(
     const previous = merged.at(-1);
 
     if (previous && suggestion.start <= previous.end) {
+      const nestedTranscriptSnippet = previous.source === 'transcript' && suggestion.source === 'transcript' &&
+        suggestion.end <= previous.end && previous.snippet.includes(suggestion.snippet);
+      if (!nestedTranscriptSnippet) {
+        previous.snippet = sanitizeWhitespace(`${previous.snippet} ${suggestion.snippet}`);
+      }
       previous.end = Math.max(previous.end, suggestion.end);
-      previous.snippet = sanitizeWhitespace(`${previous.snippet} ${suggestion.snippet}`);
       previous.matchedTerms = Array.from(
         new Set([...previous.matchedTerms, ...suggestion.matchedTerms])
       ).sort();

@@ -69,6 +69,7 @@ const props = defineProps<{
   markerCountLabel: string;
   profanitySuggestionCountLabel: string;
   profanitySuggestions: ProfanitySuggestion[];
+  profanityWarnings: string[];
   profanityAnalysisProgressPercent: number;
   profanitySubtitlePath: string;
   skpDraftCountLabel: string;
@@ -438,6 +439,7 @@ onMounted(() => {
         :subtitle-path="profanitySubtitlePath"
         :suggestion-count-label="profanitySuggestionCountLabel"
         :suggestions="profanitySuggestions"
+        :warnings="profanityWarnings"
         @analyze-profanity="emit('analyzeProfanity')"
         @apply-profanity-suggestions="handleProfanitySuggestionsApply"
         @clear-subtitle-path="emit('clearProfanitySubtitlePath')"

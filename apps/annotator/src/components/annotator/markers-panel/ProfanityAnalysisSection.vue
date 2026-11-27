@@ -22,6 +22,7 @@ defineProps<{
   subtitlePath: string;
   suggestionCountLabel: string;
   suggestions: ProfanitySuggestion[];
+  warnings: string[];
 }>();
 
 function formatTimestamp(seconds: number): string {
@@ -38,10 +39,13 @@ function formatTimestamp(seconds: number): string {
 
 function formatSourceLabel(suggestion: ProfanitySuggestion): string {
   const sources = suggestion.sources ?? [suggestion.source];
+  const labels = {
+    provided: 'Provided Subtitle',
+    embedded: 'Embedded Subtitle',
+    transcript: 'Provided Transcript'
+  };
 
-  return sources
-    .map((source) => (source === 'provided' ? 'Provided Subtitle' : 'Embedded Subtitle'))
-    .join(' + ');
+  return sources.map((source) => labels[source]).join(' + ');
 }
 </script>
 
@@ -61,13 +65,13 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
     </div>
 
     <div class="profanity-capability-notice" data-testid="profanity-subtitle-guidance">
-      <p>CleanVid now analyzes profanity from subtitles only.</p>
       <p>
-        It will use embedded subtitles when available. If the file has no usable subtitles, choose
-        an `.srt`, `.vtt`, or `.ass` file yourself and try again.
+        CleanVid uses embedded text subtitles unless you choose a subtitle file
+        (.srt, .vtt, .ass, or .ssa) or a Media Transcription Studio transcript (.json).
+        Transcript suggestions use word timestamps without added padding.
       </p>
       <p>
-        If you need one, try searching
+        If you need a subtitle file, try searching
         <a href="https://www.opensubtitles.com/" target="_blank" rel="noreferrer">
           OpenSubtitles
         </a>
@@ -83,7 +87,7 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
         :disabled="isSelectingSubtitlePath || isAnalyzingProfanity"
         @click="emit('selectSubtitlePath')"
       >
-        {{ isSelectingSubtitlePath ? 'Choosing Subtitle...' : 'Choose Subtitle File' }}
+        {{ isSelectingSubtitlePath ? 'Choosing File...' : 'Choose Subtitle or Transcript' }}
       </button>
 
       <button
@@ -98,7 +102,7 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
     </div>
 
     <div class="export-metric-row">
-      <span>Selected subtitle</span>
+      <span>Selected file</span>
       <strong data-testid="selected-subtitle-path">
         {{ subtitlePath === '' ? 'Embedded only' : subtitlePath }}
       </strong>
@@ -125,6 +129,13 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
     <div class="export-metric-row">
       <span>Draft suggestions</span>
       <strong data-testid="profanity-suggestion-count">{{ suggestionCountLabel }}</strong>
+    </div>
+
+    <div v-if="warnings.length > 0" class="validation-summary" role="status" data-testid="profanity-warnings">
+      <strong>Transcript warnings</strong>
+      <ul>
+        <li v-for="warning in warnings" :key="warning">{{ warning }}</li>
+      </ul>
     </div>
 
     <div v-if="suggestions.length === 0" class="segments-empty">

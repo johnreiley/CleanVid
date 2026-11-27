@@ -352,10 +352,10 @@ describe('annotator app', () => {
     expect(wrapper.find('[data-testid="profanity-modal"]').exists()).toBe(false);
     await openProfanityModal(wrapper);
     expect(wrapper.get('[data-testid="profanity-subtitle-guidance"]').text()).toContain(
-      'CleanVid now analyzes profanity from subtitles only.'
+      'Media Transcription Studio transcript (.json)'
     );
     expect(wrapper.get('[data-testid="select-subtitle-path-button"]').text()).toContain(
-      'Choose Subtitle File'
+      'Choose Subtitle or Transcript'
     );
     await wrapper.get('[data-testid="close-profanity-modal-button"]').trigger('click');
     await nextTick();
@@ -911,6 +911,49 @@ describe('annotator app', () => {
     expect(wrapper.get('[data-testid="status-message"]').text()).toContain(
       'Applied 2 profanity suggestions as mute filters.'
     );
+  });
+
+  it('selects an MTS transcript, shows warnings and previews its exact draft range before applying', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+
+    fetchMock.mockClear();
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({ cancelled: false, subtitlePath: 'C:\\Transcripts\\movie.json' }));
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({
+      suggestions: [{
+        id: 'suggestion-1', start: 12.4, end: 12.7, snippet: 'Damn!', source: 'transcript', matchedTerms: ['damn']
+      }],
+      usedSources: ['transcript'],
+      subtitleCueCount: 0,
+      transcriptSegmentCount: 1,
+      warnings: ['Transcript coverage is incomplete (1 of 2 chunks).'],
+      message: 'Detected 1 draft mute suggestion.'
+    }));
+
+    const picker = wrapper.get('[data-testid="select-subtitle-path-button"]');
+    expect(picker.text()).toBe('Choose Subtitle or Transcript');
+    await picker.trigger('click');
+    await flushPromises();
+    expect(wrapper.get('[data-testid="selected-subtitle-path"]').text()).toBe('C:\\Transcripts\\movie.json');
+
+    await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
+    await flushPromises();
+    const [url, init] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect(url).toBe('/api/analyze-profanity');
+    expect(JSON.parse(String(init.body))).toMatchObject({ subtitlePath: 'C:\\Transcripts\\movie.json' });
+    expect(wrapper.get('[data-testid="profanity-warnings"]').text()).toContain('1 of 2 chunks');
+    const draft = wrapper.get('[data-testid="profanity-suggestion-seek"]');
+    expect(draft.text()).toContain('Provided Transcript');
+    expect(draft.text()).toContain('00:12.400');
+    expect(draft.text()).toContain('00:12.700');
+    expect(wrapper.findAll('.segment-card:not(.profanity-suggestion-card)')).toHaveLength(0);
+
+    await draft.trigger('click');
+    expect(video.currentTime).toBe(12.4);
+    await wrapper.get('[data-testid="apply-profanity-suggestions-button"]').trigger('click');
+    expect(wrapper.findAll('.segment-card')).toHaveLength(1);
   });
 
   it('can discard draft profanity suggestions without changing the filter timeline', async () => {

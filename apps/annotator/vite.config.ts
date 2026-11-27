@@ -36,7 +36,7 @@ const execFile = promisify(execFileCallback);
 const VIDEO_DIALOG_FILTER =
   'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
 const SUBTITLE_DIALOG_FILTER =
-  'Subtitle Files|*.srt;*.vtt;*.ass;*.ssa|All Files|*.*';
+  'Subtitles and MTS Transcripts|*.srt;*.vtt;*.ass;*.ssa;*.json|All Files|*.*';
 const OUTPUT_DIALOG_FILTER =
   'Video Files|*.mp4;*.mov;*.m4v;*.mkv;*.avi;*.wmv;*.webm;*.mpg;*.mpeg|All Files|*.*';
 
@@ -383,14 +383,14 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
 
 export async function openNativeSubtitleFileDialog(): Promise<string | null> {
   if (process.platform !== 'win32') {
-    throw new HttpError(501, 'Native subtitle selection is only supported on Windows in this build.');
+    throw new HttpError(501, 'Native subtitle or transcript selection is only supported on Windows in this build.');
   }
 
   const script = `
 Add-Type -AssemblyName System.Windows.Forms
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $dialog = New-Object System.Windows.Forms.OpenFileDialog
-$dialog.Title = 'Select subtitle file'
+$dialog.Title = 'Choose Subtitle or Transcript'
 $dialog.Filter = '${SUBTITLE_DIALOG_FILTER}'
 $dialog.Multiselect = $false
 $result = $dialog.ShowDialog()
