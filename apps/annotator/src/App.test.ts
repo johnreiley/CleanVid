@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { mount } from '@vue/test-utils';
+import type { ReconciledDetection } from '@cleanvid/shared';
 import { nextTick } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App.vue';
@@ -355,7 +356,7 @@ describe('annotator app', () => {
       'Media Transcription Studio transcript (.json)'
     );
     expect(wrapper.get('[data-testid="select-subtitle-path-button"]').text()).toContain(
-      'Choose Subtitle or Transcript'
+      'Choose subtitle'
     );
     await wrapper.get('[data-testid="close-profanity-modal-button"]').trigger('click');
     await nextTick();
@@ -402,7 +403,7 @@ describe('annotator app', () => {
     ).toBe(false);
     await openProfanityModal(wrapper);
     expect(wrapper.get('[data-testid="analyze-profanity-button"]').element).toBeTruthy();
-    expect(wrapper.get('[data-testid="selected-subtitle-path"]').text()).toContain('Embedded only');
+    expect((wrapper.get('[data-testid="profanity-analysis-section"] select').element as HTMLSelectElement).value).toBe('auto');
   });
 
   it('does not reopen the picker when clicking the stage after a video is loaded', async () => {
@@ -895,7 +896,8 @@ describe('annotator app', () => {
     expect(JSON.parse(String(analysisInit.body))).toEqual({
       inputPath: 'C:\\Movies\\movie.mp4',
       movieTitle: 'movie',
-      subtitlePath: 'C:\\Subtitles\\movie.srt'
+      subtitlePath: 'C:\\Subtitles\\movie.srt',
+      subtitleMode: 'external'
     });
     expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toContain('2 suggestions');
     expect(wrapper.get('[data-testid="profanity-suggestion-snippet"]').text()).toContain('oh shit');
@@ -920,7 +922,7 @@ describe('annotator app', () => {
     await openProfanityModal(wrapper);
 
     fetchMock.mockClear();
-    fetchMock.mockResolvedValueOnce(mockJsonResponse({ cancelled: false, subtitlePath: 'C:\\Transcripts\\movie.json' }));
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({ cancelled: false, transcriptPath: 'C:\\Transcripts\\movie.json' }));
     fetchMock.mockResolvedValueOnce(mockJsonResponse({
       suggestions: [{
         id: 'suggestion-1', start: 12.4, end: 12.7, snippet: 'Damn!', source: 'transcript', matchedTerms: ['damn']
@@ -932,17 +934,17 @@ describe('annotator app', () => {
       message: 'Detected 1 draft mute suggestion.'
     }));
 
-    const picker = wrapper.get('[data-testid="select-subtitle-path-button"]');
-    expect(picker.text()).toBe('Choose Subtitle or Transcript');
+    const picker = wrapper.get('[data-testid="select-transcript-path-button"]');
+    expect(picker.text()).toBe('Choose MTS transcript');
     await picker.trigger('click');
     await flushPromises();
-    expect(wrapper.get('[data-testid="selected-subtitle-path"]').text()).toBe('C:\\Transcripts\\movie.json');
+    expect(wrapper.get('[data-testid="selected-transcript-path"]').text()).toBe('C:\\Transcripts\\movie.json');
 
     await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
     await flushPromises();
     const [url, init] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(url).toBe('/api/analyze-profanity');
-    expect(JSON.parse(String(init.body))).toMatchObject({ subtitlePath: 'C:\\Transcripts\\movie.json' });
+    expect(JSON.parse(String(init.body))).toMatchObject({ transcriptPath: 'C:\\Transcripts\\movie.json', subtitleMode: 'auto' });
     expect(wrapper.get('[data-testid="profanity-warnings"]').text()).toContain('1 of 2 chunks');
     const draft = wrapper.get('[data-testid="profanity-suggestion-seek"]');
     expect(draft.text()).toContain('Provided Transcript');
@@ -954,6 +956,120 @@ describe('annotator app', () => {
     expect(video.currentTime).toBe(12.4);
     await wrapper.get('[data-testid="apply-profanity-suggestions-button"]').trigger('click');
     expect(wrapper.findAll('.segment-card')).toHaveLength(1);
+  });
+
+  it('reviews dual-source occurrences independently and applies each approved range once', async () => {
+    const wrapper = mount(App);
+    const video = await openVideo(wrapper);
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+
+    const precise: ReconciledDetection = {
+      id: 'paired', agreement: 'both', timingMethod: 'transcript-word', confidence: 'high',
+      evidence: [{ id: 'subtitle', matchedText: 'damn', canonicalTerms: ['damn'], context: 'Oh damn again',
+        source: 'provided', timingMethod: 'subtitle-cue', start: 10, end: 15, tokenStart: 1, tokenEnd: 2 }],
+      rawRange: { start: 12.4, end: 12.7 }, proposedRange: { start: 12.4, end: 12.7 },
+      needsReview: false, reviewReasons: [], reviewStatus: 'pending'
+    };
+    const broad: ReconciledDetection = {
+      ...precise, id: 'broad', agreement: 'subtitle-only', timingMethod: 'subtitle-cue', confidence: 'low',
+      proposedRange: { start: 9.85, end: 15.25 }, needsReview: true, reviewReasons: ['Whole cue']
+    };
+    const point: ReconciledDetection = {
+      ...precise, id: 'point', agreement: 'transcript-only', timingMethod: 'unresolved', confidence: 'low',
+      evidence: [{ ...precise.evidence[0], id: 'point-word', source: 'transcript', start: 20, end: 20 }],
+      rawRange: null, proposedRange: null, needsReview: true, reviewReasons: ['No range']
+    };
+
+    fetchMock.mockClear();
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({ cancelled: false, subtitlePath: '/subtitles.srt' }));
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({ cancelled: false, transcriptPath: '/transcript.json' }));
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({
+      suggestions: [], detections: [precise, broad, point], usedSources: ['provided', 'transcript'],
+      subtitleCueCount: 2, message: 'Detected 3 profanity occurrences.'
+    }));
+    await wrapper.get('[data-testid="select-subtitle-path-button"]').trigger('click');
+    await flushPromises();
+    await wrapper.get('[data-testid="select-transcript-path-button"]').trigger('click');
+    await flushPromises();
+    await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
+    await flushPromises();
+    const [requestUrl, request] = fetchMock.mock.calls[2] as [string, RequestInit];
+    expect(requestUrl).toBe('/api/analyze-profanity');
+    expect(JSON.parse(String(request.body))).toMatchObject({ subtitlePath: '/subtitles.srt', transcriptPath: '/transcript.json' });
+
+    const modal = wrapper.get('[data-testid="profanity-modal"]');
+    const button = (text: string) => modal.findAll('button').find((item) => item.text().startsWith(text))!;
+    const apply = modal.get<HTMLButtonElement>('[data-testid="apply-profanity-suggestions-button"]');
+    expect(apply.element.disabled).toBe(true);
+    await button('Approve eligible high confidence').trigger('click');
+    expect(apply.text()).toContain('(1)');
+    await apply.trigger('click');
+    expect(apply.element.disabled).toBe(true);
+    expect(wrapper.findAll('.segment-card:not(.profanity-suggestion-card)')).toHaveLength(1);
+
+    await button('Next pending review').trigger('click');
+    expect(video.currentTime).toBeCloseTo(8.85);
+    const filter = modal.get<HTMLSelectElement>('.profanity-review-summary select');
+    await filter.setValue('2');
+    expect(modal.get('[aria-label="Selected detection"]').text()).toContain('Whole cue');
+    expect(modal.text()).toContain('Unresolved near 00:20.000');
+    await modal.get('.profanity-detection').trigger('click');
+    expect(video.currentTime).toBe(19);
+    expect(modal.get('[aria-label="Selected detection"]').findAll('button').find((item) => item.text() === 'Approve')?.attributes('disabled')).toBeDefined();
+    await modal.get('#profanity-end').setValue('20.500');
+    await modal.get('[aria-label="Move start forward 100 ms"]').trigger('click');
+    expect((modal.get('#profanity-start').element as HTMLInputElement).value).toBe('20.1');
+    await button('Use edited range').trigger('click');
+    const editor = modal.get('[aria-label="Selected detection"]');
+    await editor.findAll('button').find((item) => item.text() === 'Approve')!.trigger('click');
+    await apply.trigger('click');
+    expect(wrapper.findAll('.segment-card:not(.profanity-suggestion-card)')).toHaveLength(2);
+    expect(apply.element.disabled).toBe(true);
+
+    video.muted = true;
+    await button('Play original').trigger('click');
+    await flushPromises();
+    expect(video.muted).toBe(false);
+    expect(video.paused).toBe(false);
+    await modal.get('[data-testid="discard-profanity-suggestions-button"]').trigger('click');
+    expect(video.paused).toBe(true);
+    expect(video.muted).toBe(true);
+    expect(wrapper.findAll('.segment-card:not(.profanity-suggestion-card)')).toHaveLength(2);
+    wrapper.unmount();
+  });
+
+  it('discards late results and resets both filenames after switching video', async () => {
+    const wrapper = mount(App);
+    await openVideo(wrapper);
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+
+    fetchMock.mockClear();
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({ cancelled: false, subtitlePath: '/subtitles.srt' }));
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({ cancelled: false, transcriptPath: '/transcript.json' }));
+    await wrapper.get('[data-testid="select-subtitle-path-button"]').trigger('click');
+    await flushPromises();
+    await wrapper.get('[data-testid="select-transcript-path-button"]').trigger('click');
+    await flushPromises();
+
+    let finish!: (value: Response) => void;
+    fetchMock.mockImplementationOnce(() => new Promise<Response>((resolve) => { finish = resolve; }));
+    await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
+    await openVideo(wrapper, {
+      cancelled: false, inputPath: '/different.mp4', name: 'different.mp4',
+      playbackUrl: '/api/media/different', playbackSource: 'original'
+    });
+    finish(mockJsonResponse({ usedSources: ['provided', 'transcript'], suggestions: [],
+      detections: [], subtitleCueCount: 1, message: 'Stale result' }));
+    await flushPromises();
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+    expect(wrapper.find('[data-testid="selected-subtitle-path"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="selected-transcript-path"]').exists()).toBe(false);
+    expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toBe('0 suggestions');
+    expect(wrapper.text()).not.toContain('Stale result');
+    wrapper.unmount();
   });
 
   it('can discard draft profanity suggestions without changing the filter timeline', async () => {

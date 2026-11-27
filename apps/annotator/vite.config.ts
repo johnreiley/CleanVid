@@ -15,6 +15,7 @@ import {
   normalizeFilters,
   serializeFilterFile,
   type FilterSegment,
+  type ProfanityAnalysisOptions,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult
 } from '../../packages/shared/src/index';
@@ -23,7 +24,7 @@ import {
   type ProcessMediaOptions,
   type ProcessMediaProgressEvent
 } from '../cli/src/processor';
-import { analyzeProfanity } from './src/profanity-analysis';
+import { analyzeProfanity, listEmbeddedSubtitleTracks } from './src/profanity-analysis';
 import {
   preparePreviewPlayback,
   type PlaybackSource,
@@ -76,10 +77,9 @@ export interface ProcessRequestBody {
   movieTitle?: string;
 }
 
-export interface AnalyzeProfanityRequestBody {
+export interface AnalyzeProfanityRequestBody extends ProfanityAnalysisOptions {
   inputPath: string;
   movieTitle?: string;
-  subtitlePath?: string;
 }
 
 export interface SelectOutputPathResult {
@@ -381,17 +381,25 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
   return selectedPath === '' ? null : path.resolve(selectedPath);
 }
 
-export async function openNativeSubtitleFileDialog(): Promise<string | null> {
+type ProfanityFileKind = 'legacy' | 'subtitle' | 'transcript';
+
+export async function openNativeSubtitleFileDialog(kind: ProfanityFileKind = 'legacy'): Promise<string | null> {
   if (process.platform !== 'win32') {
     throw new HttpError(501, 'Native subtitle or transcript selection is only supported on Windows in this build.');
   }
+
+  const title = kind === 'transcript' ? 'Choose MTS Transcript'
+    : kind === 'subtitle' ? 'Choose Subtitle File' : 'Choose Subtitle or Transcript';
+  const filter = kind === 'transcript' ? 'MTS transcripts (*.json)|*.json'
+    : kind === 'subtitle' ? 'Subtitle files (*.srt;*.vtt;*.ass;*.ssa)|*.srt;*.vtt;*.ass;*.ssa'
+      : SUBTITLE_DIALOG_FILTER;
 
   const script = `
 Add-Type -AssemblyName System.Windows.Forms
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $dialog = New-Object System.Windows.Forms.OpenFileDialog
-$dialog.Title = 'Choose Subtitle or Transcript'
-$dialog.Filter = '${SUBTITLE_DIALOG_FILTER}'
+$dialog.Title = '${title}'
+$dialog.Filter = '${filter}'
 $dialog.Multiselect = $false
 $result = $dialog.ShowDialog()
 if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
@@ -440,29 +448,58 @@ export async function handleOpenVideoRequest(
   };
 }
 
-function parseAnalyzeProfanityRequestBody(body: unknown): {
-  inputPath: string;
-  movieTitle: string;
-  subtitlePath: string;
-} {
-  if (typeof body !== 'object' || body === null) {
+function parseAnalyzeProfanityRequestBody(body: unknown): AnalyzeProfanityRequestBody {
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     throw new HttpError(400, 'Request body must be a JSON object.');
   }
 
   const record = body as Record<string, unknown>;
   const inputPath = typeof record.inputPath === 'string' ? record.inputPath.trim() : '';
   const movieTitle = typeof record.movieTitle === 'string' ? record.movieTitle.trim() : '';
-  const subtitlePath = typeof record.subtitlePath === 'string' ? record.subtitlePath.trim() : '';
+  if (!inputPath) throw new HttpError(400, 'inputPath is required.');
 
-  if (inputPath === '') {
-    throw new HttpError(400, 'inputPath is required.');
+  const request: AnalyzeProfanityRequestBody = { inputPath, movieTitle };
+  for (const field of ['subtitlePath', 'transcriptPath'] as const) {
+    const value = record[field];
+    if (value === undefined) continue;
+    if (typeof value !== 'string') throw new HttpError(400, `${field} must be a path string.`);
+    if (value.trim()) request[field] = value.trim();
   }
-
-  return {
-    inputPath,
-    movieTitle,
-    subtitlePath
-  };
+  const { subtitleMode, subtitleStreamIndex, subtitleOffset, estimateMissingWords, wordPadding } = record;
+  if (subtitleMode !== undefined) {
+    if (subtitleMode !== 'auto' && subtitleMode !== 'external' && subtitleMode !== 'none') {
+      throw new HttpError(400, 'subtitleMode must be auto, external, or none.');
+    }
+    request.subtitleMode = subtitleMode;
+  }
+  if (subtitleStreamIndex !== undefined) {
+    if (typeof subtitleStreamIndex !== 'number' || !Number.isSafeInteger(subtitleStreamIndex) || subtitleStreamIndex < 0) {
+      throw new HttpError(400, 'subtitleStreamIndex must be a nonnegative integer.');
+    }
+    request.subtitleStreamIndex = subtitleStreamIndex;
+  }
+  if (subtitleOffset !== undefined) {
+    if (typeof subtitleOffset !== 'number' || !Number.isFinite(subtitleOffset)) {
+      throw new HttpError(400, 'subtitleOffset must be a finite number of seconds.');
+    }
+    request.subtitleOffset = subtitleOffset;
+  }
+  if (estimateMissingWords !== undefined) {
+    if (typeof estimateMissingWords !== 'boolean') throw new HttpError(400, 'estimateMissingWords must be a boolean.');
+    request.estimateMissingWords = estimateMissingWords;
+  }
+  if (wordPadding !== undefined) {
+    if (!wordPadding || typeof wordPadding !== 'object' || !('before' in wordPadding) || !('after' in wordPadding)) {
+      throw new HttpError(400, 'wordPadding must specify before and after in seconds.');
+    }
+    const { before, after } = wordPadding;
+    if (typeof before !== 'number' || typeof after !== 'number' ||
+      !Number.isFinite(before) || !Number.isFinite(after) || before < 0 || after < 0) {
+      throw new HttpError(400, 'wordPadding before and after must be nonnegative finite numbers.');
+    }
+    request.wordPadding = { before, after };
+  }
+  return request;
 }
 
 export async function handleAnalyzeProfanityRequest(
@@ -471,21 +508,25 @@ export async function handleAnalyzeProfanityRequest(
   onProgress?: (event: ProfanityAnalysisProgressEvent) => void
 ): Promise<AnalyzeProfanityResult> {
   const request = parseAnalyzeProfanityRequestBody(body);
-  const resolvedInputPath = path.resolve(request.inputPath);
+  const inputPath = path.resolve(request.inputPath);
+  await dependencies.ensureInputExists(inputPath);
 
-  await dependencies.ensureInputExists(resolvedInputPath);
-  const resolvedSubtitlePath =
-    request.subtitlePath === '' ? '' : path.resolve(request.subtitlePath);
-
-  if (resolvedSubtitlePath !== '') {
-    await dependencies.ensureInputExists(resolvedSubtitlePath);
+  const subtitlePath = request.subtitlePath ? path.resolve(request.subtitlePath) : undefined;
+  const transcriptPath = request.transcriptPath ? path.resolve(request.transcriptPath) : undefined;
+  for (const [label, selected] of [
+    ['subtitle', request.subtitleMode !== 'none' || (subtitlePath && /\.json$/i.test(subtitlePath) && !transcriptPath) ? subtitlePath : undefined],
+    ['transcript', transcriptPath]
+  ] as const) {
+    if (!selected) continue;
+    try {
+      await dependencies.ensureInputExists(selected);
+    } catch {
+      const kind = label === 'subtitle' && /\.json$/i.test(selected) ? 'transcript' : label;
+      throw new HttpError(400, `The selected ${kind} file could not be found. Choose it again or clear it and retry.`);
+    }
   }
-
   return dependencies.analyzeProfanityImpl({
-    inputPath: resolvedInputPath,
-    movieTitle: request.movieTitle,
-    subtitlePath: resolvedSubtitlePath || undefined,
-    onProgress
+    ...request, inputPath, subtitlePath, ...(transcriptPath ? { transcriptPath } : {}), onProgress
   });
 }
 
@@ -937,14 +978,31 @@ async function handleApiRequest(request: IncomingMessage, response: ServerRespon
     return true;
   }
 
-  if (url.pathname === '/api/select-subtitle-path') {
+  if (url.pathname === '/api/select-subtitle-path' || url.pathname === '/api/select-transcript-path') {
     if (request.method !== 'POST') {
       sendJson(response, 405, { message: 'Method not allowed.' });
       return true;
     }
 
-    const result = await handleSelectSubtitlePathRequest();
+    if (url.pathname === '/api/select-transcript-path') {
+      const transcriptPath = await openNativeSubtitleFileDialog('transcript');
+      sendJson(response, 200, transcriptPath ? { cancelled: false, transcriptPath } : { cancelled: true });
+      return true;
+    }
+    const kind = url.searchParams.get('kind') === 'subtitle' ? 'subtitle' : 'legacy';
+    const result = await handleSelectSubtitlePathRequest({ selectSubtitlePath: () => openNativeSubtitleFileDialog(kind) });
     sendJson(response, 200, result);
+    return true;
+  }
+
+  if (url.pathname === '/api/profanity-subtitle-tracks') {
+    if (request.method !== 'POST') {
+      sendJson(response, 405, { message: 'Method not allowed.' });
+      return true;
+    }
+    const { inputPath } = parseAnalyzeProfanityRequestBody(await readJsonBody(request));
+    await ensureInputExists(inputPath);
+    sendJson(response, 200, { tracks: await listEmbeddedSubtitleTracks(path.resolve(inputPath)) });
     return true;
   }
 

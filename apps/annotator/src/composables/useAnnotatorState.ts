@@ -1,12 +1,16 @@
-import { computed, ref, watch, type ComponentPublicInstance } from 'vue';
+import { computed, reactive, ref, watch, type ComponentPublicInstance } from 'vue';
 import {
   FilterValidationError,
   buildTimeline,
   normalizeFilters,
+  mergeApprovedProfanityRanges,
   parseFilterFile,
   parseSkpFile,
   parseSvgRectImport,
   serializeFilterFile,
+  type MuteRange,
+  type EmbeddedSubtitleTrack,
+  type ProfanityAnalysisOptions,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult,
   type ProfanitySuggestion,
@@ -15,7 +19,7 @@ import {
   type SkpDraftSegment,
   type TimelineSegment
 } from '@cleanvid/shared';
-import type { EditableSegment, SegmentIssue } from '../annotator-types';
+import type { EditableSegment, ProfanityReviewState, SegmentIssue } from '../annotator-types';
 import { formatTimestamp } from '../time';
 
 const SEEK_STEP_SECONDS = 5;
@@ -68,9 +72,10 @@ interface SelectOutputPathResponse {
   outputPath?: string;
 }
 
-interface SelectSubtitlePathResponse {
+interface SelectProfanityPathResponse {
   cancelled: boolean;
   subtitlePath?: string;
+  transcriptPath?: string;
 }
 
 interface AnalyzeProfanityResultStreamEvent {
@@ -172,7 +177,6 @@ export function useAnnotatorState() {
   const isPlaying = ref(false);
   const isOpeningVideo = ref(false);
   const isSelectingOutputPath = ref(false);
-  const isSelectingSubtitlePath = ref(false);
   const isAnalyzingProfanity = ref(false);
   const isProcessing = ref(false);
   const openVideoProgressPercent = ref(0);
@@ -195,7 +199,21 @@ export function useAnnotatorState() {
   const svgImportMode = ref<SvgImportMode>('replace');
   const svgImportError = ref('');
   const svgImportSuccessKey = ref(0);
-  const profanitySubtitlePath = ref('');
+  const profanityReview = reactive<ProfanityReviewState>({
+    options: { subtitleMode: 'auto' },
+    detections: null,
+    selectedId: null,
+    tracks: [],
+    result: null,
+    isSelectingFile: false,
+    isLoadingTracks: false
+  });
+  let profanityAnalysis: AbortController | undefined;
+  let profanityVideoRevision = 0;
+  let profanityPreview: {
+    video: HTMLVideoElement; range: MuteRange; start: number; end: number;
+    muted: boolean; originalMuted: boolean; loop: boolean; frame?: number;
+  } | undefined;
   const statusMessage = ref('Open a video to begin annotating.');
   const errorMessage = ref('');
   const persistedFiltersSignature = ref('[]');
@@ -320,7 +338,10 @@ export function useAnnotatorState() {
   const canMark = computed(() => videoElement.value !== null && effectiveDuration.value > 0);
   const canExport = computed(() => effectiveDuration.value > 0 && segmentIssues.value.length === 0);
   const canAnalyzeProfanity = computed(
-    () => inputPath.value !== '' && !isOpeningVideo.value && !isAnalyzingProfanity.value && !isProcessing.value
+    () => inputPath.value !== '' && !isOpeningVideo.value && !isAnalyzingProfanity.value && !isProcessing.value &&
+      !profanityReview.isSelectingFile && !profanityReview.isLoadingTracks &&
+      (profanityReview.options.subtitleMode !== 'external' || Boolean(profanityReview.options.subtitlePath)) &&
+      (profanityReview.options.subtitleMode !== 'none' || Boolean(profanityReview.options.transcriptPath))
   );
   const canProcessVideo = computed(
     () =>
@@ -347,12 +368,12 @@ export function useAnnotatorState() {
   const markerCountLabel = computed(
     () => `${sortedSegments.value.length} marker${sortedSegments.value.length === 1 ? '' : 's'}`
   );
-  const profanitySuggestionCountLabel = computed(
-    () =>
-      `${profanitySuggestions.value.length} suggestion${
-        profanitySuggestions.value.length === 1 ? '' : 's'
-      }`
-  );
+  const profanitySuggestionCountLabel = computed(() => {
+    const detections = profanityReview.detections;
+    const count = detections?.length ?? profanitySuggestions.value.length;
+    const unit = detections ? 'occurrence' : 'suggestion';
+    return `${count} ${unit}${count === 1 ? '' : 's'}`;
+  });
   const skpDraftCountLabel = computed(
     () => `${skpDraftSegments.value.length} draft${skpDraftSegments.value.length === 1 ? '' : 's'}`
   );
@@ -581,7 +602,8 @@ export function useAnnotatorState() {
   }
 
   async function requestAnalyzeProfanityWithProgress(
-    body: Record<string, unknown>
+    body: ProfanityAnalysisOptions & { inputPath: string; movieTitle: string },
+    signal: AbortSignal
   ): Promise<ProfanityAnalysisResult> {
     const response = await fetch('/api/analyze-profanity', {
       method: 'POST',
@@ -589,18 +611,14 @@ export function useAnnotatorState() {
         Accept: 'application/x-ndjson',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal
     });
 
     const contentType = response.headers.get('content-type') ?? '';
-
     if (!contentType.includes('application/x-ndjson') || !response.body) {
-      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-
-      if (!response.ok) {
-        throw new Error(payload?.message || 'The request failed.');
-      }
-
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload) throw new Error(payload?.message || 'The analysis request failed.');
       return payload as ProfanityAnalysisResult;
     }
 
@@ -609,50 +627,12 @@ export function useAnnotatorState() {
     let buffer = '';
     let result: ProfanityAnalysisResult | null = null;
 
-    while (true) {
-      const { value, done } = await reader.read();
-      buffer += decoder.decode(value, { stream: !done });
-
-      let newlineIndex = buffer.indexOf('\n');
-
-      while (newlineIndex !== -1) {
-        const line = buffer.slice(0, newlineIndex).trim();
-        buffer = buffer.slice(newlineIndex + 1);
-
-        if (line !== '') {
-          const event = JSON.parse(line) as AnalyzeProfanityStreamEvent;
-
-          if (event.type === 'progress') {
-            analyzeProfanityProgressPercent.value = Math.max(
-              analyzeProfanityProgressPercent.value,
-              event.progress.percent ?? 0
-            );
-            statusMessage.value = event.progress.message;
-          } else if (event.type === 'result') {
-            analyzeProfanityProgressPercent.value = 100;
-            result = event.result;
-          } else {
-            throw new Error(event.message);
-          }
-        }
-
-        newlineIndex = buffer.indexOf('\n');
-      }
-
-      if (done) {
-        break;
-      }
-    }
-
-    const trailingLine = buffer.trim();
-
-    if (trailingLine !== '') {
-      const event = JSON.parse(trailingLine) as AnalyzeProfanityStreamEvent;
-
+    function handleEvent(line: string) {
+      if (!line.trim() || signal.aborted) return;
+      const event = JSON.parse(line) as AnalyzeProfanityStreamEvent;
       if (event.type === 'progress') {
         analyzeProfanityProgressPercent.value = Math.max(
-          analyzeProfanityProgressPercent.value,
-          event.progress.percent ?? 0
+          analyzeProfanityProgressPercent.value, event.progress.percent ?? 0
         );
         statusMessage.value = event.progress.message;
       } else if (event.type === 'result') {
@@ -663,11 +643,22 @@ export function useAnnotatorState() {
       }
     }
 
-    if (result) {
-      return result;
+    try {
+      while (!signal.aborted) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+        for (const line of lines) handleEvent(line);
+        if (done) break;
+      }
+      handleEvent(buffer);
+      if (result) return result;
+      throw new Error('Analysis stream ended unexpectedly.');
+    } finally {
+      await reader.cancel().catch(() => undefined);
+      reader.releaseLock();
     }
-
-    throw new Error('Analysis stream ended unexpectedly.');
   }
 
   function setError(message: string) {
@@ -715,8 +706,15 @@ export function useAnnotatorState() {
   }
 
   function clearProfanitySuggestions() {
+    profanityAnalysis?.abort();
+    profanityAnalysis = undefined;
+    isAnalyzingProfanity.value = false;
+    stopProfanityPreview();
     profanitySuggestions.value = [];
     profanityWarnings.value = [];
+    profanityReview.detections = null;
+    profanityReview.result = null;
+    profanityReview.selectedId = null;
     analyzeProfanityProgressPercent.value = 0;
   }
 
@@ -733,12 +731,15 @@ export function useAnnotatorState() {
     clearProfanitySuggestions();
     clearSkpDraftSegments();
     resetSvgImportForm();
-    profanitySubtitlePath.value = '';
+    profanityVideoRevision += 1;
+    profanityReview.options = { subtitleMode: 'auto' };
+    profanityReview.tracks = [];
   }
 
   function applyPreviewPlayback() {
     const video = videoElement.value;
 
+    if (profanityPreview) return;
     if (!video || !previewPlaybackEnabled.value || !isPlaying.value) {
       clearPreviewEffects();
       return;
@@ -1123,80 +1124,95 @@ export function useAnnotatorState() {
     outputPath.value = value;
   }
 
-  async function selectProfanitySubtitlePath() {
+  function updateProfanityOptions(options: Partial<ProfanityAnalysisOptions>) {
     clearFeedback();
+    clearProfanitySuggestions();
+    const changesSubtitleSource = ('subtitlePath' in options && options.subtitlePath !== profanityReview.options.subtitlePath) ||
+      ('subtitleMode' in options && options.subtitleMode !== profanityReview.options.subtitleMode) ||
+      ('subtitleStreamIndex' in options && options.subtitleStreamIndex !== profanityReview.options.subtitleStreamIndex);
+    profanityReview.options = {
+      ...profanityReview.options,
+      ...(changesSubtitleSource ? { subtitleOffset: undefined } : {}),
+      ...options
+    };
+  }
 
-    if (isOpeningVideo.value || isProcessing.value || inputPath.value === '') {
-      return;
-    }
+  async function selectProfanityPath(kind: 'subtitle' | 'transcript') {
+    clearFeedback();
+    if (isOpeningVideo.value || isProcessing.value || !inputPath.value ||
+      profanityReview.isSelectingFile || isAnalyzingProfanity.value) return;
 
-    isSelectingSubtitlePath.value = true;
-
+    const revision = profanityVideoRevision;
+    profanityReview.isSelectingFile = true;
     try {
-      const response = await requestJson<SelectSubtitlePathResponse>('/api/select-subtitle-path', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.cancelled) {
-        return;
-      }
-
-      const nextPath = response.subtitlePath ?? '';
-      if (nextPath !== profanitySubtitlePath.value) {
-        clearProfanitySuggestions();
-      }
-      profanitySubtitlePath.value = nextPath;
-
-      if (profanitySubtitlePath.value !== '') {
-        const kind = /\.json$/i.test(nextPath) ? 'transcript' : 'subtitle';
-        statusMessage.value = `Selected ${kind} file ${nextPath}.`;
+      const url = kind === 'subtitle' ? '/api/select-subtitle-path?kind=subtitle' : '/api/select-transcript-path';
+      const response = await requestJson<SelectProfanityPathResponse>(url, { method: 'POST' });
+      if (response.cancelled || revision !== profanityVideoRevision) return;
+      if (kind === 'subtitle' && response.subtitlePath) {
+        updateProfanityOptions({ subtitlePath: response.subtitlePath, subtitleMode: 'external' });
+      } else if (kind === 'transcript' && response.transcriptPath) {
+        updateProfanityOptions({ transcriptPath: response.transcriptPath });
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unable to select a subtitle or transcript file.');
+      if (revision === profanityVideoRevision) setError(error instanceof Error ? error.message : `Unable to choose a ${kind} file.`);
     } finally {
-      isSelectingSubtitlePath.value = false;
+      profanityReview.isSelectingFile = false;
     }
   }
 
-  function clearProfanitySubtitlePath() {
-    profanitySubtitlePath.value = '';
-    clearProfanitySuggestions();
-    statusMessage.value = 'Cleared the selected subtitle or transcript.';
+  async function loadProfanitySubtitleTracks() {
+    clearFeedback();
+    if (!inputPath.value || isOpeningVideo.value || isAnalyzingProfanity.value || profanityReview.isLoadingTracks) return;
+    const revision = profanityVideoRevision;
+    profanityReview.isLoadingTracks = true;
+    try {
+      const { tracks } = await requestJson<{ tracks: EmbeddedSubtitleTrack[] }>('/api/profanity-subtitle-tracks', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ inputPath: inputPath.value })
+      });
+      if (revision !== profanityVideoRevision) return;
+      profanityReview.tracks = tracks;
+      if (!tracks.length) statusMessage.value = 'No embedded text subtitle tracks were found.';
+    } catch (error) {
+      if (revision === profanityVideoRevision) setError(error instanceof Error ? error.message : 'Unable to list subtitle tracks.');
+    } finally {
+      profanityReview.isLoadingTracks = false;
+    }
   }
 
   async function analyzeProfanity() {
     clearFeedback();
+    if (!canAnalyzeProfanity.value) return;
 
-    if (!canAnalyzeProfanity.value) {
-      if (inputPath.value === '') {
-        setError('Open a local source file before analyzing profanity.');
-      }
-
-      return;
-    }
-
-    isAnalyzingProfanity.value = true;
     clearProfanitySuggestions();
+    const controller = new AbortController();
+    profanityAnalysis = controller;
+    isAnalyzingProfanity.value = true;
     statusMessage.value = `Analyzing ${inputName.value || 'opened video'} for profanity...`;
 
     try {
+      const options = profanityReview.options;
       const result = await requestAnalyzeProfanityWithProgress({
+        ...options,
+        subtitlePath: options.subtitleMode === 'external' ? options.subtitlePath : undefined,
         inputPath: inputPath.value,
-        movieTitle: movieTitle.value,
-        subtitlePath: profanitySubtitlePath.value.trim()
-      });
+        movieTitle: movieTitle.value
+      }, controller.signal);
 
+      if (profanityAnalysis !== controller) return;
       profanitySuggestions.value = result.suggestions;
       profanityWarnings.value = result.warnings ?? [];
+      profanityReview.detections = result.detections ?? null;
+      profanityReview.result = result;
+      if (result.subtitleTracks) profanityReview.tracks = result.subtitleTracks;
       statusMessage.value = result.message;
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unable to analyze profanity.');
+      if (profanityAnalysis === controller) setError(error instanceof Error ? error.message : 'Unable to analyze profanity.');
     } finally {
-      isAnalyzingProfanity.value = false;
-      analyzeProfanityProgressPercent.value = 0;
+      if (profanityAnalysis === controller) {
+        profanityAnalysis = undefined;
+        isAnalyzingProfanity.value = false;
+        analyzeProfanityProgressPercent.value = 0;
+      }
     }
   }
 
@@ -1206,35 +1222,119 @@ export function useAnnotatorState() {
   }
 
   function removeProfanitySuggestion(id: string) {
+    const remaining = profanitySuggestions.value.filter((suggestion) => suggestion.id !== id);
+    if (remaining.length === profanitySuggestions.value.length) return;
     clearFeedback();
+    profanitySuggestions.value = remaining;
+    statusMessage.value = 'Removed draft profanity suggestion.';
+  }
 
-    const remainingSuggestions = profanitySuggestions.value.filter((suggestion) => suggestion.id !== id);
+  function selectProfanityDetection(id: string) {
+    const draft = profanityReview.detections?.find((item) => item.id === id);
+    if (!draft) return;
+    stopProfanityPreview();
+    profanityReview.selectedId = id;
+    if (videoElement.value && !videoElement.value.paused) videoElement.value.pause();
+    seekTo(Math.max(0, (draft.editedRange ?? draft.proposedRange ?? draft.evidence[0]).start - 1));
+  }
 
-    if (remainingSuggestions.length === profanitySuggestions.value.length) {
-      return;
+  function reviewProfanityDetection(id: string, status: 'approved' | 'rejected') {
+    const draft = profanityReview.detections?.find((item) => item.id === id);
+    if (!draft || draft.applied || (status === 'approved' && !(draft.editedRange ?? draft.proposedRange))) return;
+    draft.reviewStatus = status;
+  }
+
+  function approveHighConfidenceProfanity() {
+    for (const draft of profanityReview.detections ?? []) {
+      if (!draft.applied && draft.reviewStatus === 'pending' && draft.confidence === 'high' && !draft.needsReview && !draft.editedRange && draft.proposedRange) {
+        draft.reviewStatus = 'approved';
+      }
+    }
+  }
+
+  function editProfanityDetection(id: string, range: MuteRange) {
+    const draft = profanityReview.detections?.find((item) => item.id === id);
+    if (!draft || draft.applied || !Number.isFinite(range.start) || !Number.isFinite(range.end) ||
+      range.start < 0 || range.end <= range.start || range.end > effectiveDuration.value) return;
+    stopProfanityPreview();
+    draft.editedRange = { ...range };
+    draft.reviewStatus = 'pending';
+  }
+
+  function stopProfanityPreview() {
+    const preview = profanityPreview;
+    if (!preview) return;
+    profanityPreview = undefined;
+    if (preview.frame !== undefined) cancelAnimationFrame(preview.frame);
+    preview.video.pause();
+    preview.video.muted = preview.originalMuted;
+    syncVideoState();
+  }
+
+  async function startProfanityPreview(range: MuteRange, muted: boolean, loop: boolean) {
+    stopProfanityPreview();
+    const video = videoElement.value;
+    if (!video || !Number.isFinite(range.start) || !Number.isFinite(range.end) || range.end <= range.start) return;
+    clearPreviewEffects();
+    const preview: NonNullable<typeof profanityPreview> = {
+      video, range, start: Math.max(0, range.start - 1), end: clampToDuration(range.end + 1),
+      muted, originalMuted: video.muted, loop
+    };
+    profanityPreview = preview;
+    // Use the review range instead of the current timeline's playback effects.
+    video.currentTime = preview.start;
+    video.muted = muted && preview.start >= range.start;
+
+    function tick() {
+      if (profanityPreview !== preview) return;
+      if (video!.currentTime >= preview.end || video!.ended) {
+        if (!preview.loop) {
+          stopProfanityPreview();
+          return;
+        }
+        video!.currentTime = preview.start;
+        if (video!.paused) void video!.play().catch(() => {
+          if (profanityPreview === preview) stopProfanityPreview();
+        });
+      }
+      video!.muted = preview.muted && video!.currentTime >= range.start && video!.currentTime < range.end;
+      preview.frame = requestAnimationFrame(tick);
     }
 
-    profanitySuggestions.value = remainingSuggestions;
-    statusMessage.value = 'Removed draft profanity suggestion.';
+    try {
+      await video.play();
+      tick();
+    } catch {
+      if (profanityPreview === preview) {
+        stopProfanityPreview();
+        setError('Unable to start review playback.');
+      }
+    }
   }
 
   function applyProfanitySuggestions() {
     clearFeedback();
-
-    if (profanitySuggestions.value.length === 0) {
-      return;
-    }
-
-    const nextSegments = profanitySuggestions.value.map((suggestion) => ({
-      id: createSegmentId(),
-      type: 'mute' as const,
-      start: clampToDuration(suggestion.start),
-      end: clampToDuration(suggestion.end)
+    const drafts = profanityReview.detections?.flatMap((draft) => {
+      const range = draft.editedRange ?? draft.proposedRange;
+      if (draft.reviewStatus !== 'approved' || draft.applied || !range) return [];
+      const start = clampToDuration(range.start);
+      const end = clampToDuration(range.end);
+      return end > start ? [{ draft, range: { start, end } }] : [];
+    });
+    const ranges = drafts ? mergeApprovedProfanityRanges(
+      drafts.map(({ range }) => range), profanityReview.result?.usedSources.length === 1
+    ) : profanitySuggestions.value.map(({ start, end }) => ({
+      start: clampToDuration(start), end: clampToDuration(end)
+    })).filter(({ start, end }) => end > start);
+    const nextSegments = ranges.map(({ start, end }) => ({
+      id: createSegmentId(), type: 'mute' as const, start, end
     }));
+    if (!nextSegments.length) return;
 
     segments.value = sortSegments([...segments.value, ...nextSegments]);
-    selectedSegmentId.value = nextSegments[0]?.id ?? null;
-    clearProfanitySuggestions();
+    selectedSegmentId.value = nextSegments[0].id;
+    if (drafts) drafts.forEach(({ draft }) => { draft.applied = true; });
+    else clearProfanitySuggestions();
     statusMessage.value = `Applied ${nextSegments.length} profanity suggestion${
       nextSegments.length === 1 ? '' : 's'
     } as mute filters.`;
@@ -1455,7 +1555,8 @@ export function useAnnotatorState() {
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (isEditableTarget(event.target)) {
+    if (isEditableTarget(event.target) ||
+      (event.target instanceof HTMLElement && event.target.closest('[data-testid="profanity-modal"]'))) {
       return;
     }
 
@@ -1489,6 +1590,7 @@ export function useAnnotatorState() {
   }
 
   function cleanup() {
+    clearProfanitySuggestions();
     clearPreviewEffects();
     revokeVideoUrl();
   }
@@ -1512,7 +1614,6 @@ export function useAnnotatorState() {
     isOpeningVideo,
     openVideoProgressPercent,
     isSelectingOutputPath,
-    isSelectingSubtitlePath,
     isAnalyzingProfanity,
     isProcessing,
     analyzeProfanityProgressPercent,
@@ -1535,7 +1636,7 @@ export function useAnnotatorState() {
     svgImportMode,
     svgImportError,
     svgImportSuccessKey,
-    profanitySubtitlePath,
+    profanityReview,
     sortedSegments,
     segmentIssues,
     canAnalyzeProfanity,
@@ -1563,8 +1664,15 @@ export function useAnnotatorState() {
     openVideo,
     loadFilterFile,
     clearSvgImportError,
-    selectProfanitySubtitlePath,
-    clearProfanitySubtitlePath,
+    selectProfanityPath,
+    updateProfanityOptions,
+    loadProfanitySubtitleTracks,
+    selectProfanityDetection,
+    reviewProfanityDetection,
+    approveHighConfidenceProfanity,
+    editProfanityDetection,
+    startProfanityPreview,
+    stopProfanityPreview,
     analyzeProfanity,
     discardProfanitySuggestions,
     removeProfanitySuggestion,

@@ -1,4 +1,5 @@
 import badWords from './badwords.js';
+import { alignTokens } from './profanity-token-alignment.js';
 
 export type ProfanitySuggestionSource = 'embedded' | 'provided' | 'transcript';
 
@@ -9,6 +10,8 @@ export type ProfanityAnalysisPhase =
   | 'load-provided-transcript'
   | 'normalize-text'
   | 'detect-profanity'
+  | 'align-sources'
+  | 'reconcile-detections'
   | 'merge-detections'
   | 'done';
 
@@ -34,7 +37,86 @@ export interface ProfanityAnalysisProgressEvent {
   percent?: number;
 }
 
+export type SubtitleMode = 'auto' | 'external' | 'none';
+
+export interface ProfanityAnalysisOptions {
+  subtitlePath?: string;
+  transcriptPath?: string;
+  subtitleMode?: SubtitleMode;
+  subtitleStreamIndex?: number;
+  subtitleOffset?: number;
+  estimateMissingWords?: boolean;
+  wordPadding?: { before: number; after: number };
+}
+
+export interface TimedTranscriptWord extends TimedTextCue {
+  id: string;
+  probability: number | null;
+}
+
+export interface TimedTranscriptSegment extends TimedTextCue {
+  id: string;
+  words: TimedTranscriptWord[];
+}
+
+export type TimingMethod =
+  'transcript-word' | 'transcript-segment' | 'context-estimated' | 'subtitle-cue' | 'unresolved' | 'manual';
+export type DetectionAgreement = 'both' | 'transcript-only' | 'subtitle-only' | 'conflicting';
+export type DetectionConfidence = 'high' | 'medium' | 'low';
+export interface MuteRange { start: number; end: number }
+
+export interface ProfanityOccurrence extends MuteRange {
+  id: string;
+  matchedText: string;
+  canonicalTerms: string[];
+  source: ProfanitySuggestionSource;
+  timingMethod: TimingMethod;
+  context: string;
+  wordIds?: string[];
+  segmentId?: string;
+  cueId?: string;
+  tokenStart: number;
+  tokenEnd: number;
+  probability?: number | null;
+  hasUnknownProbability?: boolean;
+  ambiguousContext?: boolean;
+}
+
+export interface ReconciledDetection {
+  id: string;
+  evidence: ProfanityOccurrence[];
+  agreement: DetectionAgreement;
+  confidence: DetectionConfidence;
+  timingMethod: TimingMethod;
+  rawRange: MuteRange | null;
+  proposedRange: MuteRange | null;
+  needsReview: boolean;
+  reviewReasons: string[];
+  reviewStatus: 'pending' | 'approved' | 'rejected';
+  transcriptProbability?: number | null;
+  hasUnknownProbability?: boolean;
+  nearbyTranscript?: { before: string; match: string; after: string };
+}
+
+export interface SubtitleAlignment {
+  status: 'aligned' | 'manual' | 'uncertain' | 'suspect';
+  offset: number;
+  anchorCount: number;
+  message: string;
+}
+
+export interface EmbeddedSubtitleTrack {
+  index: number;
+  language?: string;
+  title?: string;
+  forced: boolean;
+}
+
 export interface ProfanityAnalysisResult {
+  detections?: ReconciledDetection[];
+  subtitleAlignment?: SubtitleAlignment;
+  subtitleTracks?: EmbeddedSubtitleTrack[];
+  transcriptDetails?: { fileName: string; model: string; audioStreamIndex: number; completedChunks: number; expectedChunks: number };
   suggestions: ProfanitySuggestion[];
   usedSources: ProfanitySuggestionSource[];
   subtitleCueCount: number;
@@ -158,7 +240,7 @@ const PROFANITY_NORMALIZATION_RULES = [
 export function normalizeProfanityText(text: string): string {
   return PROFANITY_NORMALIZATION_RULES.reduce(
     (value, rule) => value.replace(rule, ' '),
-    text.toLowerCase()
+    text.toLowerCase().replaceAll('’', "'")
   ).trim();
 }
 
@@ -170,6 +252,115 @@ function findProfanityMatches(normalized: string) {
       end: match.index + match[0].length
     }))
   );
+}
+
+export function profanityTokens(text: string) {
+  return Array.from(text.matchAll(/[a-z0-9]+(?:'[a-z0-9]+)*/g), (match) => ({
+    text: match[0], start: match.index, end: match.index + match[0].length
+  }));
+}
+
+function occurrenceSpans(text: string) {
+  const spans: { start: number; end: number; terms: string[] }[] = [];
+  const matches = findProfanityMatches(text).sort((a, b) => a.start - b.start || b.end - a.end);
+  for (const match of matches) {
+    const previous = spans.at(-1);
+    if (previous && match.start < previous.end) {
+      previous.end = Math.max(previous.end, match.end);
+      if (!previous.terms.includes(match.canonical)) previous.terms.push(match.canonical);
+    } else {
+      spans.push({ start: match.start, end: match.end, terms: [match.canonical] });
+    }
+  }
+  const tokens = profanityTokens(text);
+  return spans.map(({ start, end, terms }) => ({
+    start, end, canonicalTerms: terms.sort(),
+    matchedText: text.slice(start, end),
+    tokenStart: tokens.findIndex((token) => token.end > start),
+    tokenEnd: tokens.filter((token) => token.start < end).length
+  }));
+}
+
+export function detectSubtitleOccurrences(
+  cues: TimedTextCue[], source: 'embedded' | 'provided'
+): ProfanityOccurrence[] {
+  return cues.flatMap((cue, index) => occurrenceSpans(normalizeProfanityText(cue.text)).map((span) => ({
+    ...span,
+    id: `${source}-${index}-${span.tokenStart}`,
+    start: cue.start,
+    end: cue.end,
+    source,
+    cueId: String(index),
+    timingMethod: 'subtitle-cue',
+    context: cue.text
+  })));
+}
+
+export function detectTranscriptOccurrences(segments: TimedTranscriptSegment[]): ProfanityOccurrence[] {
+  return segments.flatMap((segment, segmentIndex) => {
+    const { text, wordIndexes } = normalizeTimedWords(segment);
+    const wordContext = text.trim();
+    const context = normalizeProfanityText(segment.text) || wordContext;
+    const matches = occurrenceSpans(text).flatMap((span): ProfanityOccurrence[] => {
+      const indexes = wordIndexes.slice(span.start, span.end).filter((index) => index >= 0);
+      if (!indexes.length) return [];
+      const words = segment.words.slice(indexes[0], indexes.at(-1)! + 1);
+      const known = words.flatMap((word) => word.probability === null ? [] : [word.probability]);
+      const start = Math.min(...words.map((word) => word.start));
+      const end = Math.max(...words.map((word) => word.end));
+      return [{
+        ...span, id: `transcript-${segmentIndex}-word-${span.tokenStart}`, source: 'transcript',
+        start, end, timingMethod: end > start ? 'transcript-word' : 'unresolved',
+        wordIds: words.map((word) => word.id), segmentId: segment.id, context: wordContext,
+        probability: known.length ? Math.min(...known) : null,
+        hasUnknownProbability: known.length !== words.length
+      }];
+    });
+
+    if (context === wordContext) return matches;
+    const segmentSpans = occurrenceSpans(context);
+    if (!segmentSpans.length) return matches;
+
+    // Positional alignment identifies which repeated occurrence has word timing.
+    // A count is only used for occurrences whose positions are still ambiguous.
+    const tokenKeys = (value: string) => profanityTokens(value).map(({ text: key }) => ({ key }));
+    const alignment = alignTokens(tokenKeys(context), tokenKeys(wordContext));
+    const represented = new Set<number>();
+    const consumed = new Set<string>();
+    const timedByPosition = new Map(matches.map((match) => [match.tokenStart, match]));
+    for (const span of segmentSpans) {
+      const mapped = alignment.unique.slice(span.tokenStart, span.tokenEnd);
+      const match = timedByPosition.get(mapped[0]);
+      if (match && match.tokenEnd - match.tokenStart === mapped.length &&
+        mapped.every((index, i) => index === mapped[0] + i)) {
+        represented.add(span.tokenStart);
+        consumed.add(match.id);
+      }
+    }
+    const remaining = new Map<string, number>();
+    const ambiguousTerms = new Set<string>();
+    for (const match of matches) {
+      if (consumed.has(match.id)) continue;
+      remaining.set(match.matchedText, (remaining.get(match.matchedText) ?? 0) + 1);
+      ambiguousTerms.add(match.matchedText);
+    }
+    for (const span of segmentSpans) {
+      if (represented.has(span.tokenStart)) continue;
+      const existing = remaining.get(span.matchedText) ?? 0;
+      if (existing > 0) {
+        remaining.set(span.matchedText, existing - 1);
+        continue;
+      }
+      matches.push({
+        ...span, id: `transcript-${segmentIndex}-segment-${span.tokenStart}`, source: 'transcript',
+        start: segment.start, end: segment.end,
+        timingMethod: segment.end > segment.start ? 'transcript-segment' : 'unresolved',
+        segmentId: segment.id, context, probability: null, hasUnknownProbability: true,
+        ambiguousContext: ambiguousTerms.has(span.matchedText)
+      });
+    }
+    return matches;
+  });
 }
 
 export function extractMatchedProfanityTerms(text: string): string[] {
@@ -236,6 +427,21 @@ export function buildProfanitySuggestions(
   });
 }
 
+export function timedTranscriptTokens(segment: TimedTranscriptSegment) {
+  const { text, wordIndexes } = normalizeTimedWords(segment);
+  return profanityTokens(text).flatMap((token) => {
+    const indexes = wordIndexes.slice(token.start, token.end).filter((index) => index >= 0);
+    if (!indexes.length) return [];
+    const words = segment.words.slice(indexes[0], indexes.at(-1)! + 1);
+    return [{
+      key: token.text,
+      wordIds: words.map((word) => word.id),
+      start: Math.min(...words.map((word) => word.start)),
+      end: Math.max(...words.map((word) => word.end))
+    }];
+  });
+}
+
 function normalizeTimedWords(segment: TimedTextCue & { words: TimedTextCue[] }) {
   let text = '';
   let wordIndexes: number[] = [];
@@ -247,7 +453,7 @@ function normalizeTimedWords(segment: TimedTextCue & { words: TimedTextCue[] }) 
       text += ' ';
       wordIndexes.push(-1);
     }
-    const lower = word.text.toLowerCase();
+    const lower = word.text.toLowerCase().replaceAll('’', "'");
     text += lower;
     for (let offset = 0; offset < lower.length; offset += 1) {
       wordIndexes.push(index);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FilterType } from '@cleanvid/shared';
-import type { ProfanitySuggestion, SkpDraftSegment } from '@cleanvid/shared';
+import type { SkpDraftSegment } from '@cleanvid/shared';
 import {
   computed,
   nextTick,
@@ -12,7 +12,6 @@ import {
 } from 'vue';
 import type { EditableSegment, SegmentIssue } from '../../../annotator-types';
 import MarkActionTiles from './MarkActionTiles.vue';
-import ProfanityAnalysisSection from './ProfanityAnalysisSection.vue';
 import ProcessingOptionsSection from './ProcessingOptionsSection.vue';
 import SegmentsSection from './SegmentsSection.vue';
 import SessionActions from './SessionActions.vue';
@@ -29,17 +28,11 @@ const emit = defineEmits<{
   changeMode: [value: AnnotatorUiMode];
   deleteSegment: [id: string];
   filtersSelected: [file: File];
-  analyzeProfanity: [];
-  applyProfanitySuggestions: [];
   applySkpImport: [];
-  clearProfanitySubtitlePath: [];
   discardSkpImport: [];
-  discardProfanitySuggestions: [];
-  removeProfanitySuggestion: [id: string];
   openVideo: [];
   clearSvgImportError: [];
   selectOutputPath: [];
-  selectProfanitySubtitlePath: [];
   processLinkedVideo: [];
   seek: [start: number];
   selectSegment: [id: string | null];
@@ -54,24 +47,16 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   activeType: FilterType;
-  canAnalyzeProfanity: boolean;
   canProcessVideo: boolean;
   canImportSvg: boolean;
   currentMode: AnnotatorUiMode;
   errorMessage: string;
   inputName: string;
-  isAnalyzingProfanity: boolean;
   isOpeningVideo: boolean;
   openVideoProgressPercent: number;
   isSelectingOutputPath: boolean;
-  isSelectingSubtitlePath: boolean;
   isProcessing: boolean;
   markerCountLabel: string;
-  profanitySuggestionCountLabel: string;
-  profanitySuggestions: ProfanitySuggestion[];
-  profanityWarnings: string[];
-  profanityAnalysisProgressPercent: number;
-  profanitySubtitlePath: string;
   skpDraftCountLabel: string;
   skpDraftSegments: SkpDraftSegment[];
   skpImportSummaryText: string;
@@ -105,6 +90,15 @@ const processButtonLabel = computed(() =>
 );
 const hasLoadedVideo = computed(() => props.inputName !== '');
 const isProfanityModalOpen = ref(false);
+const profanityLauncher = ref<HTMLButtonElement | null>(null);
+const profanityDialog = ref<HTMLElement | null>(null);
+
+watch(isProfanityModalOpen, async (open) => {
+  await nextTick();
+  if (open !== isProfanityModalOpen.value) return;
+  if (open) profanityDialog.value?.focus();
+  else profanityLauncher.value?.focus();
+});
 const isSkpImportModalOpen = ref(false);
 const isSvgImportModalOpen = ref(false);
 
@@ -175,16 +169,6 @@ function closeSvgImportModal() {
 
 function closeSkpImportModal() {
   isSkpImportModalOpen.value = false;
-}
-
-function handleProfanitySuggestionsApply() {
-  emit('applyProfanitySuggestions');
-  closeProfanityModal();
-}
-
-function handleProfanitySuggestionsDiscard() {
-  emit('discardProfanitySuggestions');
-  closeProfanityModal();
 }
 
 function handleSkpImportApply() {
@@ -354,6 +338,7 @@ onMounted(() => {
         <button
           type="button"
           class="subtle-action profanity-modal-launch-button"
+          ref="profanityLauncher"
           data-testid="open-profanity-modal-button"
           :disabled="!hasLoadedVideo || isOpeningVideo"
           @click="openProfanityModal"
@@ -425,30 +410,13 @@ onMounted(() => {
 
   <div
     v-if="isProfanityModalOpen"
-    class="modal-backdrop profanity-modal-backdrop"
+    class="modal-backdrop profanity-review-backdrop"
     data-testid="profanity-modal"
     @click.self="closeProfanityModal"
   >
-    <div class="panel profanity-modal-panel" role="dialog" aria-modal="true" aria-label="Auto-Detect Profanity">
-      <ProfanityAnalysisSection
-        :can-analyze-profanity="canAnalyzeProfanity"
-        :is-analyzing-profanity="isAnalyzingProfanity"
-        :is-selecting-subtitle-path="isSelectingSubtitlePath"
-        :progress-percent="profanityAnalysisProgressPercent"
-        :show-close-button="true"
-        :subtitle-path="profanitySubtitlePath"
-        :suggestion-count-label="profanitySuggestionCountLabel"
-        :suggestions="profanitySuggestions"
-        :warnings="profanityWarnings"
-        @analyze-profanity="emit('analyzeProfanity')"
-        @apply-profanity-suggestions="handleProfanitySuggestionsApply"
-        @clear-subtitle-path="emit('clearProfanitySubtitlePath')"
-        @close="closeProfanityModal"
-        @discard-profanity-suggestions="handleProfanitySuggestionsDiscard"
-        @remove-profanity-suggestion="emit('removeProfanitySuggestion', $event)"
-        @seek="emit('seek', $event)"
-        @select-subtitle-path="emit('selectProfanitySubtitlePath')"
-      />
+    <div ref="profanityDialog" class="panel profanity-modal-panel" role="dialog" aria-modal="true"
+      aria-label="Auto-Detect Profanity" tabindex="-1">
+      <slot name="profanity" :close="closeProfanityModal" />
     </div>
   </div>
 
