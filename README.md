@@ -138,25 +138,27 @@ SVG import:
 
 ## Profanity Analysis
 
-The Annotate tab includes an `Auto-Detect Profanity` button that opens the analysis modal. The flow creates draft `mute` suggestions instead of changing the timeline automatically.
+Open **Auto-Detect Profanity** from the Annotate tab. CleanVid analyzes English dialogue locally using either source or both together.
 
-How it works:
-- CleanVid uses embedded text subtitles unless you choose a file in the modal; clearing the selection goes back to embedded subtitles
-- `Choose Subtitle or Transcript` accepts `.srt`, `.vtt`, `.ass`, `.ssa`, and Media Transcription Studio v1 transcript `.json` files
-- subtitle detections keep their existing padding; transcript ranges use exact word timestamps (or segment timestamps when no word timing can be mapped) without padding
-- use a transcript for the original video and its first audio track, which is the track CleanVid exports; review any source mismatch, coverage, or zero-duration match warnings
+| Source | Selection |
+| --- | --- |
+| Embedded text subtitles | Choose **Embedded**. Use **Find embedded tracks** to select a specific track. Automatic selection skips known non-English and forced-only tracks. |
+| External subtitles | Choose an `.srt`, `.vtt`, `.ass`, or `.ssa` file. It takes precedence over embedded subtitles. Set subtitles to **None** for transcript-only analysis. |
+| Media Transcription Studio | Choose a v1 `.json` transcript for the original video and its first audio stream. Check filename, size, timing, and coverage warnings before approving detections. |
 
-Suggestion review behavior:
-- draft suggestions stay separate from your filter timeline until you click `Apply all as mute filters`
-- each suggestion shows its source: embedded subtitles, a provided subtitle, or a provided transcript
-- clicking a suggestion seeks playback to its start time
-- `Discard suggestions` clears the draft analysis results without changing your current filters
+With both sources loaded, CleanVid checks distinctive dialogue throughout the video for subtitle synchronization. The modal shows the estimated offset and the number of anchors. Enter an offset in **Timing options** to shift subtitle times in seconds, then run detection again. Positive values move subtitles later. Suspected drift or a different cut leaves subtitle detections unresolved until synchronization can be verified.
 
-Current analysis scope:
-- English-first profanity matching
-- image-based subtitle tracks are ignored in v1
-- if the video has no subtitles, provide a subtitle or transcript file; CleanVid does not fetch subtitles or generate transcripts automatically
-- the modal suggests searching `https://www.opensubtitles.com/` if you need to find a subtitle file yourself
+Review counts refer to detected occurrences. A reliable match in both sources uses the transcript word interval. If CleanVid finds the word only in the subtitles, nearby unambiguous transcript words may suggest a reviewable interval. Otherwise, a subtitle detection may cover the entire cue. Segment timing, estimates, conflicts, low recognition probability, and source warnings require review. The recognition probability comes from MTS and may be unknown. Both sources can miss the same word.
+
+Select a detection to seek one second before it. Open **Source evidence** to see the matching dialogue and use **Play original** or **Play muted** to compare. You can loop the excerpt, enter start and end times, nudge either endpoint by 100 ms, and save the edited interval. Approve or reject detections individually, or use **Approve eligible high confidence**. Unresolved items need a valid range before approval.
+
+Transcript word and segment ranges have zero default padding. In a dual-source run, word padding is configurable, contextual estimates add 150 ms on either side, and subtitle cues add 150 ms before and 250 ms after. Timing shown in the list includes that padding. Applying approved detections merges overlapping intervals and appends ordinary mute filters. Discarding the draft leaves the timeline intact.
+
+Image subtitles are unsupported. Supply a text subtitle file or an existing MTS transcript when the video lacks usable embedded subtitles. CleanVid does not fetch subtitles or run speech recognition. Both file selectors use Windows-native dialogs in the current build.
+
+### Reconciliation benchmark
+
+A synthetic two-hour transcript with 20,000 words, 2,000 cues, and 1,000 corroborated detections took 0.87–0.92 seconds and used 75–78 MiB peak process RSS over three fresh Node 24 processes on an AMD EPYC 9V74 Linux host. Doubling the fixture to 40,000 words took 2.08 seconds and used 129 MiB peak RSS. These runs cover detection, dialogue alignment, and reconciliation with preloaded data.
 
 ## Export From The Annotator
 

@@ -2,6 +2,7 @@
 import type { FilterType } from '@cleanvid/shared';
 import { onBeforeUnmount, onMounted, proxyRefs, ref, watch } from 'vue';
 import AnnotatorTopBar from './components/annotator/top-bar/AnnotatorTopBar.vue';
+import ProfanityAnalysisSection from './components/annotator/markers-panel/ProfanityAnalysisSection.vue';
 import MarkersPanel from './components/annotator/markers-panel/MarkersPanel.vue';
 import VideoStage from './components/annotator/video-stage/VideoStage.vue';
 import { useAnnotatorState } from './composables/useAnnotatorState';
@@ -101,24 +102,16 @@ onBeforeUnmount(() => {
     <main class="workspace" data-testid="workspace">
       <MarkersPanel
         :active-type="annotator.activeType"
-        :can-analyze-profanity="annotator.canAnalyzeProfanity"
         :can-import-svg="annotator.effectiveDuration > 0"
         :can-process-video="annotator.canProcessVideo"
         :current-mode="uiMode"
         :error-message="annotator.errorMessage"
         :input-name="annotator.inputName"
-        :is-analyzing-profanity="annotator.isAnalyzingProfanity"
         :is-opening-video="annotator.isOpeningVideo"
         :open-video-progress-percent="annotator.openVideoProgressPercent"
         :is-selecting-output-path="annotator.isSelectingOutputPath"
-        :is-selecting-subtitle-path="annotator.isSelectingSubtitlePath"
         :is-processing="annotator.isProcessing"
         :marker-count-label="annotator.markerCountLabel"
-        :profanity-analysis-progress-percent="annotator.analyzeProfanityProgressPercent"
-        :profanity-suggestion-count-label="annotator.profanitySuggestionCountLabel"
-        :profanity-subtitle-path="annotator.profanitySubtitlePath"
-        :profanity-suggestions="annotator.profanitySuggestions"
-        :profanity-warnings="annotator.profanityWarnings"
         :skp-draft-count-label="annotator.skpDraftCountLabel"
         :skp-draft-segments="annotator.skpDraftSegments"
         :skp-import-summary-text="annotator.skpImportSummaryText"
@@ -139,19 +132,13 @@ onBeforeUnmount(() => {
         :svg-import-text="annotator.svgImportText"
         :svg-import-type="annotator.svgImportType"
         @active-type-change="handleActiveTypeChange"
-        @analyze-profanity="annotator.analyzeProfanity"
-        @apply-profanity-suggestions="annotator.applyProfanitySuggestions"
         @apply-skp-import="annotator.applySkpImport"
         @clear-svg-import-error="annotator.clearSvgImportError"
-        @clear-profanity-subtitle-path="annotator.clearProfanitySubtitlePath"
         @change-mode="handleModeChange"
         @discard-skp-import="annotator.discardSkpImport"
-        @discard-profanity-suggestions="annotator.discardProfanitySuggestions"
         @filters-selected="annotator.loadFilterFile"
         @open-video="annotator.openVideo"
-        @remove-profanity-suggestion="annotator.removeProfanitySuggestion"
         @select-output-path="annotator.selectOutputPath"
-        @select-profanity-subtitle-path="annotator.selectProfanitySubtitlePath"
         @process-linked-video="annotator.processLinkedVideo"
         @submit-svg-import="annotator.importSvgFilters"
         @toggle-mark="annotator.toggleMark"
@@ -163,7 +150,37 @@ onBeforeUnmount(() => {
         @update-svg-import-text="annotator.updateSvgImportText"
         @update-svg-import-type="annotator.updateSvgImportType"
         @delete-segment="annotator.deleteSegment"
-      />
+      >
+        <template #profanity="{ close }">
+          <ProfanityAnalysisSection
+            :can-analyze-profanity="annotator.canAnalyzeProfanity"
+            :is-analyzing-profanity="annotator.isAnalyzingProfanity"
+            :progress-percent="annotator.analyzeProfanityProgressPercent"
+            :review="annotator.profanityReview"
+            :duration="annotator.effectiveDuration"
+            :suggestion-count-label="annotator.profanitySuggestionCountLabel"
+            :suggestions="annotator.profanitySuggestions"
+            :warnings="annotator.profanityWarnings"
+            :error-message="annotator.errorMessage"
+            :status-message="annotator.statusMessage"
+            @analyze-profanity="annotator.analyzeProfanity"
+            @apply-profanity-suggestions="annotator.applyProfanitySuggestions"
+            @close="close"
+            @discard-profanity-suggestions="annotator.discardProfanitySuggestions"
+            @remove-profanity-suggestion="annotator.removeProfanitySuggestion"
+            @seek="annotator.seekTo"
+            @pick="annotator.selectProfanityPath"
+            @options="annotator.updateProfanityOptions"
+            @load-tracks="annotator.loadProfanitySubtitleTracks"
+            @select-detection="annotator.selectProfanityDetection"
+            @review-detection="annotator.reviewProfanityDetection"
+            @approve-high-confidence="annotator.approveHighConfidenceProfanity"
+            @edit-detection="annotator.editProfanityDetection"
+            @start-preview="annotator.startProfanityPreview"
+            @stop-preview="annotator.stopProfanityPreview"
+          />
+        </template>
+      </MarkersPanel>
 
       <section class="stage-shell" data-testid="stage-shell">
         <VideoStage

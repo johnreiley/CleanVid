@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { TimedTextCue } from '@cleanvid/shared';
+import type { TimedTranscriptSegment } from '@cleanvid/shared';
 
 type ReadField<T> = (value: unknown, field: string) => T;
 
@@ -166,9 +166,12 @@ export function checkMtsTranscriptMedia(
   return warnings;
 }
 
-export function toTimedTranscriptSegments(transcript: MtsTranscript): Array<TimedTextCue & { words: TimedTextCue[] }> {
-  function toCue({ startMs, endMs, text }: { startMs: number; endMs: number; text: string }): TimedTextCue {
-    return { start: startMs / 1000, end: endMs / 1000, text };
+export function toTimedTranscriptSegments(transcript: MtsTranscript): TimedTranscriptSegment[] {
+  function toCue({ id, startMs, endMs, text }: { id: string; startMs: number; endMs: number; text: string }) {
+    return { id, start: startMs / 1000, end: endMs / 1000, text };
   }
-  return transcript.segments.map((segment) => ({ ...toCue(segment), words: segment.words.map(toCue) }));
+  return transcript.segments.map((segment) => ({
+    ...toCue(segment),
+    words: segment.words.map((word) => ({ ...toCue(word), probability: word.probability }))
+  }));
 }

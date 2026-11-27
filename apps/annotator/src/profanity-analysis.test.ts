@@ -15,7 +15,7 @@ function createDependencies(
   return {
     probeSubtitleStreams: async () => ({
       duration: 600,
-      streams: []
+      streams: [{ index: 2, codec_type: 'subtitle', codec_name: 'subrip', tags: { language: 'eng' } }]
     }),
     extractEmbeddedSubtitleCues: async () => null,
     loadProvidedSubtitleCues: async () => null,
@@ -227,6 +227,86 @@ describe('MTS transcript analysis', () => {
     expect(dependencies.loadProvidedSubtitleCues).not.toHaveBeenCalled();
   });
 
+  it('probes once, loads both independent paths and streams dual-source progress', async () => {
+    const lines = [
+      [1000, 'Quiet trains crossed the wooden bridge'], [6000, 'Fresh fruit filled the wicker basket'],
+      [12000, 'What the hell was that'], [17000, 'Purple orchids grew beside northern windows']
+    ] as const;
+    const segments = lines.map(([startMs, text], i) => ({
+      id: String(i), startMs, endMs: startMs + 2500, text,
+      words: text.split(' ').map((token, j) => word(`${i}-${j}`, startMs + j * 300, startMs + j * 300 + 200, token))
+    }));
+    const dependencies = jsonDependencies(transcriptFixture({ segments }));
+    const probe = vi.spyOn(dependencies, 'probeSubtitleStreams');
+    dependencies.loadProvidedSubtitleCues = vi.fn(async () => lines.map(([startMs, text]) =>
+      createCue(startMs / 1000 - 0.2, startMs / 1000 + 2, text)));
+    const phases: string[] = [];
+    const result = await analyzeProfanity({
+      inputPath: jsonRequest.inputPath, transcriptPath: jsonRequest.subtitlePath, subtitlePath: 'movie.srt',
+      onProgress: ({ phase }) => phases.push(phase)
+    }, dependencies);
+
+    expect(probe).toHaveBeenCalledTimes(1);
+    expect(dependencies.loadProvidedSubtitleCues).toHaveBeenCalledWith('movie.srt');
+    expect(dependencies.extractEmbeddedSubtitleCues).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      usedSources: ['provided', 'transcript'], suggestions: [],
+      detections: [{ agreement: 'both', proposedRange: { start: 12.6, end: 12.8 } }],
+      transcriptDetails: { model: 'test', audioStreamIndex: 3, completedChunks: 2, expectedChunks: 2 }
+    });
+    expect(phases).toEqual(['probe-media', 'load-provided-transcript', 'load-provided-subtitles', 'normalize-text',
+      'detect-profanity', 'align-sources', 'reconcile-detections', 'done']);
+  });
+
+  it('rejects an unusable external source and allows an explicit transcript-only retry', async () => {
+    const dependencies = jsonDependencies(transcriptFixture());
+    const request = { inputPath: jsonRequest.inputPath, transcriptPath: jsonRequest.subtitlePath, subtitlePath: 'bad.srt' };
+    await expect(analyzeProfanity(request, dependencies)).rejects.toThrow('no readable cues');
+    await expect(analyzeProfanity({ ...request, subtitleMode: 'none' }, dependencies)).resolves.toMatchObject({
+      usedSources: ['transcript']
+    });
+    await expect(analyzeProfanity({ inputPath: request.inputPath, subtitleMode: 'none' }, dependencies))
+      .rejects.toThrow('Choose an MTS transcript or enable subtitles');
+  });
+
+  it('skips known non-English, forced, and bitmap tracks in auto mode and supports manual selection', async () => {
+    const streams = [
+      { index: 3, codec_type: 'audio' },
+      { index: 4, codec_type: 'subtitle', codec_name: 'subrip', tags: { language: 'fre' } },
+      { index: 5, codec_type: 'subtitle', codec_name: 'subrip', tags: { language: 'eng' }, disposition: { forced: 1 } },
+      { index: 6, codec_type: 'subtitle', codec_name: 'hdmv_pgs_subtitle', tags: { language: 'eng' } }
+    ];
+    const dependencies = jsonDependencies(transcriptFixture());
+    dependencies.probeSubtitleStreams = async () => ({ duration: 20, streams });
+    dependencies.extractEmbeddedSubtitleCues = vi.fn(async () => [createCue(12, 13, 'Damn')]);
+    const request = { inputPath: jsonRequest.inputPath, transcriptPath: jsonRequest.subtitlePath };
+    const automatic = await analyzeProfanity(request, dependencies);
+    expect(dependencies.extractEmbeddedSubtitleCues).not.toHaveBeenCalled();
+    expect(automatic).toMatchObject({ usedSources: ['transcript'], subtitleTracks: [{ index: 4 }, { index: 5, forced: true }] });
+    await expect(analyzeProfanity({ ...request, subtitleStreamIndex: 5 }, dependencies)).resolves.toMatchObject({
+      usedSources: ['embedded', 'transcript']
+    });
+    expect(dependencies.extractEmbeddedSubtitleCues).toHaveBeenCalledWith(request.inputPath, [streams[2]]);
+    await expect(analyzeProfanity({ ...request, subtitleStreamIndex: 6 }, dependencies)).rejects.toThrow('track is unavailable');
+  });
+
+  it('honors an explicit auto mode on a legacy JSON path and rejects MTS timings past media bounds', async () => {
+    const transcript = transcriptFixture({ segments: [
+      { id: 'invalid', startMs: 22000, endMs: 22500, text: 'Damn', words: [] }
+    ] });
+    await expect(analyzeProfanity({ ...jsonRequest, subtitleMode: 'auto' }, jsonDependencies(transcript)))
+      .rejects.toThrow('timestamps beyond the end of the video');
+
+    const dependencies = jsonDependencies(transcriptFixture());
+    dependencies.probeSubtitleStreams = async () => ({ duration: 20, streams: [
+      { index: 3, codec_type: 'audio' },
+      { index: 5, codec_type: 'subtitle', codec_name: 'subrip', tags: { language: 'eng' } }
+    ] });
+    dependencies.extractEmbeddedSubtitleCues = vi.fn(async () => [createCue(12, 13, 'Damn')]);
+    await expect(analyzeProfanity({ ...jsonRequest, subtitleMode: 'auto' }, dependencies))
+      .resolves.toMatchObject({ usedSources: ['embedded', 'transcript'] });
+  });
+
   it('validates the v1 shape, reports field paths, and handles a UTF-8 BOM', () => {
     const valid = transcriptFixture({ segments: [{ id: 's', startMs: 0, endMs: 50, text: 'Hi', words: [word('w', 0, 50, 'Hi')] }] });
     expect(parseMtsTranscript(`\uFEFF${JSON.stringify(valid)}`)).toEqual(valid);
@@ -244,7 +324,8 @@ describe('MTS transcript analysis', () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), 'cleanvid-mts-'));
     try {
       const inputPath = path.join(directory, 'movie.mkv');
-      const subtitlePath = path.join(directory, 'transcript.json');
+      const transcriptPath = path.join(directory, 'transcript.json');
+      const subtitlePath = path.join(directory, 'movie.srt');
       const previewPath = path.join(directory, 'preview.mp4');
       const filtersPath = path.join(directory, 'filters.json');
       const outputPath = path.join(directory, 'cleaned.mp4');
@@ -269,17 +350,31 @@ describe('MTS transcript analysis', () => {
           ...transcriptFixture().source, fileName: 'movie.mkv', durationMs: Math.round(duration * 1000),
           sizeBytes: Number(media.size), audioStreamIndex: 1, channels: 1
         },
-        segments: [{ id: 's', startMs: 1000, endMs: 2000, text: 'Damn!', words: [word('w', 1250, 1750, ' Damn!')] }]
+        segments: [{
+          id: 's', startMs: 900, endMs: 2250, text: 'Oh damn there it goes',
+          words: [
+            word('w1', 900, 1100, 'Oh'), word('w2', 1250, 1750, 'damn'), word('w3', 1800, 1950, 'there'),
+            word('w4', 2000, 2100, 'it'), word('w5', 2125, 2250, 'goes')
+          ]
+        }]
       });
-      await writeFile(subtitlePath, JSON.stringify(transcript));
-      const result = await analyzeProfanity({ inputPath, subtitlePath });
-      expect(result.suggestions).toMatchObject([{ start: 1.25, end: 1.75 }]);
+      await writeFile(transcriptPath, JSON.stringify(transcript));
+      const legacy = await analyzeProfanity({ inputPath, subtitlePath: transcriptPath });
+      expect(legacy.suggestions).toMatchObject([{ start: 1.25, end: 1.75 }]);
+
+      await writeFile(subtitlePath, 'invalid SRT block\nwithout a timestamp');
+      await expect(analyzeProfanity({ inputPath, subtitlePath, transcriptPath })).rejects.toThrow('no readable cues');
+      await writeFile(subtitlePath, '1\n00:00:00,850 --> 00:00:02,300\nOh damn there it goes\n');
+      const result = await analyzeProfanity({ inputPath, subtitlePath, transcriptPath, subtitleOffset: 0 });
+      expect(result.detections).toMatchObject([{
+        agreement: 'both', proposedRange: { start: 1.25, end: 1.75 }
+      }]);
 
       await remuxPreview(inputPath, previewPath);
       expect(Number((await probeFormat(previewPath)).start_time)).toBeCloseTo(0, 1);
       await writeFile(filtersPath, JSON.stringify({
         version: 1, movie: { duration },
-        filters: result.suggestions.map(({ id, start, end }) => ({ id, type: 'mute', start, end }))
+        filters: result.detections!.map(({ id, proposedRange }) => ({ id, type: 'mute', ...proposedRange! }))
       }));
       await processMedia({ inputPath, filtersPath, outputPath });
       const { stderr } = await runCommand('ffmpeg', [

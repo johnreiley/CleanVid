@@ -1261,3 +1261,64 @@
 }
 
 /* #endregion Playback Transport */
+
+/* Profanity review stays to the left so the video remains visible during preview. */
+.profanity-review-backdrop {
+  place-items: center start;
+  background: linear-gradient(90deg, var(--surface-backdrop), transparent 75%);
+}
+
+.profanity-review-backdrop .profanity-modal-panel {
+  width: min(36rem, 100%);
+  overflow: auto;
+}
+
+.profanity-sources {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-lg);
+}
+
+.profanity-field,
+.profanity-review-summary,
+.profanity-review-editor,
+.profanity-source-summary {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.profanity-source-summary,
+.profanity-path {
+  overflow-wrap: anywhere;
+}
+
+.profanity-review-summary span {
+  display: inline-block;
+  margin-inline-end: 0.75rem;
+}
+
+.profanity-suggestion-content.profanity-detection {
+  width: 100%;
+  padding: 0.6rem;
+}
+
+.profanity-detection[aria-pressed='true'] {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+.profanity-time-input input {
+  width: 7rem;
+}
+
+.profanity-review-editor p {
+  white-space: pre-wrap;
+}
+
+[data-testid='profanity-detection-list'] {
+  max-height: 17rem;
+  overflow-y: auto;
+}

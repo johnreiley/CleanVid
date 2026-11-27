@@ -218,12 +218,12 @@ describe('preview preparation', () => {
     const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
 
     await expect(
-      preparePreviewPlayback('C:\\Movies\\movie.mp4', undefined, (event) => {
+      preparePreviewPlayback(path.resolve('Movies', 'movie.mp4'), undefined, (event) => {
         progressEvents.push(event);
       })
     ).resolves.toEqual({
-      inputPath: 'C:\\Movies\\movie.mp4',
-      playbackPath: 'C:\\Movies\\movie.mp4',
+      inputPath: path.resolve('Movies', 'movie.mp4'),
+      playbackPath: path.resolve('Movies', 'movie.mp4'),
       playbackSource: 'original',
       name: 'movie.mp4'
     });
@@ -251,8 +251,8 @@ describe('preview preparation', () => {
     const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
 
     await expect(
-      preparePreviewPlayback('C:\\Movies\\movie.mkv', {
-        ensureCacheDirectory: async () => 'C:\\Cache',
+      preparePreviewPlayback(path.resolve('Movies', 'movie.mkv'), {
+        ensureCacheDirectory: async () => path.resolve('Cache'),
         getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
         getLogicalCpuCount: () => 8,
         probeStreams,
@@ -270,7 +270,7 @@ describe('preview preparation', () => {
         progressEvents.push(event);
       })
     ).resolves.toMatchObject({
-      inputPath: 'C:\\Movies\\movie.mkv',
+      inputPath: path.resolve('Movies', 'movie.mkv'),
       playbackSource: 'preview'
     });
 
@@ -308,8 +308,8 @@ describe('preview preparation', () => {
     ];
     const encodePreviewImpl = vi.fn(async () => undefined);
 
-    await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
-      ensureCacheDirectory: async () => 'C:\\Cache',
+    await preparePreviewPlayback(path.resolve('Movies', 'movie.mkv'), {
+      ensureCacheDirectory: async () => path.resolve('Cache'),
       getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
       getLogicalCpuCount: () => 8,
       probeStreams: async () => ({
@@ -328,7 +328,7 @@ describe('preview preparation', () => {
 
     expect(encodePreviewImpl).toHaveBeenCalledTimes(1);
     expect(encodePreviewImpl).toHaveBeenCalledWith(
-      'C:\\Movies\\movie.mkv',
+      path.resolve('Movies', 'movie.mkv'),
       expect.stringContaining('.tmp.mp4'),
       encodePlans,
       expect.objectContaining({
@@ -341,8 +341,8 @@ describe('preview preparation', () => {
   it('maps remux ffmpeg progress into import progress updates', async () => {
     const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
 
-    await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
-      ensureCacheDirectory: async () => 'C:\\Cache',
+    await preparePreviewPlayback(path.resolve('Movies', 'movie.mkv'), {
+      ensureCacheDirectory: async () => path.resolve('Cache'),
       getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
       getLogicalCpuCount: () => 8,
       probeStreams: async () => ({
@@ -381,8 +381,8 @@ describe('preview preparation', () => {
   it('maps encode ffmpeg progress into import progress updates', async () => {
     const progressEvents: Array<{ phase: string; message: string; percent?: number }> = [];
 
-    await preparePreviewPlayback('C:\\Movies\\movie.mkv', {
-      ensureCacheDirectory: async () => 'C:\\Cache',
+    await preparePreviewPlayback(path.resolve('Movies', 'movie.mkv'), {
+      ensureCacheDirectory: async () => path.resolve('Cache'),
       getInputStats: async () => ({ size: 100, mtimeMs: 2_000 }),
       getLogicalCpuCount: () => 8,
       probeStreams: async () => ({

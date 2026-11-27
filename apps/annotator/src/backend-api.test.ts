@@ -75,7 +75,7 @@ describe('annotator vite api helpers', () => {
 
     await expect(
       handleOpenVideoRequest({
-        selectFilePath: async () => 'C:\\Movies\\movie.mp4',
+        selectFilePath: async () => path.resolve('Movies', 'movie.mp4'),
         preparePlaybackFile: async (_inputPath, onProgress) => {
           onProgress?.({
             phase: 'check-format',
@@ -84,8 +84,8 @@ describe('annotator vite api helpers', () => {
           });
 
           return {
-            inputPath: 'C:\\Movies\\movie.mp4',
-            playbackPath: 'C:\\Movies\\movie.mp4',
+            inputPath: path.resolve('Movies', 'movie.mp4'),
+            playbackPath: path.resolve('Movies', 'movie.mp4'),
             playbackSource: 'original',
             name: 'movie.mp4'
           };
@@ -96,14 +96,14 @@ describe('annotator vite api helpers', () => {
       })
     ).resolves.toEqual({
       cancelled: false,
-      inputPath: 'C:\\Movies\\movie.mp4',
+      inputPath: path.resolve('Movies', 'movie.mp4'),
       name: 'movie.mp4',
-      outputPath: 'C:\\Movies\\movie.cleaned.mp4',
+      outputPath: path.resolve('Movies', 'movie.cleaned.mp4'),
       playbackUrl: '/api/media/token-1',
       playbackSource: 'original'
     });
 
-    expect(registerPlaybackPath).toHaveBeenCalledWith('C:\\Movies\\movie.mp4');
+    expect(registerPlaybackPath).toHaveBeenCalledWith(path.resolve('Movies', 'movie.mp4'));
     expect(progressEvents).toEqual([
       {
         phase: 'select-file',
@@ -131,10 +131,10 @@ describe('annotator vite api helpers', () => {
   it('returns preview playback metadata when preprocessing is needed', async () => {
     await expect(
       handleOpenVideoRequest({
-        selectFilePath: async () => 'C:\\Movies\\movie.mkv',
+        selectFilePath: async () => path.resolve('Movies', 'movie.mkv'),
         preparePlaybackFile: async () => ({
-          inputPath: 'C:\\Movies\\movie.mkv',
-          playbackPath: 'C:\\Temp\\preview.mp4',
+          inputPath: path.resolve('Movies', 'movie.mkv'),
+          playbackPath: path.resolve('Temp', 'preview.mp4'),
           playbackSource: 'preview',
           name: 'movie.mkv'
         }),
@@ -142,9 +142,9 @@ describe('annotator vite api helpers', () => {
       })
     ).resolves.toEqual({
       cancelled: false,
-      inputPath: 'C:\\Movies\\movie.mkv',
+      inputPath: path.resolve('Movies', 'movie.mkv'),
       name: 'movie.mkv',
-      outputPath: 'C:\\Movies\\movie.cleaned.mkv',
+      outputPath: path.resolve('Movies', 'movie.cleaned.mkv'),
       playbackUrl: '/api/media/token-preview',
       playbackSource: 'preview'
     });
@@ -154,24 +154,24 @@ describe('annotator vite api helpers', () => {
     await expect(
       handleSelectOutputPathRequest(
         {
-          outputPath: 'C:\\Exports\\movie.cleaned.mp4'
+          outputPath: path.resolve('Exports', 'movie.cleaned.mp4')
         },
         {
           selectOutputPath: async (suggestedPath) => {
-            expect(suggestedPath).toBe('C:\\Exports\\movie.cleaned.mp4');
-            return 'C:\\Exports\\custom-output.mp4';
+            expect(suggestedPath).toBe(path.resolve('Exports', 'movie.cleaned.mp4'));
+            return path.resolve('Exports', 'custom-output.mp4');
           }
         }
       )
     ).resolves.toEqual({
       cancelled: false,
-      outputPath: 'C:\\Exports\\custom-output.mp4'
+      outputPath: path.resolve('Exports', 'custom-output.mp4')
     });
 
     await expect(
       handleSelectOutputPathRequest(
         {
-          outputPath: 'C:\\Exports\\movie.cleaned.mp4'
+          outputPath: path.resolve('Exports', 'movie.cleaned.mp4')
         },
         {
           selectOutputPath: async () => null
@@ -183,11 +183,11 @@ describe('annotator vite api helpers', () => {
   it('returns the selected subtitle path shape and supports cancellation', async () => {
     await expect(
       handleSelectSubtitlePathRequest({
-        selectSubtitlePath: async () => 'C:\\Subtitles\\movie.srt'
+        selectSubtitlePath: async () => path.resolve('Subtitles', 'movie.srt')
       })
     ).resolves.toEqual({
       cancelled: false,
-      subtitlePath: 'C:\\Subtitles\\movie.srt'
+      subtitlePath: path.resolve('Subtitles', 'movie.srt')
     });
 
     await expect(
@@ -227,9 +227,9 @@ describe('annotator vite api helpers', () => {
     await expect(
       handleAnalyzeProfanityRequest(
         {
-          inputPath: 'C:\\Movies\\movie.mp4',
+          inputPath: path.resolve('Movies', 'movie.mp4'),
           movieTitle: 'movie',
-          subtitlePath: 'C:\\Subtitles\\movie.srt'
+          subtitlePath: path.resolve('Subtitles', 'movie.srt')
         },
         {
           ensureInputExists: async () => undefined,
@@ -258,9 +258,9 @@ describe('annotator vite api helpers', () => {
 
     expect(analyzeProfanityImpl).toHaveBeenCalledWith(
       expect.objectContaining({
-        inputPath: 'C:\\Movies\\movie.mp4',
+        inputPath: path.resolve('Movies', 'movie.mp4'),
         movieTitle: 'movie',
-        subtitlePath: 'C:\\Subtitles\\movie.srt'
+        subtitlePath: path.resolve('Subtitles', 'movie.srt')
       })
     );
     expect(progressEvents).toEqual([
@@ -272,9 +272,36 @@ describe('annotator vite api helpers', () => {
     ]);
   });
 
+  it('validates the independent analysis inputs and skips an inactive subtitle path', async () => {
+    const ensureInputExists = vi.fn(async () => undefined);
+    const analyzeProfanityImpl = vi.fn(async (): Promise<ProfanityAnalysisResult> => ({
+      suggestions: [], usedSources: ['transcript'], subtitleCueCount: 0, message: 'Done'
+    }));
+    const dependencies = { ensureInputExists, analyzeProfanityImpl };
+    const options = {
+      inputPath: path.resolve('Movies', 'movie.mp4'),
+      subtitlePath: path.resolve('Subtitles', 'old.srt'),
+      subtitleMode: 'none',
+      transcriptPath: path.resolve('Transcripts', 'movie.json'),
+      subtitleOffset: -1.25,
+      estimateMissingWords: false,
+      wordPadding: { before: 0, after: 0.15 }
+    };
+    await handleAnalyzeProfanityRequest(options, dependencies);
+    expect(ensureInputExists.mock.calls).toEqual([[options.inputPath], [options.transcriptPath]]);
+    expect(analyzeProfanityImpl).toHaveBeenCalledWith(expect.objectContaining(options));
+
+    for (const [field, value] of [
+      ['transcriptPath', 1], ['subtitleMode', 'guess'], ['subtitleStreamIndex', -1],
+      ['subtitleOffset', '0'], ['estimateMissingWords', 'false'], ['wordPadding', { before: -0.1, after: 0 }]
+    ]) {
+      await expect(handleAnalyzeProfanityRequest({ ...options, [field as string]: value }, dependencies)).rejects.toThrow(String(field));
+    }
+  });
+
   it('derives the default cleaned output path beside the input file', () => {
-    expect(deriveDefaultOutputPath('C:\\Movies\\movie.mp4')).toBe('C:\\Movies\\movie.cleaned.mp4');
-    expect(deriveDefaultOutputPath('C:\\Movies\\movie')).toBe('C:\\Movies\\movie.cleaned');
+    expect(deriveDefaultOutputPath(path.resolve('Movies', 'movie.mp4'))).toBe(path.resolve('Movies', 'movie.cleaned.mp4'));
+    expect(deriveDefaultOutputPath(path.resolve('Movies', 'movie'))).toBe(path.resolve('Movies', 'movie.cleaned'));
   });
 
   it('rejects missing input paths and invalid filter payloads', async () => {
@@ -299,7 +326,7 @@ describe('annotator vite api helpers', () => {
     await expect(
       handleProcessRequest(
         {
-          inputPath: 'C:\\Movies\\movie.mp4',
+          inputPath: path.resolve('Movies', 'movie.mp4'),
           filters: [{ id: '', type: 'skip', start: 1, end: 2 }]
         },
         {
@@ -321,17 +348,17 @@ describe('annotator vite api helpers', () => {
     const createTempFilterFile = vi.fn(async (content: string) => {
       expect(content).toContain('"type": "skip"');
       return {
-        filtersPath: 'C:\\Temp\\filters.json',
+        filtersPath: path.resolve('Temp', 'filters.json'),
         cleanup
       };
     });
     const processMediaImpl = vi.fn(async () => undefined);
-    const writeExportedFilterFile = vi.fn(async () => 'C:\\Movies\\movie.cleaned.filters.json');
+    const writeExportedFilterFile = vi.fn(async () => path.resolve('Movies', 'movie.cleaned.filters.json'));
 
     await expect(
       handleProcessRequest(
         {
-          inputPath: 'C:\\Movies\\movie.mkv',
+          inputPath: path.resolve('Movies', 'movie.mkv'),
           filters: [{ id: 'seg-1', type: 'skip', start: 10, end: 20 }]
         },
         {
@@ -342,19 +369,19 @@ describe('annotator vite api helpers', () => {
         }
       )
     ).resolves.toEqual({
-      outputPath: 'C:\\Movies\\movie.cleaned.mkv',
-      filtersPath: 'C:\\Movies\\movie.cleaned.filters.json',
-      message: 'Processed video to C:\\Movies\\movie.cleaned.mkv.'
+      outputPath: path.resolve('Movies', 'movie.cleaned.mkv'),
+      filtersPath: path.resolve('Movies', 'movie.cleaned.filters.json'),
+      message: `Processed video to ${path.resolve('Movies', 'movie.cleaned.mkv')}.`
     });
 
-    expect(ensureInputExists).toHaveBeenCalledWith('C:\\Movies\\movie.mkv');
+    expect(ensureInputExists).toHaveBeenCalledWith(path.resolve('Movies', 'movie.mkv'));
     expect(processMediaImpl).toHaveBeenCalledWith({
-      inputPath: 'C:\\Movies\\movie.mkv',
-      filtersPath: 'C:\\Temp\\filters.json',
-      outputPath: 'C:\\Movies\\movie.cleaned.mkv'
+      inputPath: path.resolve('Movies', 'movie.mkv'),
+      filtersPath: path.resolve('Temp', 'filters.json'),
+      outputPath: path.resolve('Movies', 'movie.cleaned.mkv')
     });
     expect(writeExportedFilterFile).toHaveBeenCalledWith(
-      'C:\\Movies\\movie.cleaned.mkv',
+      path.resolve('Movies', 'movie.cleaned.mkv'),
       expect.stringContaining('"type": "skip"')
     );
     expect(cleanup).toHaveBeenCalledTimes(1);
@@ -365,7 +392,7 @@ describe('annotator vite api helpers', () => {
     await expect(
       handleProcessRequest(
         {
-          inputPath: 'C:\\Movies\\movie.mkv',
+          inputPath: path.resolve('Movies', 'movie.mkv'),
           filters: [{ id: 'seg-1', type: 'skip', start: 10, end: 20 }]
         },
         {
@@ -384,11 +411,11 @@ describe('annotator vite api helpers', () => {
   });
 
   it('derives the exported filters path beside the processed video', () => {
-    expect(deriveExportedFiltersPath('C:\\Movies\\movie.cleaned.mp4')).toBe(
-      'C:\\Movies\\movie.cleaned.filters.json'
+    expect(deriveExportedFiltersPath(path.resolve('Movies', 'movie.cleaned.mp4'))).toBe(
+      path.resolve('Movies', 'movie.cleaned.filters.json')
     );
-    expect(deriveExportedFiltersPath('C:\\Exports\\movie.cleaned')).toBe(
-      'C:\\Exports\\movie.cleaned.filters.json'
+    expect(deriveExportedFiltersPath(path.resolve('Exports', 'movie.cleaned'))).toBe(
+      path.resolve('Exports', 'movie.cleaned.filters.json')
     );
   });
 
