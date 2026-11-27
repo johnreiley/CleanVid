@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {
   buildProfanitySuggestions,
+  buildTranscriptProfanitySuggestions,
   mergeProfanitySuggestions,
   type ProfanityAnalysisProgressEvent,
   type ProfanityAnalysisResult,
@@ -10,6 +11,7 @@ import {
   type TimedTextCue
 } from '@cleanvid/shared';
 import { runCommand } from '../../cli/src/ffmpeg.js';
+import { checkMtsTranscriptMedia, parseMtsTranscript, toTimedTranscriptSegments } from './mts-transcript.js';
 
 interface SubtitleStreamInfo {
   index: number;
@@ -25,6 +27,7 @@ interface ProbeResponse {
   streams?: SubtitleStreamInfo[];
   format?: {
     duration?: string;
+    size?: string;
   };
 }
 
@@ -36,9 +39,10 @@ export interface AnalyzeProfanityRequest {
 }
 
 export interface AnalyzeProfanityDependencies {
-  probeSubtitleStreams: (inputPath: string) => Promise<{ duration: number; streams: SubtitleStreamInfo[] }>;
+  probeSubtitleStreams: (inputPath: string) => Promise<{ duration: number; streams: SubtitleStreamInfo[]; sizeBytes?: number }>;
   extractEmbeddedSubtitleCues: (inputPath: string, streams: SubtitleStreamInfo[]) => Promise<TimedTextCue[] | null>;
   loadProvidedSubtitleCues: (subtitlePath: string) => Promise<TimedTextCue[] | null>;
+  readTranscriptFile: (transcriptPath: string) => Promise<string>;
 }
 
 const TEXT_SUBTITLE_CODECS = new Set(['ass', 'mov_text', 'srt', 'ssa', 'subrip', 'text', 'webvtt']);
@@ -46,6 +50,7 @@ const DEFAULT_PROGRESS_PERCENTS: Record<ProfanityAnalysisProgressEvent['phase'],
   'probe-media': 5,
   'extract-embedded-subtitles': 20,
   'load-provided-subtitles': 38,
+  'load-provided-transcript': 38,
   'normalize-text': 65,
   'detect-profanity': 82,
   'merge-detections': 96,
@@ -236,7 +241,7 @@ function pickPreferredSubtitleStream(streams: SubtitleStreamInfo[]): SubtitleStr
   );
 }
 
-async function probeSubtitleStreams(inputPath: string): Promise<{ duration: number; streams: SubtitleStreamInfo[] }> {
+async function probeSubtitleStreams(inputPath: string) {
   const { stdout } = await runCommand('ffprobe', [
     '-v',
     'error',
@@ -248,6 +253,7 @@ async function probeSubtitleStreams(inputPath: string): Promise<{ duration: numb
   ]);
   const parsed = JSON.parse(stdout) as ProbeResponse;
   const duration = Number(parsed.format?.duration);
+  const size = Number(parsed.format?.size);
 
   if (!Number.isFinite(duration) || duration <= 0) {
     throw new Error('Unable to determine media duration with ffprobe.');
@@ -255,7 +261,8 @@ async function probeSubtitleStreams(inputPath: string): Promise<{ duration: numb
 
   return {
     duration,
-    streams: parsed.streams ?? []
+    streams: parsed.streams ?? [],
+    sizeBytes: Number.isSafeInteger(size) && size > 0 ? size : undefined
   };
 }
 
@@ -302,12 +309,57 @@ function getDefaultAnalyzeProfanityDependencies(): AnalyzeProfanityDependencies 
   return {
     probeSubtitleStreams,
     extractEmbeddedSubtitleCues,
-    loadProvidedSubtitleCues
+    loadProvidedSubtitleCues,
+    readTranscriptFile: (transcriptPath) => readFile(transcriptPath, 'utf8')
   };
 }
 
-function uniqueSources(values: ProfanitySuggestionSource[]): ProfanitySuggestionSource[] {
-  return Array.from(new Set(values));
+async function analyzeMtsTranscript(
+  transcriptPath: string,
+  request: AnalyzeProfanityRequest,
+  media: Awaited<ReturnType<AnalyzeProfanityDependencies['probeSubtitleStreams']>>,
+  readTranscriptFile: AnalyzeProfanityDependencies['readTranscriptFile']
+): Promise<ProfanityAnalysisResult> {
+  emitProgress(request.onProgress, {
+    phase: 'load-provided-transcript',
+    message: 'Loading the provided MTS transcript...'
+  });
+  const transcript = parseMtsTranscript(await readTranscriptFile(transcriptPath));
+  const warnings = checkMtsTranscriptMedia(transcript, {
+    inputPath: request.inputPath,
+    duration: media.duration,
+    sizeBytes: media.sizeBytes,
+    firstAudioStreamIndex: media.streams.find((stream) => stream.codec_type === 'audio')?.index
+  });
+
+  emitProgress(request.onProgress, { phase: 'normalize-text', message: 'Preparing transcript text and word timestamps...' });
+  const segments = toTimedTranscriptSegments(transcript);
+  emitProgress(request.onProgress, { phase: 'detect-profanity', message: 'Detecting profanity in the transcript...' });
+  const detected = buildTranscriptProfanitySuggestions(segments);
+  emitProgress(request.onProgress, { phase: 'merge-detections', message: 'Merging overlapping draft mute ranges...' });
+  const suggestions = mergeProfanitySuggestions(detected.suggestions, media.duration);
+  const hasSpeech = segments.some((segment) => segment.text.trim() || segment.words.some((word) => word.text.trim()));
+  const message = suggestions.length > 0
+    ? draftSuggestionMessage(suggestions.length)
+    : !hasSpeech
+      ? 'No speech was transcribed.'
+      : detected.warnings.length || detected.suggestions.length
+        ? 'No draft mute ranges could be created. Review the transcript warnings.'
+        : 'No profanity matches were detected in the transcript.';
+  emitProgress(request.onProgress, { phase: 'done', message });
+
+  return {
+    suggestions,
+    usedSources: ['transcript'],
+    subtitleCueCount: 0,
+    transcriptSegmentCount: segments.length,
+    warnings: [...new Set([...warnings, ...detected.warnings])],
+    message
+  };
+}
+
+function draftSuggestionMessage(count: number): string {
+  return `Detected ${count} draft mute suggestion${count === 1 ? '' : 's'}.`;
 }
 
 export async function analyzeProfanity(
@@ -316,20 +368,26 @@ export async function analyzeProfanity(
 ): Promise<ProfanityAnalysisResult> {
   emitProgress(request.onProgress, {
     phase: 'probe-media',
-    message: 'Analyzing video and subtitle streams...'
+    message: 'Analyzing the opened video and its streams...'
   });
-  const { duration, streams } = await dependencies.probeSubtitleStreams(request.inputPath);
+  const media = await dependencies.probeSubtitleStreams(request.inputPath);
+  const { duration, streams } = media;
+  const providedPath = request.subtitlePath?.trim();
+
+  if (providedPath && path.extname(providedPath).toLowerCase() === '.json') {
+    return analyzeMtsTranscript(providedPath, request, media, dependencies.readTranscriptFile);
+  }
 
   let subtitleSource: ProfanitySuggestionSource = 'embedded';
   let subtitleCues: TimedTextCue[] | null = null;
 
-  if (request.subtitlePath?.trim()) {
+  if (providedPath) {
     emitProgress(request.onProgress, {
       phase: 'load-provided-subtitles',
       message: 'Loading the provided subtitle file...'
     });
     subtitleSource = 'provided';
-    subtitleCues = await dependencies.loadProvidedSubtitleCues(request.subtitlePath.trim());
+    subtitleCues = await dependencies.loadProvidedSubtitleCues(providedPath);
   } else {
     emitProgress(request.onProgress, {
       phase: 'extract-embedded-subtitles',
@@ -340,7 +398,7 @@ export async function analyzeProfanity(
 
   if (!subtitleCues || subtitleCues.length === 0) {
     throw new Error(
-      'No usable subtitles were found. Choose an .srt, .vtt, or .ass subtitle file and try again. You can search https://www.opensubtitles.com/ for one.'
+      'No usable subtitles were found. Choose a subtitle file (.srt, .vtt, .ass, .ssa) or a Media Transcription Studio transcript (.json) and try again.'
     );
   }
 
@@ -360,11 +418,10 @@ export async function analyzeProfanity(
     message: 'Merging profanity detections into draft mute suggestions...'
   });
   const suggestions = mergeProfanitySuggestions(rawSuggestions, duration);
-  const usedSources = uniqueSources([subtitleSource]);
   const message =
     suggestions.length === 0
       ? 'No profanity matches were detected in the subtitles.'
-      : `Detected ${suggestions.length} draft mute suggestion${suggestions.length === 1 ? '' : 's'}.`;
+      : draftSuggestionMessage(suggestions.length);
 
   emitProgress(request.onProgress, {
     phase: 'done',
@@ -373,7 +430,7 @@ export async function analyzeProfanity(
 
   return {
     suggestions,
-    usedSources,
+    usedSources: [subtitleSource],
     subtitleCueCount: subtitleCues.length,
     message
   };

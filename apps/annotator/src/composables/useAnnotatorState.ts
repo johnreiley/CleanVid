@@ -186,6 +186,7 @@ export function useAnnotatorState() {
   const segments = ref<EditableSegment[]>([]);
   const selectedSegmentId = ref<string | null>(null);
   const profanitySuggestions = ref<ProfanitySuggestion[]>([]);
+  const profanityWarnings = ref<string[]>([]);
   const skpDraftSegments = ref<SkpDraftSegment[]>([]);
   const skpImportWarnings = ref<string[]>([]);
   const skpReviewRequestKey = ref(0);
@@ -715,6 +716,7 @@ export function useAnnotatorState() {
 
   function clearProfanitySuggestions() {
     profanitySuggestions.value = [];
+    profanityWarnings.value = [];
     analyzeProfanityProgressPercent.value = 0;
   }
 
@@ -1142,13 +1144,18 @@ export function useAnnotatorState() {
         return;
       }
 
-      profanitySubtitlePath.value = response.subtitlePath ?? '';
+      const nextPath = response.subtitlePath ?? '';
+      if (nextPath !== profanitySubtitlePath.value) {
+        clearProfanitySuggestions();
+      }
+      profanitySubtitlePath.value = nextPath;
 
       if (profanitySubtitlePath.value !== '') {
-        statusMessage.value = `Selected subtitle file ${profanitySubtitlePath.value}.`;
+        const kind = /\.json$/i.test(nextPath) ? 'transcript' : 'subtitle';
+        statusMessage.value = `Selected ${kind} file ${nextPath}.`;
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unable to select a subtitle file.');
+      setError(error instanceof Error ? error.message : 'Unable to select a subtitle or transcript file.');
     } finally {
       isSelectingSubtitlePath.value = false;
     }
@@ -1156,7 +1163,8 @@ export function useAnnotatorState() {
 
   function clearProfanitySubtitlePath() {
     profanitySubtitlePath.value = '';
-    statusMessage.value = 'Cleared the selected subtitle file.';
+    clearProfanitySuggestions();
+    statusMessage.value = 'Cleared the selected subtitle or transcript.';
   }
 
   async function analyzeProfanity() {
@@ -1182,6 +1190,7 @@ export function useAnnotatorState() {
       });
 
       profanitySuggestions.value = result.suggestions;
+      profanityWarnings.value = result.warnings ?? [];
       statusMessage.value = result.message;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unable to analyze profanity.');
@@ -1516,6 +1525,7 @@ export function useAnnotatorState() {
     statusMessage,
     errorMessage,
     profanitySuggestions,
+    profanityWarnings,
     skpDraftSegments,
     skpImportWarnings,
     skpImportSummaryText,

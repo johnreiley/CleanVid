@@ -118,6 +118,7 @@ onBeforeUnmount(() => {
         :profanity-suggestion-count-label="annotator.profanitySuggestionCountLabel"
         :profanity-subtitle-path="annotator.profanitySubtitlePath"
         :profanity-suggestions="annotator.profanitySuggestions"
+        :profanity-warnings="annotator.profanityWarnings"
         :skp-draft-count-label="annotator.skpDraftCountLabel"
         :skp-draft-segments="annotator.skpDraftSegments"
         :skp-import-summary-text="annotator.skpImportSummaryText"
