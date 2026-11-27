@@ -54,17 +54,74 @@ describe('dual-source profanity reconciliation', () => {
     expect(result.detections[0].evidence).toHaveLength(1);
   });
 
-  it('keeps ambiguous repetitions and competing overlapping cues from claiming corroboration', () => {
+  it('keeps extra repetitions and attaches overlapping copies of one cue as evidence', () => {
     const result = dual([line('Oh damn damn please come back')], [segment(40, 'Oh damn please come back')]);
-    expect(result.detections).toHaveLength(3);
-    expect(result.detections.every(({ agreement, needsReview }) => agreement === 'conflicting' && needsReview)).toBe(true);
+    expect(result.detections).toHaveLength(2);
+    expect(result.detections.filter(({ evidence }) => evidence.some(({ source }) => source === 'transcript'))).toEqual([
+      expect.objectContaining({ agreement: 'both', confidence: 'medium', needsReview: true })
+    ]);
+    expect(result.detections.filter(({ evidence }) => evidence.length === 1)).toHaveLength(1);
 
     const overlapping = dual([
       line('Oh damn please come back'),
       { start: 40, end: 42, text: 'Oh damn please come back' }
     ], [segment(40, 'Oh damn please come back')]);
-    expect(overlapping.detections).toHaveLength(3);
-    expect(overlapping.detections.every(({ agreement }) => agreement !== 'both')).toBe(true);
+    expect(overlapping.detections).toEqual([expect.objectContaining({
+      agreement: 'both', confidence: 'medium', evidence: expect.arrayContaining([
+        expect.objectContaining({ source: 'provided', cueId: '3' }),
+        expect.objectContaining({ source: 'provided', cueId: '4' }),
+        expect.objectContaining({ source: 'transcript' })
+      ])
+    })]);
+  });
+
+  it('uses exact wording and cue timing as reviewable evidence for a short phrase', () => {
+    const result = dual([line('Oh, my God!')], [segment(40, 'Oh my god')]);
+    expect(result.detections).toEqual([expect.objectContaining({
+      agreement: 'both', confidence: 'medium', needsReview: true, reviewStatus: 'pending',
+      timingMethod: 'transcript-word', proposedRange: { start: 40, end: 40.8 }
+    })]);
+    expect(result.detections[0].evidence).toHaveLength(2);
+  });
+
+  it('keeps one transcript result even when other dialogue is reordered within a cue', () => {
+    const result = dual([line('Could you be quiet? What the hell, friend?')], [
+      segment(40, 'What the hell friend could you be quiet')
+    ]);
+    expect(result.detections).toEqual([expect.objectContaining({
+      agreement: 'both', confidence: 'medium', needsReview: true, proposedRange: { start: 40.6, end: 40.8 }
+    })]);
+    expect(result.detections[0].evidence[1]).toMatchObject({ source: 'transcript', matchedText: 'hell' });
+  });
+
+  it('uses a timed result for the same words and keeps separate occurrences elsewhere', () => {
+    const isolated = dual([line('Damn!')], [segment(40, 'Damn!')]);
+    expect(isolated.detections).toEqual([expect.objectContaining({
+      agreement: 'both', needsReview: true, proposedRange: { start: 40, end: 40.2 }
+    })]);
+
+    const adjacent = dual([{ start: 39, end: 40, text: 'Oh my God!' }], [segment(40.1, 'Oh my god')]);
+    expect(adjacent.detections.map(({ agreement }) => agreement)).toEqual(['subtitle-only', 'transcript-only']);
+  });
+
+  it('keeps one review item for a timed match in a short clip without synchronization anchors', () => {
+    const result = dual([], [], { cues: [line('Damn')], segments: [segment(40, 'Damn')] });
+    expect(result.subtitleAlignment?.status).toBe('uncertain');
+    expect(result.detections).toEqual([expect.objectContaining({
+      agreement: 'both', confidence: 'medium', needsReview: true, proposedRange: { start: 40, end: 40.2 }
+    })]);
+  });
+
+  it('pairs repeated phrases in adjacent cues with their distinct word ranges', () => {
+    const text = 'Oh my God please stop';
+    const segments = [40, 41.8, 43.6].map((start) => segment(start, text));
+    const cues = segments.map(({ start, end }) => ({ start: start - 0.1, end: end + 0.1, text }));
+    const result = dual(cues, segments);
+    expect(result.detections.map(({ agreement, proposedRange }) => [agreement, proposedRange])).toEqual([
+      ['both', { start: 40, end: 40.8 }],
+      ['both', { start: 41.8, end: 42.6 }],
+      ['both', { start: 43.6, end: 44.4 }]
+    ]);
   });
 
   it('keeps distinct occurrences in a cue and in transcript-only dialogue independently reviewable', () => {

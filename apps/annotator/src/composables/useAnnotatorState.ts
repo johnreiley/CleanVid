@@ -1244,11 +1244,15 @@ export function useAnnotatorState() {
     draft.reviewStatus = status;
   }
 
-  function approveHighConfidenceProfanity() {
+  function approveProfanityBatch(ids?: string[]) {
+    const selected = ids ? new Set(ids) : null;
     for (const draft of profanityReview.detections ?? []) {
-      if (!draft.applied && draft.reviewStatus === 'pending' && draft.confidence === 'high' && !draft.needsReview && !draft.editedRange && draft.proposedRange) {
-        draft.reviewStatus = 'approved';
-      }
+      const range = draft.editedRange ?? draft.proposedRange;
+      if (draft.applied || draft.reviewStatus !== 'pending' || !range || !Number.isFinite(range.start) ||
+        !Number.isFinite(range.end) || clampToDuration(range.end) <= clampToDuration(range.start)) continue;
+      const eligible = selected ? selected.has(draft.id)
+        : draft.confidence === 'high' && !draft.needsReview && !draft.editedRange;
+      if (eligible) draft.reviewStatus = 'approved';
     }
   }
 
@@ -1669,7 +1673,7 @@ export function useAnnotatorState() {
     loadProfanitySubtitleTracks,
     selectProfanityDetection,
     reviewProfanityDetection,
-    approveHighConfidenceProfanity,
+    approveProfanityBatch,
     editProfanityDetection,
     startProfanityPreview,
     stopProfanityPreview,

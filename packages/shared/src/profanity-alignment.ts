@@ -187,6 +187,8 @@ interface ReconcileOptions {
 interface Candidate {
   subtitle: ProfanityOccurrence;
   transcript?: ProfanityOccurrence;
+  timedOptions: ProfanityOccurrence[];
+  timingMatchOnly?: boolean;
   conflicting: boolean;
   ambiguousWords?: string[];
   estimated?: MuteRange;
@@ -202,6 +204,11 @@ function tokenSpan(tokens: { position: number }[], occurrence: ProfanityOccurren
 function sameText(a: ProfanityOccurrence, b: ProfanityOccurrence) {
   return alignmentTokens(a.matchedText).map((token) => token.key).join(' ') ===
     alignmentTokens(b.matchedText).map((token) => token.key).join(' ');
+}
+
+function midpointInCue(occurrence: MuteRange, cue: MuteRange) {
+  const midpoint = (occurrence.start + occurrence.end) / 2;
+  return cue.start <= midpoint && midpoint < cue.end;
 }
 
 function matchingSegment(
@@ -222,19 +229,25 @@ function matchingSegment(
 function findCueCandidates(
   cue: TimedTextCue, occurrences: ProfanityOccurrence[], words: WordToken[],
   byWordId: Map<string, ProfanityOccurrence[]>, segmentMatches: ProfanityOccurrence[],
-  synchronized: boolean, estimate: boolean
+  transcriptMatches: ProfanityOccurrence[], alignmentStatus: SubtitleAlignment['status'], estimate: boolean
 ): Candidate[] {
+  const synchronized = alignmentStatus === 'aligned' || alignmentStatus === 'manual';
   const tokens = alignmentTokens(cue.text);
   const alignment = alignTokens(tokens, words);
+  const repetitions = new Map<string, number>();
+  for (const { matchedText } of occurrences) {
+    repetitions.set(matchedText, (repetitions.get(matchedText) ?? 0) + 1);
+  }
 
   return occurrences.map((subtitle) => {
     const { first, length } = tokenSpan(tokens, subtitle);
-    if (first < 0 || !length) return { subtitle, conflicting: false };
+    if (first < 0 || !length) return { subtitle, conflicting: false, timedOptions: [] };
     const after = first + length;
     const mapped = alignment.unique.slice(first, after);
     const beforeIndex = alignment.unique[first - 1] ?? -1;
     const afterIndex = alignment.unique[after] ?? -1;
     const wordIndexes = alignment.positions.slice(first, after).flat();
+    const repeated = repetitions.get(subtitle.matchedText)! > 1;
     const nearCue = (word: MuteRange) => distanceToCue(word, cue, 0) <= MAX_CUE_ERROR;
     const mappedWords = mapped.flatMap((index) => index < 0 ? [] : [words[index]]);
     const contextMatches = alignment.unique.filter((index, i) =>
@@ -243,8 +256,16 @@ function findCueCandidates(
     const ids = [...new Set(mappedWords.flatMap((word) => word.wordIds))];
     const wordOptions = (byWordId.get(ids[0]) ?? []).filter((match) => sameText(subtitle, match) &&
       match.wordIds?.length === ids.length && match.wordIds.every((id, i) => id === ids[i]) && nearCue(match));
-    const word = enoughContext && mappedWords.length === length &&
+    const alignedWord = enoughContext && mappedWords.length === length &&
       mapped.every((index, i) => index === mapped[0] + i) && wordOptions.length === 1 ? wordOptions[0] : undefined;
+    const timedOptions = alignmentStatus !== 'suspect' && transcriptMatches.length <= MAX_LOCAL_TOKENS
+      ? transcriptMatches.filter((match) => midpointInCue(match, cue) && sameText(subtitle, match))
+      : [];
+    if (!timedOptions.length && alignmentStatus !== 'suspect' && segmentMatches.length <= MAX_LOCAL_TOKENS) {
+      timedOptions.push(...segmentMatches.filter((match) => !match.ambiguousContext &&
+        midpointInCue(match, cue) && nearCue(match) && sameText(subtitle, match)));
+    }
+    const word = alignedWord && (midpointInCue(alignedWord, cue) || !timedOptions.length) ? alignedWord : undefined;
     const fallback = synchronized && !word
       ? matchingSegment(subtitle, cue, tokens, first, length, segmentMatches)
       : [];
@@ -254,7 +275,10 @@ function findCueCandidates(
       nearCue(words[beforeIndex]) && nearCue(words[afterIndex]);
     const missing = wordIndexes.length === 0 && bracketed && afterIndex === beforeIndex + 1;
     const substitution = wordIndexes.length === 0 && bracketed && afterIndex > beforeIndex + 1;
-    const ambiguous = synchronized && !transcript && (wordIndexes.some((index) => nearCue(words[index])) || fallback.length > 1);
+    const possibleIds = new Set(wordIndexes.flatMap((index) => words[index].wordIds));
+    const ambiguousWords = !transcript ? timedOptions.filter((match) =>
+      !repeated || match.wordIds?.some((id) => possibleIds.has(id))).map((match) => match.id) : [];
+    const ambiguous = ambiguousWords.length > 0 || fallback.length > 1;
     const gap = bracketed ? { start: words[beforeIndex].end, end: words[afterIndex].start } : undefined;
     const plausible = gap && gap.end - gap.start >= 0.1 - 1e-9 && gap.end - gap.start <= 1.5 + 1e-9;
     const estimated = estimate && synchronized && length === 1 && plausible &&
@@ -264,11 +288,9 @@ function findCueCandidates(
     const firstWord = mapped[0] >= 0 ? mapped[0] : beforeIndex + 1;
     const lastWord = mapped.at(-1)! >= 0 ? mapped.at(-1)! + 1 : afterIndex >= 0 ? afterIndex : firstWord;
     const text = (start: number, end: number) => words.slice(start, end).map(({ key }) => key).join(' ');
-    const ambiguousWords = ambiguous ? [...new Set(wordIndexes.flatMap((index) => words[index].wordIds))]
-      .flatMap((id) => (byWordId.get(id) ?? []).filter((match) => sameText(subtitle, match) && nearCue(match)).map((match) => match.id))
-      : undefined;
     return {
-      subtitle, transcript, estimated, ambiguousWords, conflicting: !transcript && (ambiguous || (synchronized && substitution)),
+      subtitle, transcript, estimated, ambiguousWords, timedOptions,
+      conflicting: !transcript && (ambiguous || (synchronized && substitution)),
       nearbyTranscript: words.length ? {
         before: text(Math.max(0, firstWord - 6), firstWord),
         match: text(firstWord, lastWord),
@@ -304,17 +326,17 @@ export function reconcileProfanity(options: ReconcileOptions): {
 
   let subtitleAlignment: SubtitleAlignment | undefined;
   let outOfBoundsCues = 0;
-  let candidates: Candidate[] = subtitles.map((subtitle) => ({ subtitle, conflicting: false }));
+  let candidates: Candidate[] = subtitles.map((subtitle) => ({ subtitle, conflicting: false, timedOptions: [] }));
   if (dual) {
     const words = new TimeIndex(segments.flatMap((segment) => timedTranscriptTokens(segment).flatMap(
       (token) => tokenParts(token.key).map((key) => ({ ...token, key }))
     )));
     const fallback = new TimeIndex(transcript.filter((item) => !item.wordIds));
+    const wordMatches = new TimeIndex(transcript.filter((item) => item.wordIds));
     subtitleAlignment = measureAlignment(cues, words.items, duration, options.subtitleOffset);
     if (subtitleAlignment.status === 'suspect' || subtitleAlignment.status === 'uncertain') {
       warnings.push(subtitleAlignment.message);
     }
-    const synchronized = subtitleAlignment.status === 'aligned' || subtitleAlignment.status === 'manual';
     const byCue = new Map<string, ProfanityOccurrence[]>();
     for (const occurrence of subtitles) {
       const group = byCue.get(occurrence.cueId!) ?? [];
@@ -330,7 +352,8 @@ export function reconcileProfanity(options: ReconcileOptions): {
       const original = cues[Number(cueId)];
       const cue = { ...original, start: original.start + offset, end: original.end + offset };
       candidates.push(...findCueCandidates(cue, occurrences, words.within(cue.start - margin, cue.end + margin),
-        byWordId, fallback.within(cue.start, cue.end), synchronized && cue.start < duration && cue.end > 0,
+        byWordId, fallback.within(cue.start, cue.end), wordMatches.within(cue.start, cue.end),
+        cue.start < duration && cue.end > 0 ? subtitleAlignment.status : 'suspect',
         options.estimateMissingWords !== false));
     }
   }
@@ -340,7 +363,6 @@ export function reconcileProfanity(options: ReconcileOptions): {
   for (const { transcript: word } of candidates) {
     if (word) claims.set(word.id, (claims.get(word.id) ?? 0) + 1);
   }
-  const paired = new Set<string>();
   const conflictingTranscript = new Set(candidates.flatMap((candidate) => candidate.ambiguousWords ?? []));
   // Reject crossings between non-overlapping cues. Overlapping cues have no
   // reliable order outside each cue's own token alignment.
@@ -361,10 +383,61 @@ export function reconcileProfanity(options: ReconcileOptions): {
     }
   }
 
+  const assignedByWord = new Map<string, Candidate>();
+  const assignedByCue = new Map<string, Array<{ subtitle: ProfanityOccurrence; word: ProfanityOccurrence }>>();
+  const matchedSubtitles = new Set<string>();
+  const extraEvidence = new Map<string, ProfanityOccurrence[]>();
+
+  function assign(candidate: Candidate, word: ProfanityOccurrence) {
+    assignedByWord.set(word.id, candidate);
+    matchedSubtitles.add(candidate.subtitle.id);
+    const cueId = candidate.subtitle.cueId!;
+    const assigned = assignedByCue.get(cueId) ?? [];
+    assigned.push({ subtitle: candidate.subtitle, word });
+    assignedByCue.set(cueId, assigned);
+  }
+
+  for (const candidate of proposed) {
+    const word = candidate.transcript!;
+    if (claims.get(word.id) === 1 && !crossings.has(candidate)) assign(candidate, word);
+    else conflictingTranscript.add(word.id);
+  }
+
+  // The transcript owns its timed detections. Match remaining exact wording
+  // within each cue before creating subtitle-only flags. Each timed match can
+  // cover one occurrence, so a subtitle can still contribute an extra repeat.
+  const unpaired = candidates.filter((candidate) => !matchedSubtitles.has(candidate.subtitle.id))
+    .sort((a, b) => a.subtitle.end - b.subtitle.end || a.subtitle.start - b.subtitle.start ||
+      a.subtitle.tokenStart - b.subtitle.tokenStart);
+  for (const candidate of unpaired) {
+    const { subtitle, timedOptions } = candidate;
+    const assigned = assignedByCue.get(subtitle.cueId!) ?? [];
+    const word = timedOptions.find((option) => !assignedByWord.has(option.id) && assigned.every((pair) =>
+      subtitle.tokenStart < pair.subtitle.tokenStart ? option.start <= pair.word.start : option.start >= pair.word.start));
+    if (word) {
+      assign({ ...candidate, conflicting: false, timingMatchOnly: true, estimated: undefined, nearbyTranscript: undefined }, word);
+      continue;
+    }
+
+    // A second copy of the same overlapping cue can corroborate the same
+    // occurrence without adding another flag. Repetitions within a cue stay distinct.
+    if (timedOptions.length !== 1) continue;
+    const [covered] = timedOptions;
+    const owner = assignedByWord.get(covered.id)?.subtitle;
+    const alreadyAttached = extraEvidence.get(covered.id) ?? [];
+    if (owner && owner.cueId !== subtitle.cueId && owner.start < subtitle.end && subtitle.start < owner.end &&
+      normalizeProfanityText(owner.context) === normalizeProfanityText(subtitle.context) &&
+      !alreadyAttached.some((item) => item.cueId === subtitle.cueId)) {
+      extraEvidence.set(covered.id, [...alreadyAttached, subtitle]);
+      matchedSubtitles.add(subtitle.id);
+    }
+  }
+
   function detection(candidate: Candidate | undefined, word?: ProfanityOccurrence): ReconciledDetection {
     const subtitle = candidate?.subtitle;
-    const evidence = [subtitle, word].filter((item): item is ProfanityOccurrence => Boolean(item));
-    const conflicting = candidate?.conflicting || (word && conflictingTranscript.has(word.id));
+    const evidence = [subtitle, word, ...(word ? extraEvidence.get(word.id) ?? [] : [])]
+      .filter((item): item is ProfanityOccurrence => Boolean(item));
+    const conflicting = candidate?.conflicting || (!candidate && word && conflictingTranscript.has(word.id));
     const agreement = conflicting ? 'conflicting' : subtitle && word ? 'both' : word ? 'transcript-only' : 'subtitle-only';
     const suspect = subtitleAlignment?.status === 'suspect';
     const offset = subtitleAlignment?.offset ?? 0;
@@ -388,6 +461,8 @@ export function reconcileProfanity(options: ReconcileOptions): {
     }
     if (conflicting) {
       reasons.push('The dialogue differs or more than one alignment is possible.');
+    } else if (candidate?.timingMatchOnly && word) {
+      reasons.push('The same wording falls within the subtitle cue. Check the alignment before applying.');
     }
     if (word && word.timingMethod === 'unresolved') reasons.push('The transcript match has zero duration.');
     if (method === 'transcript-segment') reasons.push('Only transcript segment timestamps are available.');
@@ -399,13 +474,15 @@ export function reconcileProfanity(options: ReconcileOptions): {
     if (subtitle && subtitleAlignment?.status === 'uncertain') reasons.push('Subtitle timing could not be verified.');
     if (suspect) reasons.push('Subtitle synchronization is suspect.');
     const confidence = conflicting || (subtitle && suspect)
-      ? 'low' : agreement === 'both' && (method === 'transcript-word' || method === 'transcript-segment')
-        ? 'high' : method === 'transcript-word' || method === 'context-estimated' ? 'medium' : 'low';
+      ? 'low' : agreement === 'both' && !candidate?.timingMatchOnly &&
+        (method === 'transcript-word' || method === 'transcript-segment')
+        ? 'high' : method === 'transcript-word' || method === 'transcript-segment' && agreement === 'both' ||
+          method === 'context-estimated' ? 'medium' : 'low';
     const needsReview = dual ? reasons.length > 0 || confidence !== 'high' : !proposedRange || Boolean(
       word && (method !== 'transcript-word' || reasons.length > 0)
     );
     return {
-      id: (subtitle ?? word)!.id, evidence, agreement, confidence, timingMethod: method,
+      id: (word ?? subtitle)!.id, evidence, agreement, confidence, timingMethod: method,
       rawRange, proposedRange, needsReview, reviewReasons: reasons,
       reviewStatus: !dual && !needsReview ? 'approved' : 'pending',
       transcriptProbability: word?.probability, hasUnknownProbability: word?.hasUnknownProbability,
@@ -413,17 +490,11 @@ export function reconcileProfanity(options: ReconcileOptions): {
     };
   }
 
-  const detections = candidates.map((candidate) => {
-    const word = candidate.transcript;
-    if (word && (claims.get(word.id)! > 1 || crossings.has(candidate) || conflictingTranscript.has(word.id))) {
-      conflictingTranscript.add(word.id);
-      return detection({ ...candidate, conflicting: true, estimated: undefined });
+  const detections = transcript.map((word) => detection(assignedByWord.get(word.id), word));
+  for (const candidate of candidates) {
+    if (!matchedSubtitles.has(candidate.subtitle.id)) {
+      detections.push(detection(candidate.transcript ? { ...candidate, conflicting: true, estimated: undefined } : candidate));
     }
-    if (word) paired.add(word.id);
-    return detection(candidate, word);
-  });
-  for (const word of transcript) {
-    if (!paired.has(word.id)) detections.push(detection(undefined, word));
   }
   detections.sort((a, b) => (a.rawRange?.start ?? a.evidence[0].start) - (b.rawRange?.start ?? b.evidence[0].start));
   return { detections, subtitleAlignment, warnings };

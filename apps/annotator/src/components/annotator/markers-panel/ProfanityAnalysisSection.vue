@@ -20,6 +20,7 @@ const emit = defineEmits<{
   selectDetection: [id: string];
   reviewDetection: [id: string, status: 'approved' | 'rejected'];
   approveHighConfidence: [];
+  approveVisible: [ids: string[]];
   editDetection: [id: string, range: MuteRange];
   startPreview: [range: MuteRange, muted: boolean, loop: boolean];
   stopPreview: [];
@@ -56,7 +57,8 @@ const filters = [
   { label: 'Transcript only', accepts: (item: ProfanityDraft) => item.agreement === 'transcript-only' },
   { label: 'Subtitle only', accepts: (item: ProfanityDraft) => item.agreement === 'subtitle-only' },
   { label: 'Estimated', accepts: (item: ProfanityDraft) => item.timingMethod === 'context-estimated' },
-  { label: 'Needs review', accepts: needsReview }
+  { label: 'Needs review', accepts: needsReview },
+  { label: 'Transcript results', accepts: (item: ProfanityDraft) => item.evidence.some(({ source }) => source === 'transcript') }
 ];
 const filterIndex = ref(0);
 const startInput = ref('');
@@ -64,6 +66,26 @@ const endInput = ref('');
 const loop = ref(false);
 const drafts = computed(() => props.review.detections ?? []);
 const visible = computed(() => drafts.value.filter(filters[filterIndex.value].accepts));
+const approvable = computed(() => visible.value.filter((item) => {
+  const range = item.editedRange ?? item.proposedRange;
+  return !item.applied && item.reviewStatus === 'pending' && range &&
+    Number.isFinite(range.start) && Number.isFinite(range.end) && range.start >= 0 &&
+    range.end > range.start && (props.duration <= 0 || range.start < props.duration);
+}));
+const visibleRows = computed(() => {
+  const rows = new Map<string, { first: ProfanityDraft; items: ProfanityDraft[] }>();
+  for (const item of visible.value) {
+    const cue = item.evidence.find((evidence) => evidence.cueId !== undefined);
+    const range = item.proposedRange;
+    const key = cue && range && item.timingMethod === 'subtitle-cue' && !item.editedRange
+      ? JSON.stringify([cue.source, cue.cueId, cue.matchedText, range.start, range.end])
+      : item.id;
+    const row = rows.get(key);
+    if (row) row.items.push(item);
+    else rows.set(key, { first: item, items: [item] });
+  }
+  return [...rows.values()];
+});
 const selected = computed(() => drafts.value.find((item) => item.id === props.review.selectedId));
 const selectedRange = computed(() => selected.value?.editedRange ?? selected.value?.proposedRange);
 const busy = computed(() => props.isAnalyzingProfanity || props.review.isSelectingFile || props.review.isLoadingTracks);
@@ -140,6 +162,12 @@ function formatTimestamp(seconds: number): string {
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds
     .toString()
     .padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+}
+
+function formatRange(item: ProfanityDraft) {
+  const range = item.editedRange ?? item.proposedRange;
+  return range ? `${formatTimestamp(range.start)} – ${formatTimestamp(range.end)}`
+    : `Unresolved near ${formatTimestamp(item.evidence[0].start)}`;
 }
 
 function formatSourceLabel(suggestion: ProfanitySuggestion): string {
@@ -303,6 +331,10 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
         </label>
       </div>
       <div class="media-action-row" v-if="drafts.length">
+        <button type="button" class="subtle-action" :disabled="approvable.length === 0"
+          @click="emit('approveVisible', approvable.map(({ id }) => id))">
+          Approve visible ranges ({{ approvable.length }})
+        </button>
         <button type="button" class="subtle-action" :disabled="eligible === 0" @click="emit('approveHighConfidence')">
           Approve eligible high confidence ({{ eligible }})
         </button>
@@ -313,20 +345,34 @@ function formatSourceLabel(suggestion: ProfanitySuggestion): string {
         </button>
       </div>
 
-      <p v-if="!visible.length" class="segments-empty">No detections {{ drafts.length ? 'match this filter' : 'found' }}.</p>
+      <p v-if="!visibleRows.length" class="segments-empty">No detections {{ drafts.length ? 'match this filter' : 'found' }}.</p>
       <ul v-else class="segment-list profanity-suggestion-list" data-testid="profanity-detection-list">
-        <li v-for="item in visible" :key="item.id" class="segment-card profanity-suggestion-card">
-          <button type="button" class="profanity-suggestion-content profanity-detection"
-            :aria-pressed="review.selectedId === item.id" @click="emit('selectDetection', item.id)">
-            <strong>{{ item.evidence[0].matchedText }}</strong>
-            <span>{{ item.editedRange || item.proposedRange
-              ? formatTimestamp((item.editedRange ?? item.proposedRange)!.start) + ' – ' +
-                formatTimestamp((item.editedRange ?? item.proposedRange)!.end)
-              : 'Unresolved near ' + formatTimestamp(item.evidence[0].start) }}</span>
-            <span>{{ agreementLabels[item.agreement] }} · {{ item.confidence }} confidence ·
-              {{ timingLabels[item.editedRange ? 'manual' : item.timingMethod] }} ·
-              {{ item.applied ? 'Applied' : item.reviewStatus }}</span>
-            <span v-if="item.reviewReasons.length">{{ item.reviewReasons[0] }}</span>
+        <li v-for="{ first, items } in visibleRows" :key="first.id" class="segment-card profanity-suggestion-card">
+          <details v-if="items.length > 1" class="profanity-cue-group" :open="items.some((item) => review.selectedId === item.id)">
+            <summary class="profanity-suggestion-content profanity-detection">
+              <strong>{{ first.evidence[0].matchedText }}</strong>
+              <span>{{ formatRange(first) }}</span>
+              <span>{{ items.length }} occurrences share this subtitle cue</span>
+            </summary>
+            <ul class="segment-list">
+              <li v-for="(item, index) in items" :key="item.id">
+                <button type="button" class="profanity-suggestion-content profanity-detection"
+                  :aria-pressed="review.selectedId === item.id" @click="emit('selectDetection', item.id)">
+                  <strong>Occurrence {{ index + 1 }}</strong>
+                  <span>{{ agreementLabels[item.agreement] }} · {{ item.confidence }} confidence ·
+                    {{ item.applied ? 'Applied' : item.reviewStatus }}</span>
+                </button>
+              </li>
+            </ul>
+          </details>
+          <button v-else type="button" class="profanity-suggestion-content profanity-detection"
+            :aria-pressed="review.selectedId === first.id" @click="emit('selectDetection', first.id)">
+            <strong>{{ first.evidence[0].matchedText }}</strong>
+            <span>{{ formatRange(first) }}</span>
+            <span>{{ agreementLabels[first.agreement] }} · {{ first.confidence }} confidence ·
+              {{ timingLabels[first.editedRange ? 'manual' : first.timingMethod] }} ·
+              {{ first.applied ? 'Applied' : first.reviewStatus }}</span>
+            <span v-if="first.reviewReasons.length">{{ first.reviewReasons[0] }}</span>
           </button>
         </li>
       </ul>

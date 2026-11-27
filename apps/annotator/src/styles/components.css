@@ -1322,3 +1322,15 @@
   max-height: 17rem;
   overflow-y: auto;
 }
+
+.profanity-cue-group summary.profanity-detection {
+  display: list-item;
+}
+
+.profanity-cue-group summary span {
+  display: block;
+}
+
+.profanity-cue-group > ul {
+  padding-inline-start: 0.75rem;
+}

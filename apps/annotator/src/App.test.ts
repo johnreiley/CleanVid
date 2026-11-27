@@ -1039,6 +1039,101 @@ describe('annotator app', () => {
     wrapper.unmount();
   });
 
+  it('groups identical subtitle fallback ranges while keeping individual review decisions', async () => {
+    const wrapper = mount(App);
+    await openVideo(wrapper);
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+
+    const range = { start: 10, end: 13 };
+    const cues = [0, 2].map((tokenStart): ReconciledDetection => ({
+      id: `cue-3-${tokenStart}`, agreement: 'subtitle-only', timingMethod: 'subtitle-cue', confidence: 'low',
+      rawRange: range, proposedRange: range, needsReview: true, reviewStatus: 'pending', reviewReasons: ['Whole cue'],
+      evidence: [{
+        ...range, id: `cue-3-${tokenStart}`, cueId: '3', source: 'provided', timingMethod: 'subtitle-cue',
+        matchedText: 'damn', canonicalTerms: ['damn'], context: 'Damn again, damn it', tokenStart, tokenEnd: tokenStart + 1
+      }]
+    }));
+    const otherPhrase: ReconciledDetection = {
+      ...cues[0], id: 'different',
+      evidence: [{ ...cues[0].evidence[0], id: 'different', matchedText: 'shit', canonicalTerms: ['shit'] }]
+    };
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({
+      suggestions: [], detections: [...cues, otherPhrase], usedSources: ['provided', 'transcript'],
+      subtitleCueCount: 1, message: 'Detected 3 profanity occurrences.'
+    }));
+    await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
+    await flushPromises();
+
+    const list = wrapper.get('[data-testid="profanity-detection-list"]');
+    const group = list.get('details');
+    expect(list.element.children).toHaveLength(2);
+    expect(group.get('summary').text()).toContain('2 occurrences share this subtitle cue');
+    expect(wrapper.get('[data-testid="profanity-suggestion-count"]').text()).toBe('3 occurrences');
+
+    await group.get('summary').trigger('click');
+    await group.findAll('button')[1].trigger('click');
+    const editor = wrapper.get('[aria-label="Selected detection"]');
+    expect(editor.get('mark').text()).toBe('damn');
+    await editor.findAll('button').find((button) => button.text() === 'Approve')!.trigger('click');
+    expect(group.findAll('button').map((button) => button.text())).toEqual([
+      expect.stringContaining('pending'), expect.stringContaining('approved')
+    ]);
+    expect(wrapper.get('[data-testid="apply-profanity-suggestions-button"]').text()).toContain('(1)');
+    wrapper.unmount();
+  });
+
+  it('bulk approves only pending detections with playable ranges in the current filter', async () => {
+    const wrapper = mount(App);
+    await openVideo(wrapper);
+    await switchMode(wrapper, 'annotate');
+    await openProfanityModal(wrapper);
+
+    function draft(
+      id: string, start: number, agreement: ReconciledDetection['agreement'],
+      status: ReconciledDetection['reviewStatus'] = 'pending', unresolved = false
+    ): ReconciledDetection {
+      const range = { start, end: start + 0.5 };
+      const timingMethod = unresolved ? 'unresolved' : agreement === 'subtitle-only' ? 'subtitle-cue' : 'transcript-word';
+      return {
+        id, agreement, timingMethod, confidence: 'medium', proposedRange: unresolved ? null : range,
+        rawRange: unresolved ? null : range, needsReview: true, reviewReasons: [], reviewStatus: status,
+        evidence: [{
+          ...range, id, source: agreement === 'subtitle-only' ? 'provided' : 'transcript',
+          timingMethod, matchedText: 'damn', canonicalTerms: ['damn'], context: 'Damn', tokenStart: 0, tokenEnd: 1
+        }]
+      };
+    }
+    fetchMock.mockResolvedValueOnce(mockJsonResponse({
+      suggestions: [], usedSources: ['provided', 'transcript'], subtitleCueCount: 1, message: 'Detected 5 occurrences.',
+      detections: [
+        draft('word', 10, 'transcript-only'), draft('shared', 20, 'both'), draft('cue', 30, 'subtitle-only'),
+        draft('rejected', 40, 'transcript-only', 'rejected'), draft('unresolved', 50, 'transcript-only', 'pending', true)
+      ]
+    }));
+    await wrapper.get('[data-testid="analyze-profanity-button"]').trigger('click');
+    await flushPromises();
+
+    const modal = wrapper.get('[data-testid="profanity-modal"]');
+    const filter = modal.get<HTMLSelectElement>('.profanity-review-summary select');
+    const transcriptOption = Array.from(filter.element.options).find((option) => option.text.startsWith('Transcript results'))!;
+    await filter.setValue(transcriptOption.value);
+    const bulk = modal.findAll('button').find((button) => button.text().startsWith('Approve visible ranges'))!;
+    expect(bulk.text()).toBe('Approve visible ranges (2)');
+    await bulk.trigger('click');
+    expect(bulk.attributes('disabled')).toBeDefined();
+    expect(modal.text()).toContain('rejected');
+    expect(modal.text()).toContain('Unresolved near');
+    const apply = modal.get('[data-testid="apply-profanity-suggestions-button"]');
+    expect(apply.text()).toContain('(2)');
+    await apply.trigger('click');
+    expect(wrapper.findAll('.segment-card:not(.profanity-suggestion-card)')).toHaveLength(2);
+
+    await filter.setValue('0');
+    expect(bulk.text()).toBe('Approve visible ranges (1)');
+    wrapper.unmount();
+  });
+
   it('discards late results and resets both filenames after switching video', async () => {
     const wrapper = mount(App);
     await openVideo(wrapper);
